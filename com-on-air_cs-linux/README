@@ -1,0 +1,37 @@
+
+
+!!! for scientific and research purposes only !!!
+
+
+what
+~~~~
+   com_on_air_cs is a very basic driver for the Dosch & Amand com-on-air PCMCIA
+   DECT cards.
+   In the tools/ subdir you find userspace tools using the driver
+
+license
+~~~~~~~
+    GNU GENERAL PUBLIC LICENSE Version 2
+    see LICENSE
+
+authors
+~~~~~~~
+    Matthias Wenzel <dect at mazzoo dot de>
+    Andreas Schuler <krater at badterrorist dot com>
+
+install
+~~~~~~~
+    make && make -C tools  # compiles the driver and userspace tools
+    make node              # create the /dev/coa character device
+
+running
+~~~~~~~
+    the most featurecomplete tool for now is dect_cli. it can dump pcap
+    formatted captures. just run it and type help.
+
+    coa_syncsniff dumps pcap files on a given channel and RFPI
+
+    pcap2cchan dumps C-channel information from pcap files
+
+    pcapstein dumps all B-Fields found in a pcap file
+
