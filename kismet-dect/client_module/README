@@ -1,0 +1,16 @@
+BUILD && INSTALL INSTRUCTIONS
+
+Set the following environment variables to something useful like so:
+
+    export KIS_SRC_DIR=/usr/src/svn/kismet-newcore
+    export KIS_DEST_DIR=/usr/local
+
+Build with:
+
+    make
+
+Install with:
+
+    sudo make install
+
+
