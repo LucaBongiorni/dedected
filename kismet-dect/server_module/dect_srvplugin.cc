@@ -1,5 +1,5 @@
 /* dect source plugin 
- * (c) 2008 by Mike Kershaw/Dragorn <dragorn (at) kismetwireless (dot) net,
+ * (c) 2008 by Mike Kershaw <dragorn (at) kismetwireless (dot) net,
  *             Jake Appelbaum <ioerror (at) appelbaum (dot) net,
  *             Christian Fromme <kaner (at) strace (dot) org
  *
@@ -46,29 +46,47 @@
 #define DECT_SUBCMD_CHANHOP_DISABLE 0
 #define DECT_SUBCMD_SCAN_STATIONS   0
 #define DECT_SUBCMD_SCAN_CALLS      1
-#define DECT_SUBCMD_SCAN_ACTIVE     2
 
 // Globals
 int dect_comp_datachunk;
 
+class PacketSource_Dect;
+static PacketSource_Dect *static_ref;
+
+static int mode = DECT_SUBCMD_SCAN_STATIONS;
+
+// Prototypes
+int dect_register(GlobalRegistry *);
+int dect_unregister(GlobalRegistry *);
+
 /* This is the 7 bytes we read while scanning */
 typedef struct {
-        uint8_t               channel;
-        uint8_t               RSSI;
-        uint8_t               RFPI[5];
+    uint8_t               channel;
+    uint8_t               RSSI;
+    uint8_t               RFPI[5];
 } dect_data_scan_t;
 
 typedef struct {
-        dect_data_scan_t      sdata;
-        uint32_t              first_seen;
-        uint32_t              last_seen;
-        uint32_t              count_seen;
+    dect_data_scan_t      sdata;
+    uint32_t              first_seen;
+    uint32_t              last_seen;
+    uint32_t              count_seen;
 } dect_data_t;
+
+typedef struct
+{
+   unsigned char rssi;
+   unsigned char channel;
+   unsigned char slot;
+   struct timespec   timestamp;
+   unsigned char data[53];
+} pp_packet_t;
 
 // DECT data in a packet
 class dect_datachunk : public packet_component {
 public:
     dect_data_scan_t sdata;
+    pp_packet_t pdata;
 };
 
 // Packetsource - where packets come from.  Reads the device and writes into the chain
@@ -79,14 +97,34 @@ public:
 		exit(1);
 	}
 
-	PacketSource_Dect(GlobalRegistry *in_globalreg) : KisPacketSource(in_globalreg) {
+	PacketSource_Dect(GlobalRegistry *in_globalreg) 
+        : KisPacketSource(in_globalreg),
+          locked(false) {
+	}
 
+	PacketSource_Dect(GlobalRegistry *in_globalreg, string in_interface,
+					  vector<opt_pair> *in_opts) : 
+		KisPacketSource(in_globalreg, in_interface, in_opts),
+        locked(false) {
+
+		serial_fd = -1;
+
+		ParseOptions(in_opts);
+	}
+
+	virtual ~PacketSource_Dect() {
+		if (serial_fd >= 0) {
+			close(serial_fd);
+		}
 	}
 
 	virtual PacketSource_Dect *CreateSource(GlobalRegistry *in_globalreg,
 											string interface,
 											vector<opt_pair> *in_opts) {
-		return new PacketSource_Dect(in_globalreg, interface, in_opts);
+        PacketSource_Dect *ref = new PacketSource_Dect(in_globalreg, interface, in_opts);
+        // XXX Hackalert
+        static_ref = ref;
+		return ref;
 	}
 
 	virtual int AutotypeProbe(string in_device) {
@@ -106,21 +144,6 @@ public:
 		// source type dect, channel list "DECT", not root
 		tracker->RegisterPacketProto("dect", this, "DECT", 0);
 		return 1;
-	}
-
-	PacketSource_Dect(GlobalRegistry *in_globalreg, string in_interface,
-					  vector<opt_pair> *in_opts) : 
-		KisPacketSource(in_globalreg, in_interface, in_opts) {
-
-		serial_fd = -1;
-
-		ParseOptions(in_opts);
-	}
-
-	virtual ~PacketSource_Dect() {
-		if (serial_fd >= 0) {
-			close(serial_fd);
-		}
 	}
 
 	virtual int ParseOptions(vector<opt_pair> *in_opts) {
@@ -147,6 +170,12 @@ public:
 		// Set a channel - channel can be # or frequency, rest of the code doesn't
 		// care.
 
+        if (locked) {
+            printf("Not switching..\n");
+            return 0;
+        } else { 
+            printf("Locker is %d: %x\n", locked, this);
+        }
         printf("switching to channel %d\n", in_ch);
         if (ioctl(serial_fd, COA_IOCTL_CHAN, &in_ch)){
             printf("couldn't ioctl()\n");
@@ -217,49 +246,64 @@ public:
         // Don't remove this, or it's gonna lock your box
         usleep(10000);
 
-        if ((rbytes = read(serial_fd, &(dc->sdata), 7)) != 7) {
-            // Fail
-            return 0;
-        } else {
-            printf("RFPI: ");
-            for (int i=0; i < 5; i++) {
-                printf("%.2x:", dc->sdata.RFPI[i]);
+        if (mode == 0 || mode == 1) {
+            if ((rbytes = read(serial_fd, &(dc->sdata), 7)) != 7) {
+                // Fail
+                return 0;
+            } else {
+                printf("RFPI: ");
+                for (int i=0; i < 5; i++) {
+                    printf("%.2x:", dc->sdata.RFPI[i]);
+                }
+                printf("\n");
+                /*
+                printf("RSSI: %d\n", dc->sdata.RSSI);
+                printf("channel: %d\n", dc->sdata.channel);
+                */
+                newpack->insert(dect_comp_datachunk, dc);
+                globalreg->packetchain->ProcessPacket(newpack);
             }
-            printf("\n");
-            /*
-            printf("RSSI: %d\n", dc->sdata.RSSI);
-            printf("channel: %d\n", dc->sdata.channel);
-            */
-            newpack->insert(dect_comp_datachunk, dc);
-            globalreg->packetchain->ProcessPacket(newpack);
+        } else {
+            if ((rbytes = read(serial_fd, &(dc->pdata), sizeof(dc->pdata))) != sizeof(dc->pdata)) {
+                    return 0;
+            } else {
+                printf("%d %d %d %s\n", dc->pdata.rssi, dc->pdata.channel,
+                                        dc->pdata.slot, dc->pdata.data);
+            }
         }
 
 		return 1;
 	}
 
+    void setLock(bool lock, int arg) 
+    {
+        printf("Setting lock: %d, arg: %d -- %x\n", lock, arg, this);
+        if (arg != -1) {
+            SetChannel(arg);
+        }
+        locked = lock;
+    }
+
 protected:
 	string serialdevice;
 	int serial_fd;
+    bool locked;
 };
-
-// Prototypes
-int dect_register(GlobalRegistry *);
-int dect_unregister(GlobalRegistry *);
 
 int dect_cc_callback(CLIENT_PARMS)
 {
     int cmd = -1;
     int subcmd = -1;
+    int arg = -1;
 
-    PacketSource_Dect *psd = (PacketSource_Dect *)auxptr;
-
+    PacketSource_Dect *psd = static_ref;
     if (!psd) {
         fprintf(stderr, "Bad args.\n");
         return 0;
     }
 
     //fprintf(stderr, "Callback for CHANHOP called: %s\n", cmdline.c_str());
-    sscanf(cmdline.c_str(), "%d %d", &cmd, &subcmd);
+    sscanf(cmdline.c_str(), "%d %d %d", &cmd, &subcmd, &arg);
     if (cmd < DECT_CMD_START || cmd > DECT_CMD_END ||
         subcmd < DECT_SUBCMD_START || subcmd > DECT_SUBCMD_END) {
         fprintf(stderr, "Bad DECT client command.\n");
@@ -271,9 +315,11 @@ int dect_cc_callback(CLIENT_PARMS)
             switch (subcmd) {
                 case DECT_SUBCMD_CHANHOP_ENABLE:
                     printf("DECT_CMD_CHANHOP ENABLE\n");
+                    psd->setLock(false, arg);
                     break;
                 case DECT_SUBCMD_CHANHOP_DISABLE:
                     printf("DECT_CMD_CHANHOP DISABLE\n");
+                    psd->setLock(true, arg);
                     break;
                 default:
                     fprintf(stderr, "Bad DECT_CMD_CHANHOP subcommand.\n");
@@ -284,14 +330,13 @@ int dect_cc_callback(CLIENT_PARMS)
             switch(subcmd) {
                 case DECT_SUBCMD_SCAN_STATIONS:
                     printf("DECT_CMD_SCAN STATIONS\n");
+                    mode = 0;
                     psd->startScanFp();
                     break;
                 case DECT_SUBCMD_SCAN_CALLS:
                     printf("DECT_CMD_SCAN CALLS\n");
+                    mode = 1;
                     psd->startCallScan();
-                    break;
-                case DECT_SUBCMD_SCAN_ACTIVE:
-                    printf("DECT_CMD_SCAN ACTIVE\n");
                     break;
                 default:
                     fprintf(stderr, "Bad DECT_CMD_SCAN subcommand.\n");

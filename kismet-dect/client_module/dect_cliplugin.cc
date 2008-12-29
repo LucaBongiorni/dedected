@@ -26,6 +26,7 @@
 // default: sort by RSSI
 static int sort_by = SORT_BY_RSSI;
 static bool descending = true;
+static int mode = 0;
 
 class DecTable : public Kis_Scrollable_Table {
 public:
@@ -107,17 +108,17 @@ public:
             string help_text = "h       - Display this help\n"
                                "<enter> - Show details of currently selected station\n"
                                "L       - Lock channel hopping to current channel\n"
-                               "S       - Set current channel\n"
                                "U       - Unlock channel hopping\n"
+                               //"S       - Set (and lock) channel\n"
                                "F       - Do async FP scan (default)\n"
                                "A       - Do async call scan\n"
-                               "P       - PP scan for active calls\n"
+                               //"P       - PP scan for active calls\n"
                                "r       - Sort by RSSI (ascending)\n"
                                "R       - Sort by RSSI (descending)\n"
                                "c       - Sort by Channel (ascending)\n"
                                "C       - Sort by Channel (descending)\n"
-                               "v       - Sort by view count (ascending)\n"
-                               "V       - Sort by view count (descending)\n";
+                               "s       - Sort by view count (ascending)\n"
+                               "S       - Sort by view count (descending)\n";
                                
             Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
             ma->Position(2, 2, 19, 55);
@@ -126,10 +127,13 @@ public:
             return 0;
         }
         if (in_key == 'L') {
+            // Return currently selected channel to server
+            vector<string> s = GetSelectedData();
+            string cmd("DECT 1 0 0 " + s[2]);
             if (globalreg && 
                 globalreg->panel_interface && 
                 globalreg->panel_interface->FetchFirstNetclient()) {
-                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 1 0 0");
+                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand(cmd.c_str());
             }
             return 0;
         }
@@ -147,6 +151,7 @@ public:
                 globalreg->panel_interface->FetchFirstNetclient()) {
                 globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 1 1 0");
             }
+            mode = 0;
             return 0;
         }
         if (in_key == 'A') {
@@ -155,6 +160,7 @@ public:
                 globalreg->panel_interface->FetchFirstNetclient()) {
                 globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 1 1 1");
             }
+            mode = 1;
             return 0;
         }
         if (in_key == 'r') {
@@ -173,11 +179,11 @@ public:
             sort_by = SORT_BY_CHANNEL;
             descending = true;
         }
-        if (in_key == 'v') {
+        if (in_key == 's') {
             sort_by = SORT_BY_COUNTSEEN;
             descending = false;
         }
-        if (in_key == 'V') {
+        if (in_key == 'S') {
             sort_by = SORT_BY_COUNTSEEN;
             descending = true;
         }
@@ -191,6 +197,7 @@ private:
 
 struct dect_data {
     DecTable *dtable;
+    DecTable *ctable;
     // This should be something else than just strings,
     // but it's too handy at the moment since we have
     // to put strings into 
@@ -222,6 +229,19 @@ void DectDetailsProtoDECT(CLIPROTO_CB_PARMS)
     while (ss >> buf) {
         inf.push_back(buf);
     }
+    // Niceify dates
+    /*
+    string f, l;
+    time_t first, last;
+    char first_s[30], last_s[30];
+    first = atoi(inf[3].c_str());
+    last = atoi(inf[4].c_str());
+    ctime_r(&first, first_s);
+    ctime_r(&last, last_s);
+    inf[3] = first_s;
+    inf[4] = last_s;
+    */
+    
     // RFPI is primary key
     vector<vector <string> >::iterator i = ddata->info_vec.begin();
     for (int j = 0; i < ddata->info_vec.end(); ++i, ++j) {
@@ -236,18 +256,27 @@ void DectDetailsProtoDECT(CLIPROTO_CB_PARMS)
         ddata->info_vec.push_back(inf);
         //ddata->dtable->AddRow(ddata->info_vec.size(), inf);
     }
-    // Sort.. XXX: This is quite rough now
     sort(ddata->info_vec.begin(), ddata->info_vec.end(), less_by_RSSI);   
     if (descending) {
         reverse(ddata->info_vec.begin(), ddata->info_vec.end());
     }
-    ddata->dtable->Clear();
-    i = ddata->info_vec.begin();
-    for (int j = 0; i < ddata->info_vec.end(); ++i, ++j) {
-        ddata->dtable->AddRow(j, (*i));
+    if (mode == 0) {
+        ddata->dtable->Clear();
+        i = ddata->info_vec.begin();
+        for (int j = 0; i < ddata->info_vec.end(); ++i, ++j) {
+            ddata->dtable->AddRow(j, (*i));
+        }
+        ddata->dtable->Show();
+        ddata->dtable->DrawComponent();
+    } else {
+        ddata->ctable->Clear();
+        i = ddata->info_vec.begin();
+        for (int j = 0; i < ddata->info_vec.end(); ++i, ++j) {
+            ddata->ctable->AddRow(j, (*i));
+        }
+        ddata->ctable->Show();
+        ddata->ctable->DrawComponent();
     }
-    ddata->dtable->Show();
-    ddata->dtable->DrawComponent();
 }
 
 void DectCliConfigured(CLICONF_CB_PARMS) 
@@ -331,6 +360,7 @@ int panel_plugin_init(GlobalRegistry *globalreg, KisPanelPluginData *pdata) {
 
 	pdata->mainpanel->AddPluginMenuItem("DECT Plugin", menu_callback, pdata);
     ddata->dtable = new DecTable(globalreg, pdata->mainpanel);
+    ddata->ctable = new DecTable(globalreg, pdata->mainpanel);
 
     vector<Kis_Scrollable_Table::title_data> ti;
     Kis_Scrollable_Table::title_data t1;
@@ -348,21 +378,21 @@ int panel_plugin_init(GlobalRegistry *globalreg, KisPanelPluginData *pdata) {
     ti.push_back(t2);
 
     Kis_Scrollable_Table::title_data t3;
-    t3.width = 8;
-    t3.draw_width = 8;
-    t3.title = "Channel";
-    t3.alignment = 8;
+    t3.width = 4;
+    t3.draw_width = 4;
+    t3.title = "Ch";
+    t3.alignment = 4;
     ti.push_back(t3);
 
     Kis_Scrollable_Table::title_data t4;
-    t4.width = 8;
+    t4.width = 16;
     t4.draw_width = 8;
     t4.title = "First";
     t4.alignment = 8;
     ti.push_back(t4);
 
     Kis_Scrollable_Table::title_data t5;
-    t5.width = 8;
+    t5.width = 16;
     t5.draw_width = 8;
     t5.title = "Last";
     t5.alignment = 8;
@@ -371,7 +401,7 @@ int panel_plugin_init(GlobalRegistry *globalreg, KisPanelPluginData *pdata) {
     Kis_Scrollable_Table::title_data t6;
     t6.width = 10;
     t6.draw_width = 10;
-    t6.title = "Count";
+    t6.title = "Seen";
     t6.alignment = 10;
     ti.push_back(t6);
 
