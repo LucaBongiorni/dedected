@@ -1,0 +1,89 @@
+KISMET DECT MODULES
+===================
+
+------------------------------------------------------------------------------
+WARNING: THIS IS PRE-ALPHA CODE AND THEREFORE HIGHLY UNSTABLE/EXPERIMENTAL!
+------------------------------------------------------------------------------
+
+PREREQUISITES:
+=============
+
+In order to use the Kismet DECT plugins, you need the latest kismet-newcore 
+from the Kismet subversion repository. The code here is NOT usable with the 
+current Kismet stable release, since Kismet supports modules only in newcore.
+
+Get kismet-newcore like so:
+
+ svn co http://svn.kismetwireless.net/code/branch/kismet-newcore kismet-newcore
+
+Build & Install:
+
+ cd kismet-newcore
+ ./configure 
+ make
+ make install
+
+KISMET-DECT PLUGINS:
+===================
+
+You can find the Kismet DECT client and server modules subversion repository at
+the following url:
+
+    https://dedected.org/svn/trunk/kismet-dect
+
+Use subversion to check out the trunk like so:
+
+    svn co https://dedected.org/svn/trunk/kismet-dect
+
+You then should see these directories:
+
+    client_module/ -- Contains the Kismet client module code
+    server_module/ -- Contains the Kismet server module code
+
+NOTE: Make sure the environment variables KIS_DEST_DIR and KIS_SRC_DIR point to
+something useful. These variables are used in the Makefile and default to the 
+following directories:
+    
+    KIS_DEST_DIR=/usr/local
+    KIS_SRC_DIR=/usr/src/kismet-newcore
+
+Change them according to your environment. For example, if your kismet-newcore
+source is at /home/user/src/kismet-newcore and your Kismet installation is at
+/home/user/tools/kismet-build, adapt your environment like so:
+
+    export KIS_SRC_DIR=/home/user/src/kismet-newcore
+    export KIS_DEST_DIR=/home/user/tools/kismet-build
+
+Then, you're ready to build:
+
+    make -C client_module && make -C server_module
+
+Install:
+
+    make -C client_module install && make -C server_module install
+
+You are then able to start kismet_server and kismet_client and should be able
+to choose the Kismet DECT plugin from the menu.
+
+NOTES:
+=====
+
+The code is currently quite rough and contains bugs. If you find a serious bug,
+you can send an email to <kismet-dect@detected.org> and hope it gets resolved 
+soon. Or even better, send a patch!
+
+Functionality that works as of now:
+- FP scan
+- Sorting FP scan results by RSSI, seen count, and channel
+- Locking channels for FP scan
+
+Functionality that is being worked on currently:
+- PP (call) scan
+- PP sync (call) scan
+
+AUTHORS:
+=======
+
+Mike Kershaw <dragorn (at) kismetwireless (dot) net
+Jake Appelbaum <ioerror (at) appelbaum (dot) net
+Christian Fromme <kaner (at) strace (dot) org
