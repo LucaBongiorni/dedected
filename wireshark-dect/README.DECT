@@ -1,0 +1,37 @@
+
+Authors:
+========
+- Andreas Schuler <krater (A) badterrorist.com>
+- Matthias Wenzel <dect (A) mazzoo.de>
+
+Description:
+============
+DECT pcap files can be obtained by using tools coming with the linux
+kernel driver for the Dosch-and-Amand COM-ON-AIR cards. The driver is
+called com-on-air_cs.
+
+Wireshark itself cannot directy record from the DECT HW, as the driver
+currently lacks a virtual network interface.
+
+To nicely view DECT pcap files in wireshark, set up a custom layout:
+
+Edit->Preferences...
+  User Interface
+    Colums
+
+      No.      | Number
+      Time     | Time (format as specified)
+      Protocol | Protocol
+      TA       | HP-UX Subsystem
+      A-Field  | Network src addr
+      B-Field  | Network dest addr
+      Info     | Information
+  OK
+
+
+Edit->Configuration Profiles...
+  New
+  Profile Name = dect
+  OK
+
+

@@ -1,0 +1,3512 @@
+diff --git a/README.DECT b/README.DECT
+new file mode 100644
+index 0000000..052e3b4
+--- /dev/null
++++ b/README.DECT
+@@ -0,0 +1,37 @@
++
++Authors:
++========
++- Andreas Schuler <krater (A) badterrorist.com>
++- Matthias Wenzel <dect (A) mazzoo.de>
++
++Description:
++============
++DECT pcap files can be obtained by using tools coming with the linux
++kernel driver for the Dosch-and-Amand COM-ON-AIR cards. The driver is
++called com-on-air_cs.
++
++Wireshark itself cannot directy record from the DECT HW, as the driver
++currently lacks a virtual network interface.
++
++To nicely view DECT pcap files in wireshark, set up a custom layout:
++
++Edit->Preferences...
++  User Interface
++    Colums
++
++      No.      | Number
++      Time     | Time (format as specified)
++      Protocol | Protocol
++      TA       | HP-UX Subsystem
++      A-Field  | Network src addr
++      B-Field  | Network dest addr
++      Info     | Information
++  OK
++
++
++Edit->Configuration Profiles...
++  New
++  Profile Name = dect
++  OK
++
++
+diff --git a/aclocal.m4 b/aclocal.m4
+index 2354619..f93461f 100644
+--- a/aclocal.m4
++++ b/aclocal.m4
+@@ -21,7 +21,7 @@ To do so, use the procedure documented by the package, typically `autoreconf'.])
+ 
+ # libtool.m4 - Configure libtool for the host system. -*-Autoconf-*-
+ 
+-# serial 52 Debian 1.5.26-1ubuntu1 AC_PROG_LIBTOOL
++# serial 52 Debian 1.5.26-4 AC_PROG_LIBTOOL
+ 
+ 
+ # AC_PROVIDE_IFELSE(MACRO-NAME, IF-PROVIDED, IF-NOT-PROVIDED)
+diff --git a/configure b/configure
+index ceacc2f..822cbae 100755
+--- a/configure
++++ b/configure
+@@ -34837,7 +34837,7 @@ rm -f confcache
+ 
+ ac_config_headers="$ac_config_headers config.h"
+ 
+-ac_config_files="$ac_config_files Makefile doxygen.cfg asn1/Makefile asn1/acp133/Makefile asn1/acse/Makefile asn1/ansi_map/Makefile asn1/ansi-tcap/Makefile asn1/camel/Makefile asn1/cdt/Makefile asn1/cmip/Makefile asn1/cms/Makefile asn1/dap/Makefile asn1/disp/Makefile asn1/dop/Makefile asn1/dsp/Makefile asn1/ess/Makefile asn1/ftam/Makefile asn1/gnm/Makefile asn1/gsmmap/Makefile asn1/h225/Makefile asn1/h235/Makefile asn1/h245/Makefile asn1/h248/Makefile asn1/h282/Makefile asn1/h283/Makefile asn1/h323/Makefile asn1/h450/Makefile asn1/h450-ros/Makefile asn1/h460/Makefile asn1/h501/Makefile asn1/inap/Makefile asn1/ldap/Makefile asn1/logotype-cert-extn/Makefile asn1/mms/Makefile asn1/mpeg-audio/Makefile asn1/mpeg-pes/Makefile asn1/nbap/Makefile asn1/ns-cert-exts/Makefile asn1/ocsp/Makefile asn1/p7/Makefile asn1/pcap/Makefile asn1/pkcs1/Makefile asn1/pkcs12/Makefile asn1/pkinit/Makefile asn1/pkix1explicit/Makefile asn1/pkix1implicit/Makefile asn1/pkixcmp/Makefile asn1/pkixcrmf/Makefile asn1/pkixproxy/Makefile asn1/pkixqualified/Makefile asn1/pkixtsp/Makefile asn1/pres/Makefile asn1/q932/Makefile asn1/q932-ros/Makefile asn1/qsig/Makefile asn1/ranap/Makefile asn1/rnsap/Makefile asn1/ros/Makefile asn1/rrc/Makefile asn1/rrlp/Makefile asn1/rtse/Makefile asn1/s1ap/Makefile asn1/s4406/Makefile asn1/sabp/Makefile asn1/smrse/Makefile asn1/snmp/Makefile asn1/spnego/Makefile asn1/t125/Makefile asn1/t38/Makefile asn1/tcap/Makefile asn1/ulp/Makefile asn1/wlancertextn/Makefile asn1/x2ap/Makefile asn1/x411/Makefile asn1/x420/Makefile asn1/x509af/Makefile asn1/x509ce/Makefile asn1/x509if/Makefile asn1/x509sat/Makefile asn1/x721/Makefile doc/Makefile epan/Makefile epan/crypt/Makefile epan/doxygen.cfg epan/dfilter/Makefile epan/dissectors/Makefile epan/ftypes/Makefile epan/wslua/Makefile codecs/Makefile gtk/Makefile gtk/doxygen.cfg help/Makefile packaging/Makefile packaging/macosx/Info.plist packaging/nsis/Makefile packaging/rpm/Makefile packaging/rpm/SPECS/Makefile packaging/rpm/SPECS/wireshark.spec packaging/svr4/Makefile packaging/svr4/checkinstall packaging/svr4/pkginfo plugins/Makefile plugins/agentx/Makefile plugins/artnet/Makefile plugins/asn1/Makefile plugins/ciscosm/Makefile plugins/docsis/Makefile plugins/enttec/Makefile plugins/ethercat/Makefile plugins/giop/Makefile plugins/gryphon/Makefile plugins/infiniband/Makefile plugins/irda/Makefile plugins/lwres/Makefile plugins/m2m/Makefile plugins/mate/Makefile plugins/opcua/Makefile plugins/opsi/Makefile plugins/pcli/Makefile plugins/profinet/Makefile plugins/rlm/Makefile plugins/rtnet/Makefile plugins/rudp/Makefile plugins/sbus/Makefile plugins/stats_tree/Makefile plugins/unistim/Makefile plugins/v5ua/Makefile plugins/wimax/Makefile plugins/wimaxasncp/Makefile tools/Makefile tools/idl2wrs.sh tools/lemon/Makefile wiretap/Makefile"
++ac_config_files="$ac_config_files Makefile doxygen.cfg asn1/Makefile asn1/acp133/Makefile asn1/acse/Makefile asn1/ansi_map/Makefile asn1/ansi-tcap/Makefile asn1/camel/Makefile asn1/cdt/Makefile asn1/cmip/Makefile asn1/cms/Makefile asn1/dap/Makefile asn1/disp/Makefile asn1/dop/Makefile asn1/dsp/Makefile asn1/ess/Makefile asn1/ftam/Makefile asn1/gnm/Makefile asn1/gsmmap/Makefile asn1/h225/Makefile asn1/h235/Makefile asn1/h245/Makefile asn1/h248/Makefile asn1/h282/Makefile asn1/h283/Makefile asn1/h323/Makefile asn1/h450/Makefile asn1/h450-ros/Makefile asn1/h460/Makefile asn1/h501/Makefile asn1/inap/Makefile asn1/ldap/Makefile asn1/logotype-cert-extn/Makefile asn1/mms/Makefile asn1/mpeg-audio/Makefile asn1/mpeg-pes/Makefile asn1/nbap/Makefile asn1/ns-cert-exts/Makefile asn1/ocsp/Makefile asn1/p7/Makefile asn1/pcap/Makefile asn1/pkcs1/Makefile asn1/pkcs12/Makefile asn1/pkinit/Makefile asn1/pkix1explicit/Makefile asn1/pkix1implicit/Makefile asn1/pkixcmp/Makefile asn1/pkixcrmf/Makefile asn1/pkixproxy/Makefile asn1/pkixqualified/Makefile asn1/pkixtsp/Makefile asn1/pres/Makefile asn1/q932/Makefile asn1/q932-ros/Makefile asn1/qsig/Makefile asn1/ranap/Makefile asn1/rnsap/Makefile asn1/ros/Makefile asn1/rrc/Makefile asn1/rrlp/Makefile asn1/rtse/Makefile asn1/s1ap/Makefile asn1/s4406/Makefile asn1/sabp/Makefile asn1/smrse/Makefile asn1/snmp/Makefile asn1/spnego/Makefile asn1/t125/Makefile asn1/t38/Makefile asn1/tcap/Makefile asn1/ulp/Makefile asn1/wlancertextn/Makefile asn1/x2ap/Makefile asn1/x411/Makefile asn1/x420/Makefile asn1/x509af/Makefile asn1/x509ce/Makefile asn1/x509if/Makefile asn1/x509sat/Makefile asn1/x721/Makefile doc/Makefile epan/Makefile epan/crypt/Makefile epan/doxygen.cfg epan/dfilter/Makefile epan/dissectors/Makefile epan/ftypes/Makefile epan/wslua/Makefile codecs/Makefile gtk/Makefile gtk/doxygen.cfg help/Makefile packaging/Makefile packaging/macosx/Info.plist packaging/nsis/Makefile packaging/rpm/Makefile packaging/rpm/SPECS/Makefile packaging/rpm/SPECS/wireshark.spec packaging/svr4/Makefile packaging/svr4/checkinstall packaging/svr4/pkginfo plugins/Makefile plugins/agentx/Makefile plugins/artnet/Makefile plugins/asn1/Makefile plugins/ciscosm/Makefile plugins/docsis/Makefile plugins/enttec/Makefile plugins/ethercat/Makefile plugins/giop/Makefile plugins/gryphon/Makefile plugins/infiniband/Makefile plugins/irda/Makefile plugins/lwres/Makefile plugins/m2m/Makefile plugins/mate/Makefile plugins/opcua/Makefile plugins/opsi/Makefile plugins/pcli/Makefile plugins/profinet/Makefile plugins/rlm/Makefile plugins/rtnet/Makefile plugins/rudp/Makefile plugins/sbus/Makefile plugins/stats_tree/Makefile plugins/unistim/Makefile plugins/v5ua/Makefile plugins/wimax/Makefile plugins/wimaxasncp/Makefile plugins/dect/Makefile tools/Makefile tools/idl2wrs.sh tools/lemon/Makefile wiretap/Makefile"
+ 
+ cat >confcache <<\_ACEOF
+ # This file is a shell script that caches the results of configure
+@@ -35652,6 +35652,7 @@ do
+     "plugins/v5ua/Makefile") CONFIG_FILES="$CONFIG_FILES plugins/v5ua/Makefile" ;;
+     "plugins/wimax/Makefile") CONFIG_FILES="$CONFIG_FILES plugins/wimax/Makefile" ;;
+     "plugins/wimaxasncp/Makefile") CONFIG_FILES="$CONFIG_FILES plugins/wimaxasncp/Makefile" ;;
++    "plugins/dect/Makefile") CONFIG_FILES="$CONFIG_FILES plugins/dect/Makefile" ;;
+     "tools/Makefile") CONFIG_FILES="$CONFIG_FILES tools/Makefile" ;;
+     "tools/idl2wrs.sh") CONFIG_FILES="$CONFIG_FILES tools/idl2wrs.sh" ;;
+     "tools/lemon/Makefile") CONFIG_FILES="$CONFIG_FILES tools/lemon/Makefile" ;;
+diff --git a/configure.in b/configure.in
+index e4f5867..a49b40c 100644
+--- a/configure.in
++++ b/configure.in
+@@ -1723,6 +1723,7 @@ AC_OUTPUT(
+   plugins/v5ua/Makefile
+   plugins/wimax/Makefile
+   plugins/wimaxasncp/Makefile
++  plugins/dect/Makefile
+   tools/Makefile
+   tools/idl2wrs.sh
+   tools/lemon/Makefile
+diff --git a/ltmain.sh b/ltmain.sh
+index e420fac..0bf3848 100644
+--- a/ltmain.sh
++++ b/ltmain.sh
+@@ -43,7 +43,7 @@ EXIT_FAILURE=1
+ 
+ PROGRAM=ltmain.sh
+ PACKAGE=libtool
+-VERSION="1.5.26 Debian 1.5.26-1ubuntu1"
++VERSION="1.5.26 Debian 1.5.26-4"
+ TIMESTAMP=" (1.1220.2.493 2008/02/01 16:58:18)"
+ 
+ # Be Bourne compatible (taken from Autoconf:_AS_BOURNE_COMPATIBLE).
+diff --git a/plugins/Makefile.am b/plugins/Makefile.am
+index 3209fea..2c6ac57 100644
+--- a/plugins/Makefile.am
++++ b/plugins/Makefile.am
+@@ -48,7 +48,8 @@ SUBDIRS = \
+ 	unistim \
+ 	v5ua \
+ 	wimax \
+-	wimaxasncp
++	wimaxasncp \
++	dect
+ 
+ 
+ plugindir = @plugindir@
+diff --git a/plugins/Makefile.in b/plugins/Makefile.in
+index b57a81d..180e51e 100644
+--- a/plugins/Makefile.in
++++ b/plugins/Makefile.in
+@@ -350,7 +350,8 @@ SUBDIRS = \
+ 	unistim \
+ 	v5ua \
+ 	wimax \
+-	wimaxasncp
++	wimaxasncp \
++	dect
+ 
+ EXTRA_DIST = \
+ 	Makefile.nmake
+diff --git a/plugins/Makefile.nmake b/plugins/Makefile.nmake
+index 0a8b61f..c262cfc 100644
+--- a/plugins/Makefile.nmake
++++ b/plugins/Makefile.nmake
+@@ -110,6 +110,9 @@ process-plugins:
+ 	cd wimaxasncp
+ 	$(MAKE) /$(MAKEFLAGS) -f Makefile.nmake $(PLUGIN_TARGET)
+ 	cd ..
++	cd dect
++	$(MAKE) /$(MAKEFLAGS) -f Makefile.nmake $(PLUGIN_TARGET)
++	cd ..
+ 	if exist Custom.nmake $(MAKE) /$(MAKEFLAGS) -f Custom.nmake $(PLUGIN_TARGET)
+ 
+ ################################################################################
+@@ -148,6 +151,7 @@ install-plugins:
+ 	xcopy v5ua\*.dll $(VERSION) /d
+ 	xcopy wimax\*.dll $(VERSION) /d
+ 	xcopy wimaxasncp\*.dll $(VERSION) /d
++	xcopy dect\*.dll $(VERSION) /d
+ 	if exist Custom.nmake $(MAKE) /$(MAKEFLAGS) -f Custom.nmake install-plugins
+ !ENDIF
+ 
+diff --git a/plugins/dect/Makefile.am b/plugins/dect/Makefile.am
+new file mode 100644
+index 0000000..ef4d106
+--- /dev/null
++++ b/plugins/dect/Makefile.am
+@@ -0,0 +1,125 @@
++# Makefile.am
++# Automake file for H.223 plugin
++#
++# $Id: Makefile.am 21961 2007-05-27 18:35:55Z guy $
++#
++# Wireshark - Network traffic analyzer
++# By Gerald Combs <gerald@wireshark.org>
++# Copyright 1998 Gerald Combs
++# 
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License
++# as published by the Free Software Foundation; either version 2
++# of the License, or (at your option) any later version.
++# 
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++# 
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
++#
++
++INCLUDES = -I$(top_srcdir) -I$(includedir)
++
++include Makefile.common
++
++if HAVE_WARNINGS_AS_ERRORS
++AM_CFLAGS = -Werror
++endif
++
++plugindir = @plugindir@
++
++plugin_LTLIBRARIES = dect.la
++dect_la_SOURCES = \
++	plugin.c \
++	moduleinfo.h \
++	$(DISSECTOR_SRC) \
++	$(DISSECTOR_SUPPORT_SRC) \
++	$(DISSECTOR_INCLUDES)
++dect_la_LDFLAGS = -module -avoid-version
++dect_la_LIBADD = @PLUGIN_LIBS@
++
++# Libs must be cleared, or else libtool won't create a shared module.
++# If your module needs to be linked against any particular libraries,
++# add them here.
++LIBS =
++
++#
++# Build plugin.c, which contains the plugin version[] string, a
++# function plugin_register() that calls the register routines for all
++# protocols, and a function plugin_reg_handoff() that calls the handoff
++# registration routines for all protocols.
++#
++# We do this by scanning sources.  If that turns out to be too slow,
++# maybe we could just require every .o file to have an register routine
++# of a given name (packet-aarp.o -> proto_register_aarp, etc.).
++#
++# Formatting conventions:  The name of the proto_register_* routines an
++# proto_reg_handoff_* routines must start in column zero, or must be
++# preceded only by "void " starting in column zero, and must not be
++# inside #if.
++#
++# DISSECTOR_SRC is assumed to have all the files that need to be scanned.
++#
++# For some unknown reason, having a big "for" loop in the Makefile
++# to scan all the files doesn't work with some "make"s; they seem to
++# pass only the first few names in the list to the shell, for some
++# reason.
++#
++# Therefore, we have a script to generate the plugin.c file.
++# The shell script runs slowly, as multiple greps and seds are run
++# for each input file; this is especially slow on Windows.  Therefore,
++# if Python is present (as indicated by PYTHON being defined), we run
++# a faster Python script to do that work instead.
++#
++# The first argument is the directory in which the source files live.
++# The second argument is "plugin", to indicate that we should build
++# a plugin.c file for a plugin.
++# All subsequent arguments are the files to scan.
++#
++plugin.c: $(DISSECTOR_SRC) $(top_srcdir)/tools/make-dissector-reg \
++    $(top_srcdir)/tools/make-dissector-reg.py
++	@if test -n $(PYTHON); then \
++		echo Making plugin.c with python ; \
++		$(PYTHON) $(top_srcdir)/tools/make-dissector-reg.py $(srcdir) \
++		    plugin $(DISSECTOR_SRC) ; \
++	else \
++		echo Making plugin.c with shell script ; \
++		$(top_srcdir)/tools/make-dissector-reg $(srcdir) \
++		    $(plugin_src) plugin $(DISSECTOR_SRC) ; \
++	fi
++
++#
++# Currently plugin.c can be included in the distribution because
++# we always build all protocol dissectors. We used to have to check
++# whether or not to build the snmp dissector. If we again need to
++# variably build something, making plugin.c non-portable, uncomment
++# the dist-hook line below.
++#
++# Oh, yuk.  We don't want to include "plugin.c" in the distribution, as
++# its contents depend on the configuration, and therefore we want it
++# to be built when the first "make" is done; however, Automake insists
++# on putting *all* source into the distribution.
++#
++# We work around this by having a "dist-hook" rule that deletes
++# "plugin.c", so that "dist" won't pick it up.
++#
++#dist-hook:
++#	@rm -f $(distdir)/plugin.c
++
++CLEANFILES = \
++	dect \
++	*~
++
++MAINTAINERCLEANFILES = \
++	Makefile.in	\
++	dect.c
++
++EXTRA_DIST = \
++	Makefile.common		\
++	Makefile.nmake		\
++	moduleinfo.nmake	\
++	plugin.rc.in
+diff --git a/plugins/dect/Makefile.common b/plugins/dect/Makefile.common
+new file mode 100644
+index 0000000..ecf26e3
+--- /dev/null
++++ b/plugins/dect/Makefile.common
+@@ -0,0 +1,39 @@
++# Makefile.common for H.223 plugin
++#     Contains the stuff from Makefile.am and Makefile.nmake that is
++#     a) common to both files and
++#     b) portable between both files
++#
++# $Id: Makefile.common 18197 2006-05-21 05:12:17Z sahlberg $
++#
++# Wireshark - Network traffic analyzer
++# By Gerald Combs <gerald@wireshark.org>
++# Copyright 1998 Gerald Combs
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License
++# as published by the Free Software Foundation; either version 2
++# of the License, or (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
++
++# the name of the plugin
++PLUGIN_NAME = dect
++
++# the dissector sources (without any helpers)
++DISSECTOR_SRC = \
++	dect.c 
++
++# corresponding headers
++DISSECTOR_INCLUDES =
++
++# Dissector helpers.  They're included in the source files in this
++# directory, but they're not dissectors themselves, i.e. they're not
++# used to generate "register.c").
++DISSECTOR_SUPPORT_SRC =
+diff --git a/plugins/dect/Makefile.in b/plugins/dect/Makefile.in
+new file mode 100644
+index 0000000..79bf131
+--- /dev/null
++++ b/plugins/dect/Makefile.in
+@@ -0,0 +1,765 @@
++# Makefile.in generated by automake 1.10.1 from Makefile.am.
++# @configure_input@
++
++# Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
++# 2003, 2004, 2005, 2006, 2007, 2008  Free Software Foundation, Inc.
++# This Makefile.in is free software; the Free Software Foundation
++# gives unlimited permission to copy and/or distribute it,
++# with or without modifications, as long as this notice is preserved.
++
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
++# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
++# PARTICULAR PURPOSE.
++
++@SET_MAKE@
++
++# Makefile.am
++# Automake file for H.223 plugin
++#
++# $Id: Makefile.am 21961 2007-05-27 18:35:55Z guy $
++#
++# Wireshark - Network traffic analyzer
++# By Gerald Combs <gerald@wireshark.org>
++# Copyright 1998 Gerald Combs
++# 
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License
++# as published by the Free Software Foundation; either version 2
++# of the License, or (at your option) any later version.
++# 
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++# 
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
++#
++
++# Makefile.common for H.223 plugin
++#     Contains the stuff from Makefile.am and Makefile.nmake that is
++#     a) common to both files and
++#     b) portable between both files
++#
++# $Id: Makefile.common 18197 2006-05-21 05:12:17Z sahlberg $
++#
++# Wireshark - Network traffic analyzer
++# By Gerald Combs <gerald@wireshark.org>
++# Copyright 1998 Gerald Combs
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License
++# as published by the Free Software Foundation; either version 2
++# of the License, or (at your option) any later version.
++#
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write to the Free Software
++# Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
++
++VPATH = @srcdir@
++pkgdatadir = $(datadir)/@PACKAGE@
++pkglibdir = $(libdir)/@PACKAGE@
++pkgincludedir = $(includedir)/@PACKAGE@
++am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
++install_sh_DATA = $(install_sh) -c -m 644
++install_sh_PROGRAM = $(install_sh) -c
++install_sh_SCRIPT = $(install_sh) -c
++INSTALL_HEADER = $(INSTALL_DATA)
++transform = $(program_transform_name)
++NORMAL_INSTALL = :
++PRE_INSTALL = :
++POST_INSTALL = :
++NORMAL_UNINSTALL = :
++PRE_UNINSTALL = :
++POST_UNINSTALL = :
++build_triplet = @build@
++host_triplet = @host@
++target_triplet = @target@
++DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.common \
++	$(srcdir)/Makefile.in
++subdir = plugins/dect
++ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
++am__aclocal_m4_deps = $(top_srcdir)/aclocal-fallback/glib-2.0.m4 \
++	$(top_srcdir)/aclocal-fallback/glib.m4 \
++	$(top_srcdir)/aclocal-fallback/gtk-2.0.m4 \
++	$(top_srcdir)/aclocal-fallback/gtk.m4 \
++	$(top_srcdir)/aclocal-fallback/iconv.m4 \
++	$(top_srcdir)/aclocal-fallback/libgcrypt.m4 \
++	$(top_srcdir)/aclocal-fallback/libgnutls.m4 \
++	$(top_srcdir)/aclocal-fallback/libsmi.m4 \
++	$(top_srcdir)/acinclude.m4 $(top_srcdir)/configure.in
++am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
++	$(ACLOCAL_M4)
++mkinstalldirs = $(install_sh) -d
++CONFIG_HEADER = $(top_builddir)/config.h
++CONFIG_CLEAN_FILES =
++am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
++am__vpath_adj = case $$p in \
++    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
++    *) f=$$p;; \
++  esac;
++am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
++am__installdirs = "$(DESTDIR)$(plugindir)"
++pluginLTLIBRARIES_INSTALL = $(INSTALL)
++LTLIBRARIES = $(plugin_LTLIBRARIES)
++dect_la_DEPENDENCIES =
++am__objects_1 = dect.lo
++am__objects_2 =
++am_dect_la_OBJECTS = plugin.lo $(am__objects_1) $(am__objects_2) \
++	$(am__objects_2)
++dect_la_OBJECTS = $(am_dect_la_OBJECTS)
++dect_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
++	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(dect_la_LDFLAGS) \
++	$(LDFLAGS) -o $@
++DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
++depcomp = $(SHELL) $(top_srcdir)/depcomp
++am__depfiles_maybe = depfiles
++COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
++	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
++LTCOMPILE = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
++	--mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
++	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
++CCLD = $(CC)
++LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) \
++	--mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
++	$(LDFLAGS) -o $@
++SOURCES = $(dect_la_SOURCES)
++DIST_SOURCES = $(dect_la_SOURCES)
++ETAGS = etags
++CTAGS = ctags
++DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
++ACLOCAL = @ACLOCAL@
++ADNS_LIBS = @ADNS_LIBS@
++AMTAR = @AMTAR@
++AR = @AR@
++AUTOCONF = @AUTOCONF@
++AUTOHEADER = @AUTOHEADER@
++AUTOMAKE = @AUTOMAKE@
++AWK = @AWK@
++CC = @CC@
++CCDEPMODE = @CCDEPMODE@
++CC_FOR_BUILD = @CC_FOR_BUILD@
++CFLAGS = @CFLAGS@
++CPP = @CPP@
++CPPFLAGS = @CPPFLAGS@
++CXX = @CXX@
++CXXCPP = @CXXCPP@
++CXXDEPMODE = @CXXDEPMODE@
++CXXFLAGS = @CXXFLAGS@
++CYGPATH_W = @CYGPATH_W@
++DEFS = @DEFS@
++DEPDIR = @DEPDIR@
++DOXYGEN = @DOXYGEN@
++DSYMUTIL = @DSYMUTIL@
++ECHO = @ECHO@
++ECHO_C = @ECHO_C@
++ECHO_N = @ECHO_N@
++ECHO_T = @ECHO_T@
++EGREP = @EGREP@
++ENABLE_STATIC = @ENABLE_STATIC@
++EXEEXT = @EXEEXT@
++F77 = @F77@
++FFLAGS = @FFLAGS@
++FLEX_PATH = @FLEX_PATH@
++FOP = @FOP@
++FRAMEWORKS = @FRAMEWORKS@
++GETOPT_C = @GETOPT_C@
++GETOPT_O = @GETOPT_O@
++GLIB_CFLAGS = @GLIB_CFLAGS@
++GLIB_CONFIG = @GLIB_CONFIG@
++GLIB_GENMARSHAL = @GLIB_GENMARSHAL@
++GLIB_LIBS = @GLIB_LIBS@
++GLIB_MKENUMS = @GLIB_MKENUMS@
++GOBJECT_QUERY = @GOBJECT_QUERY@
++GREP = @GREP@
++GTK_CFLAGS = @GTK_CFLAGS@
++GTK_CONFIG = @GTK_CONFIG@
++GTK_LIBS = @GTK_LIBS@
++G_ASCII_STRCASECMP_C = @G_ASCII_STRCASECMP_C@
++G_ASCII_STRCASECMP_LO = @G_ASCII_STRCASECMP_LO@
++G_ASCII_STRCASECMP_O = @G_ASCII_STRCASECMP_O@
++G_ASCII_STRTOULL_C = @G_ASCII_STRTOULL_C@
++G_ASCII_STRTOULL_LO = @G_ASCII_STRTOULL_LO@
++G_ASCII_STRTOULL_O = @G_ASCII_STRTOULL_O@
++HAVE_BLESS = @HAVE_BLESS@
++HAVE_DOXYGEN = @HAVE_DOXYGEN@
++HAVE_DPKG_BUILDPACKAGE = @HAVE_DPKG_BUILDPACKAGE@
++HAVE_FOP = @HAVE_FOP@
++HAVE_HDIUTIL = @HAVE_HDIUTIL@
++HAVE_HHC = @HAVE_HHC@
++HAVE_OSX_PACKAGING = @HAVE_OSX_PACKAGING@
++HAVE_PKGMK = @HAVE_PKGMK@
++HAVE_PKGPROTO = @HAVE_PKGPROTO@
++HAVE_PKGTRANS = @HAVE_PKGTRANS@
++HAVE_RPM = @HAVE_RPM@
++HAVE_SVR4_PACKAGING = @HAVE_SVR4_PACKAGING@
++HAVE_XCODEBUILD = @HAVE_XCODEBUILD@
++HAVE_XMLLINT = @HAVE_XMLLINT@
++HAVE_XSLTPROC = @HAVE_XSLTPROC@
++HHC = @HHC@
++HTML_VIEWER = @HTML_VIEWER@
++INET_ATON_C = @INET_ATON_C@
++INET_ATON_LO = @INET_ATON_LO@
++INET_ATON_O = @INET_ATON_O@
++INET_NTOP_C = @INET_NTOP_C@
++INET_NTOP_LO = @INET_NTOP_LO@
++INET_NTOP_O = @INET_NTOP_O@
++INET_PTON_C = @INET_PTON_C@
++INET_PTON_LO = @INET_PTON_LO@
++INET_PTON_O = @INET_PTON_O@
++INSTALL = @INSTALL@
++INSTALL_DATA = @INSTALL_DATA@
++INSTALL_PROGRAM = @INSTALL_PROGRAM@
++INSTALL_SCRIPT = @INSTALL_SCRIPT@
++INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
++KRB5_CONFIG = @KRB5_CONFIG@
++KRB5_LIBS = @KRB5_LIBS@
++LDFLAGS = @LDFLAGS@
++LDFLAGS_SHAREDLIB = @LDFLAGS_SHAREDLIB@
++LEX = @LEX@
++LEXDUMMY = @LEXDUMMY@
++LEXLIB = @LEXLIB@
++LEX_OUTPUT_ROOT = @LEX_OUTPUT_ROOT@
++LIBCAP_LIBS = @LIBCAP_LIBS@
++LIBGCRYPT_CFLAGS = @LIBGCRYPT_CFLAGS@
++LIBGCRYPT_CONFIG = @LIBGCRYPT_CONFIG@
++LIBGCRYPT_LIBS = @LIBGCRYPT_LIBS@
++LIBGNUTLS_CFLAGS = @LIBGNUTLS_CFLAGS@
++LIBGNUTLS_CONFIG = @LIBGNUTLS_CONFIG@
++LIBGNUTLS_LIBS = @LIBGNUTLS_LIBS@
++LIBICONV = @LIBICONV@
++LIBOBJS = @LIBOBJS@
++
++# Libs must be cleared, or else libtool won't create a shared module.
++# If your module needs to be linked against any particular libraries,
++# add them here.
++LIBS = 
++LIBSMI_CFLAGS = @LIBSMI_CFLAGS@
++LIBSMI_LDFLAGS = @LIBSMI_LDFLAGS@
++LIBSMI_VERSION = @LIBSMI_VERSION@
++LIBTOOL = @LIBTOOL@
++LIBTOOL_DEPS = @LIBTOOL_DEPS@
++LN_S = @LN_S@
++LTLIBOBJS = @LTLIBOBJS@
++LUA_INCLUDES = @LUA_INCLUDES@
++LUA_LIBS = @LUA_LIBS@
++MAKEINFO = @MAKEINFO@
++MKDIR_P = @MKDIR_P@
++MKSTEMP_C = @MKSTEMP_C@
++MKSTEMP_O = @MKSTEMP_O@
++NMEDIT = @NMEDIT@
++NSL_LIBS = @NSL_LIBS@
++OBJEXT = @OBJEXT@
++PACKAGE = @PACKAGE@
++PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
++PACKAGE_NAME = @PACKAGE_NAME@
++PACKAGE_STRING = @PACKAGE_STRING@
++PACKAGE_TARNAME = @PACKAGE_TARNAME@
++PACKAGE_VERSION = @PACKAGE_VERSION@
++PATH_SEPARATOR = @PATH_SEPARATOR@
++PCAP_LIBS = @PCAP_LIBS@
++PCRE_LIBS = @PCRE_LIBS@
++PERL = @PERL@
++PKG_CONFIG = @PKG_CONFIG@
++PLUGIN_LIBS = @PLUGIN_LIBS@
++POD2HTML = @POD2HTML@
++POD2MAN = @POD2MAN@
++PORTAUDIO_INCLUDES = @PORTAUDIO_INCLUDES@
++PORTAUDIO_LIBS = @PORTAUDIO_LIBS@
++PYTHON = @PYTHON@
++RANLIB = @RANLIB@
++SED = @SED@
++SET_MAKE = @SET_MAKE@
++SHELL = @SHELL@
++SOCKET_LIBS = @SOCKET_LIBS@
++SSL_LIBS = @SSL_LIBS@
++STRCASECMP_C = @STRCASECMP_C@
++STRCASECMP_O = @STRCASECMP_O@
++STRERROR_C = @STRERROR_C@
++STRERROR_O = @STRERROR_O@
++STRIP = @STRIP@
++STRNCASECMP_C = @STRNCASECMP_C@
++STRNCASECMP_O = @STRNCASECMP_O@
++STRPTIME_C = @STRPTIME_C@
++STRPTIME_O = @STRPTIME_O@
++VERSION = @VERSION@
++XMLLINT = @XMLLINT@
++XSLTPROC = @XSLTPROC@
++YACC = @YACC@
++YACCDUMMY = @YACCDUMMY@
++YFLAGS = @YFLAGS@
++abs_builddir = @abs_builddir@
++abs_srcdir = @abs_srcdir@
++abs_top_builddir = @abs_top_builddir@
++abs_top_srcdir = @abs_top_srcdir@
++ac_ct_CC = @ac_ct_CC@
++ac_ct_CXX = @ac_ct_CXX@
++ac_ct_F77 = @ac_ct_F77@
++ac_cv_wireshark_have_rpm = @ac_cv_wireshark_have_rpm@
++am__include = @am__include@
++am__leading_dot = @am__leading_dot@
++am__quote = @am__quote@
++am__tar = @am__tar@
++am__untar = @am__untar@
++bindir = @bindir@
++build = @build@
++build_alias = @build_alias@
++build_cpu = @build_cpu@
++build_os = @build_os@
++build_vendor = @build_vendor@
++builddir = @builddir@
++capinfos_bin = @capinfos_bin@
++capinfos_man = @capinfos_man@
++datadir = @datadir@
++datarootdir = @datarootdir@
++dftest_bin = @dftest_bin@
++docdir = @docdir@
++dumpcap_bin = @dumpcap_bin@
++dumpcap_man = @dumpcap_man@
++dvidir = @dvidir@
++editcap_bin = @editcap_bin@
++editcap_man = @editcap_man@
++exec_prefix = @exec_prefix@
++host = @host@
++host_alias = @host_alias@
++host_cpu = @host_cpu@
++host_os = @host_os@
++host_vendor = @host_vendor@
++htmldir = @htmldir@
++idl2wrs_bin = @idl2wrs_bin@
++idl2wrs_man = @idl2wrs_man@
++includedir = @includedir@
++infodir = @infodir@
++install_sh = @install_sh@
++libdir = @libdir@
++libexecdir = @libexecdir@
++localedir = @localedir@
++localstatedir = @localstatedir@
++mandir = @mandir@
++mergecap_bin = @mergecap_bin@
++mergecap_man = @mergecap_man@
++mkdir_p = @mkdir_p@
++oldincludedir = @oldincludedir@
++pdfdir = @pdfdir@
++plugindir = @plugindir@
++prefix = @prefix@
++program_transform_name = @program_transform_name@
++psdir = @psdir@
++randpkt_bin = @randpkt_bin@
++rawshark_bin = @rawshark_bin@
++rawshark_man = @rawshark_man@
++rdps_bin = @rdps_bin@
++sbindir = @sbindir@
++sharedstatedir = @sharedstatedir@
++srcdir = @srcdir@
++sysconfdir = @sysconfdir@
++target = @target@
++target_alias = @target_alias@
++target_cpu = @target_cpu@
++target_os = @target_os@
++target_vendor = @target_vendor@
++text2pcap_bin = @text2pcap_bin@
++text2pcap_man = @text2pcap_man@
++top_builddir = @top_builddir@
++top_srcdir = @top_srcdir@
++tshark_bin = @tshark_bin@
++tshark_man = @tshark_man@
++wireshark_SUBDIRS = @wireshark_SUBDIRS@
++wireshark_bin = @wireshark_bin@
++wireshark_man = @wireshark_man@
++wiresharkfilter_man = @wiresharkfilter_man@
++INCLUDES = -I$(top_srcdir) -I$(includedir)
++
++# the name of the plugin
++PLUGIN_NAME = dect
++
++# the dissector sources (without any helpers)
++DISSECTOR_SRC = \
++	dect.c 
++
++
++# corresponding headers
++DISSECTOR_INCLUDES = 
++
++# Dissector helpers.  They're included in the source files in this
++# directory, but they're not dissectors themselves, i.e. they're not
++# used to generate "register.c").
++DISSECTOR_SUPPORT_SRC = 
++@HAVE_WARNINGS_AS_ERRORS_TRUE@AM_CFLAGS = -Werror
++plugin_LTLIBRARIES = dect.la
++dect_la_SOURCES = \
++	plugin.c \
++	moduleinfo.h \
++	$(DISSECTOR_SRC) \
++	$(DISSECTOR_SUPPORT_SRC) \
++	$(DISSECTOR_INCLUDES)
++
++dect_la_LDFLAGS = -module -avoid-version
++dect_la_LIBADD = @PLUGIN_LIBS@
++
++#
++# Currently plugin.c can be included in the distribution because
++# we always build all protocol dissectors. We used to have to check
++# whether or not to build the snmp dissector. If we again need to
++# variably build something, making plugin.c non-portable, uncomment
++# the dist-hook line below.
++#
++# Oh, yuk.  We don't want to include "plugin.c" in the distribution, as
++# its contents depend on the configuration, and therefore we want it
++# to be built when the first "make" is done; however, Automake insists
++# on putting *all* source into the distribution.
++#
++# We work around this by having a "dist-hook" rule that deletes
++# "plugin.c", so that "dist" won't pick it up.
++#
++#dist-hook:
++#	@rm -f $(distdir)/plugin.c
++CLEANFILES = \
++	dect \
++	*~
++
++MAINTAINERCLEANFILES = \
++	Makefile.in	\
++	dect.c
++
++EXTRA_DIST = \
++	Makefile.common		\
++	Makefile.nmake		\
++	moduleinfo.nmake	\
++	plugin.rc.in
++
++all: all-am
++
++.SUFFIXES:
++.SUFFIXES: .c .lo .o .obj
++$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/Makefile.common $(am__configure_deps)
++	@for dep in $?; do \
++	  case '$(am__configure_deps)' in \
++	    *$$dep*) \
++	      cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh \
++		&& exit 0; \
++	      exit 1;; \
++	  esac; \
++	done; \
++	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu  plugins/dect/Makefile'; \
++	cd $(top_srcdir) && \
++	  $(AUTOMAKE) --gnu  plugins/dect/Makefile
++.PRECIOUS: Makefile
++Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
++	@case '$?' in \
++	  *config.status*) \
++	    cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh;; \
++	  *) \
++	    echo ' cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe)'; \
++	    cd $(top_builddir) && $(SHELL) ./config.status $(subdir)/$@ $(am__depfiles_maybe);; \
++	esac;
++
++$(top_builddir)/config.status: $(top_srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
++	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
++
++$(top_srcdir)/configure:  $(am__configure_deps)
++	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
++$(ACLOCAL_M4):  $(am__aclocal_m4_deps)
++	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
++install-pluginLTLIBRARIES: $(plugin_LTLIBRARIES)
++	@$(NORMAL_INSTALL)
++	test -z "$(plugindir)" || $(MKDIR_P) "$(DESTDIR)$(plugindir)"
++	@list='$(plugin_LTLIBRARIES)'; for p in $$list; do \
++	  if test -f $$p; then \
++	    f=$(am__strip_dir) \
++	    echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(pluginLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) '$$p' '$(DESTDIR)$(plugindir)/$$f'"; \
++	    $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(pluginLTLIBRARIES_INSTALL) $(INSTALL_STRIP_FLAG) "$$p" "$(DESTDIR)$(plugindir)/$$f"; \
++	  else :; fi; \
++	done
++
++uninstall-pluginLTLIBRARIES:
++	@$(NORMAL_UNINSTALL)
++	@list='$(plugin_LTLIBRARIES)'; for p in $$list; do \
++	  p=$(am__strip_dir) \
++	  echo " $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f '$(DESTDIR)$(plugindir)/$$p'"; \
++	  $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=uninstall rm -f "$(DESTDIR)$(plugindir)/$$p"; \
++	done
++
++clean-pluginLTLIBRARIES:
++	-test -z "$(plugin_LTLIBRARIES)" || rm -f $(plugin_LTLIBRARIES)
++	@list='$(plugin_LTLIBRARIES)'; for p in $$list; do \
++	  dir="`echo $$p | sed -e 's|/[^/]*$$||'`"; \
++	  test "$$dir" != "$$p" || dir=.; \
++	  echo "rm -f \"$${dir}/so_locations\""; \
++	  rm -f "$${dir}/so_locations"; \
++	done
++dect.la: $(dect_la_OBJECTS) $(dect_la_DEPENDENCIES) 
++	$(dect_la_LINK) -rpath $(plugindir) $(dect_la_OBJECTS) $(dect_la_LIBADD) $(LIBS)
++
++mostlyclean-compile:
++	-rm -f *.$(OBJEXT)
++
++distclean-compile:
++	-rm -f *.tab.c
++
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dect.Plo@am__quote@
++@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/plugin.Plo@am__quote@
++
++.c.o:
++@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(COMPILE) -c $<
++
++.c.obj:
++@am__fastdepCC_TRUE@	$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ `$(CYGPATH_W) '$<'`
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Po
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(COMPILE) -c `$(CYGPATH_W) '$<'`
++
++.c.lo:
++@am__fastdepCC_TRUE@	$(LTCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
++@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/$*.Tpo $(DEPDIR)/$*.Plo
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
++@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
++@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
++
++mostlyclean-libtool:
++	-rm -f *.lo
++
++clean-libtool:
++	-rm -rf .libs _libs
++
++ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
++	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
++	unique=`for i in $$list; do \
++	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
++	  done | \
++	  $(AWK) '{ files[$$0] = 1; nonemtpy = 1; } \
++	      END { if (nonempty) { for (i in files) print i; }; }'`; \
++	mkid -fID $$unique
++tags: TAGS
++
++TAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
++		$(TAGS_FILES) $(LISP)
++	tags=; \
++	here=`pwd`; \
++	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
++	unique=`for i in $$list; do \
++	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
++	  done | \
++	  $(AWK) '{ files[$$0] = 1; nonempty = 1; } \
++	      END { if (nonempty) { for (i in files) print i; }; }'`; \
++	if test -z "$(ETAGS_ARGS)$$tags$$unique"; then :; else \
++	  test -n "$$unique" || unique=$$empty_fix; \
++	  $(ETAGS) $(ETAGSFLAGS) $(AM_ETAGSFLAGS) $(ETAGS_ARGS) \
++	    $$tags $$unique; \
++	fi
++ctags: CTAGS
++CTAGS:  $(HEADERS) $(SOURCES)  $(TAGS_DEPENDENCIES) \
++		$(TAGS_FILES) $(LISP)
++	tags=; \
++	list='$(SOURCES) $(HEADERS)  $(LISP) $(TAGS_FILES)'; \
++	unique=`for i in $$list; do \
++	    if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
++	  done | \
++	  $(AWK) '{ files[$$0] = 1; nonempty = 1; } \
++	      END { if (nonempty) { for (i in files) print i; }; }'`; \
++	test -z "$(CTAGS_ARGS)$$tags$$unique" \
++	  || $(CTAGS) $(CTAGSFLAGS) $(AM_CTAGSFLAGS) $(CTAGS_ARGS) \
++	     $$tags $$unique
++
++GTAGS:
++	here=`$(am__cd) $(top_builddir) && pwd` \
++	  && cd $(top_srcdir) \
++	  && gtags -i $(GTAGS_ARGS) $$here
++
++distclean-tags:
++	-rm -f TAGS ID GTAGS GRTAGS GSYMS GPATH tags
++
++distdir: $(DISTFILES)
++	@srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*]/\\\\&/g'`; \
++	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's/[].[^$$\\*]/\\\\&/g'`; \
++	list='$(DISTFILES)'; \
++	  dist_files=`for file in $$list; do echo $$file; done | \
++	  sed -e "s|^$$srcdirstrip/||;t" \
++	      -e "s|^$$topsrcdirstrip/|$(top_builddir)/|;t"`; \
++	case $$dist_files in \
++	  */*) $(MKDIR_P) `echo "$$dist_files" | \
++			   sed '/\//!d;s|^|$(distdir)/|;s,/[^/]*$$,,' | \
++			   sort -u` ;; \
++	esac; \
++	for file in $$dist_files; do \
++	  if test -f $$file || test -d $$file; then d=.; else d=$(srcdir); fi; \
++	  if test -d $$d/$$file; then \
++	    dir=`echo "/$$file" | sed -e 's,/[^/]*$$,,'`; \
++	    if test -d $(srcdir)/$$file && test $$d != $(srcdir); then \
++	      cp -pR $(srcdir)/$$file $(distdir)$$dir || exit 1; \
++	    fi; \
++	    cp -pR $$d/$$file $(distdir)$$dir || exit 1; \
++	  else \
++	    test -f $(distdir)/$$file \
++	    || cp -p $$d/$$file $(distdir)/$$file \
++	    || exit 1; \
++	  fi; \
++	done
++check-am: all-am
++check: check-am
++all-am: Makefile $(LTLIBRARIES)
++installdirs:
++	for dir in "$(DESTDIR)$(plugindir)"; do \
++	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
++	done
++install: install-am
++install-exec: install-exec-am
++install-data: install-data-am
++uninstall: uninstall-am
++
++install-am: all-am
++	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
++
++installcheck: installcheck-am
++install-strip:
++	$(MAKE) $(AM_MAKEFLAGS) INSTALL_PROGRAM="$(INSTALL_STRIP_PROGRAM)" \
++	  install_sh_PROGRAM="$(INSTALL_STRIP_PROGRAM)" INSTALL_STRIP_FLAG=-s \
++	  `test -z '$(STRIP)' || \
++	    echo "INSTALL_PROGRAM_ENV=STRIPPROG='$(STRIP)'"` install
++mostlyclean-generic:
++
++clean-generic:
++	-test -z "$(CLEANFILES)" || rm -f $(CLEANFILES)
++
++distclean-generic:
++	-test -z "$(CONFIG_CLEAN_FILES)" || rm -f $(CONFIG_CLEAN_FILES)
++
++maintainer-clean-generic:
++	@echo "This command is intended for maintainers to use"
++	@echo "it deletes files that may require special tools to rebuild."
++	-test -z "$(MAINTAINERCLEANFILES)" || rm -f $(MAINTAINERCLEANFILES)
++clean: clean-am
++
++clean-am: clean-generic clean-libtool clean-pluginLTLIBRARIES \
++	mostlyclean-am
++
++distclean: distclean-am
++	-rm -rf ./$(DEPDIR)
++	-rm -f Makefile
++distclean-am: clean-am distclean-compile distclean-generic \
++	distclean-tags
++
++dvi: dvi-am
++
++dvi-am:
++
++html: html-am
++
++info: info-am
++
++info-am:
++
++install-data-am: install-pluginLTLIBRARIES
++
++install-dvi: install-dvi-am
++
++install-exec-am:
++
++install-html: install-html-am
++
++install-info: install-info-am
++
++install-man:
++
++install-pdf: install-pdf-am
++
++install-ps: install-ps-am
++
++installcheck-am:
++
++maintainer-clean: maintainer-clean-am
++	-rm -rf ./$(DEPDIR)
++	-rm -f Makefile
++maintainer-clean-am: distclean-am maintainer-clean-generic
++
++mostlyclean: mostlyclean-am
++
++mostlyclean-am: mostlyclean-compile mostlyclean-generic \
++	mostlyclean-libtool
++
++pdf: pdf-am
++
++pdf-am:
++
++ps: ps-am
++
++ps-am:
++
++uninstall-am: uninstall-pluginLTLIBRARIES
++
++.MAKE: install-am install-strip
++
++.PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
++	clean-libtool clean-pluginLTLIBRARIES ctags distclean \
++	distclean-compile distclean-generic distclean-libtool \
++	distclean-tags distdir dvi dvi-am html html-am info info-am \
++	install install-am install-data install-data-am install-dvi \
++	install-dvi-am install-exec install-exec-am install-html \
++	install-html-am install-info install-info-am install-man \
++	install-pdf install-pdf-am install-pluginLTLIBRARIES \
++	install-ps install-ps-am install-strip installcheck \
++	installcheck-am installdirs maintainer-clean \
++	maintainer-clean-generic mostlyclean mostlyclean-compile \
++	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
++	tags uninstall uninstall-am uninstall-pluginLTLIBRARIES
++
++
++#
++# Build plugin.c, which contains the plugin version[] string, a
++# function plugin_register() that calls the register routines for all
++# protocols, and a function plugin_reg_handoff() that calls the handoff
++# registration routines for all protocols.
++#
++# We do this by scanning sources.  If that turns out to be too slow,
++# maybe we could just require every .o file to have an register routine
++# of a given name (packet-aarp.o -> proto_register_aarp, etc.).
++#
++# Formatting conventions:  The name of the proto_register_* routines an
++# proto_reg_handoff_* routines must start in column zero, or must be
++# preceded only by "void " starting in column zero, and must not be
++# inside #if.
++#
++# DISSECTOR_SRC is assumed to have all the files that need to be scanned.
++#
++# For some unknown reason, having a big "for" loop in the Makefile
++# to scan all the files doesn't work with some "make"s; they seem to
++# pass only the first few names in the list to the shell, for some
++# reason.
++#
++# Therefore, we have a script to generate the plugin.c file.
++# The shell script runs slowly, as multiple greps and seds are run
++# for each input file; this is especially slow on Windows.  Therefore,
++# if Python is present (as indicated by PYTHON being defined), we run
++# a faster Python script to do that work instead.
++#
++# The first argument is the directory in which the source files live.
++# The second argument is "plugin", to indicate that we should build
++# a plugin.c file for a plugin.
++# All subsequent arguments are the files to scan.
++#
++plugin.c: $(DISSECTOR_SRC) $(top_srcdir)/tools/make-dissector-reg \
++    $(top_srcdir)/tools/make-dissector-reg.py
++	@if test -n $(PYTHON); then \
++		echo Making plugin.c with python ; \
++		$(PYTHON) $(top_srcdir)/tools/make-dissector-reg.py $(srcdir) \
++		    plugin $(DISSECTOR_SRC) ; \
++	else \
++		echo Making plugin.c with shell script ; \
++		$(top_srcdir)/tools/make-dissector-reg $(srcdir) \
++		    $(plugin_src) plugin $(DISSECTOR_SRC) ; \
++	fi
++# Tell versions [3.59,3.63) of GNU make to not export all variables.
++# Otherwise a system limit (for SysV at least) may be exceeded.
++.NOEXPORT:
+diff --git a/plugins/dect/Makefile.nmake b/plugins/dect/Makefile.nmake
+new file mode 100644
+index 0000000..6f0cfe4
+--- /dev/null
++++ b/plugins/dect/Makefile.nmake
+@@ -0,0 +1,96 @@
++# Makefile.nmake
++# nmake file for Wireshark plugin
++#
++# $Id: Makefile.nmake 21963 2007-05-27 18:56:39Z guy $
++#
++
++include ..\..\config.nmake
++include moduleinfo.nmake
++
++include Makefile.common
++
++CFLAGS=/WX /DHAVE_CONFIG_H /I../.. /I../../wiretap $(GLIB_CFLAGS) \
++	/I$(PCAP_DIR)\include -D_U_="" $(LOCAL_CFLAGS)
++
++LDFLAGS = $(PLUGIN_LDFLAGS)
++
++!IFDEF ENABLE_LIBWIRESHARK
++LINK_PLUGIN_WITH=..\..\epan\libwireshark.lib
++CFLAGS=/DHAVE_WIN32_LIBWIRESHARK_LIB /D_NEED_VAR_IMPORT_ $(CFLAGS)
++
++DISSECTOR_OBJECTS = $(DISSECTOR_SRC:.c=.obj)
++
++DISSECTOR_SUPPORT_OBJECTS = $(DISSECTOR_SUPPORT_SRC:.c=.obj)
++
++OBJECTS = $(DISSECTOR_OBJECTS) $(DISSECTOR_SUPPORT_OBJECTS) plugin.obj
++
++RESOURCE=$(PLUGIN_NAME).res
++
++all: $(PLUGIN_NAME).dll
++
++$(PLUGIN_NAME).rc : moduleinfo.nmake
++	sed -e s/@PLUGIN_NAME@/$(PLUGIN_NAME)/ \
++	-e s/@RC_MODULE_VERSION@/$(RC_MODULE_VERSION)/ \
++	-e s/@RC_VERSION@/$(RC_VERSION)/ \
++	-e s/@MODULE_VERSION@/$(MODULE_VERSION)/ \
++	-e s/@PACKAGE@/$(PACKAGE)/ \
++	-e s/@VERSION@/$(VERSION)/ \
++	-e s/@MSVC_VARIANT@/$(MSVC_VARIANT)/ \
++	< plugin.rc.in > $@
++
++$(PLUGIN_NAME).dll $(PLUGIN_NAME).exp $(PLUGIN_NAME).lib : $(OBJECTS) $(LINK_PLUGIN_WITH) $(RESOURCE)
++	link -dll /out:$(PLUGIN_NAME).dll $(LDFLAGS) $(OBJECTS) $(LINK_PLUGIN_WITH) \
++	$(GLIB_LIBS) $(RESOURCE)
++
++#
++# Build plugin.c, which contains the plugin version[] string, a
++# function plugin_register() that calls the register routines for all
++# protocols, and a function plugin_reg_handoff() that calls the handoff
++# registration routines for all protocols.
++#
++# We do this by scanning sources.  If that turns out to be too slow,
++# maybe we could just require every .o file to have an register routine
++# of a given name (packet-aarp.o -> proto_register_aarp, etc.).
++#
++# Formatting conventions:  The name of the proto_register_* routines an
++# proto_reg_handoff_* routines must start in column zero, or must be
++# preceded only by "void " starting in column zero, and must not be
++# inside #if.
++#
++# DISSECTOR_SRC is assumed to have all the files that need to be scanned.
++#
++# For some unknown reason, having a big "for" loop in the Makefile
++# to scan all the files doesn't work with some "make"s; they seem to
++# pass only the first few names in the list to the shell, for some
++# reason.
++#
++# Therefore, we have a script to generate the plugin.c file.
++# The shell script runs slowly, as multiple greps and seds are run
++# for each input file; this is especially slow on Windows.  Therefore,
++# if Python is present (as indicated by PYTHON being defined), we run
++# a faster Python script to do that work instead.
++#
++# The first argument is the directory in which the source files live.
++# The second argument is "plugin", to indicate that we should build
++# a plugin.c file for a plugin.
++# All subsequent arguments are the files to scan.
++#
++plugin.c: $(DISSECTOR_SRC) ../../tools/make-dissector-reg.py ../../tools/make-dissector-reg
++!IFDEF PYTHON
++	@echo Making plugin.c (using python)
++	@$(PYTHON) "../../tools/make-dissector-reg.py" . plugin $(DISSECTOR_SRC)
++!ELSE
++	@echo Making plugin.c (using sh)
++	@$(SH) ../../tools/make-dissector-reg . plugin $(DISSECTOR_SRC)
++!ENDIF
++
++!ENDIF
++
++clean:
++	rm -f $(OBJECTS) $(RESOURCE) plugin.c *.pdb \
++	    $(PLUGIN_NAME).dll $(PLUGIN_NAME).dll.manifest $(PLUGIN_NAME).lib \
++	    $(PLUGIN_NAME).exp $(PLUGIN_NAME).rc 
++
++distclean: clean
++
++maintainer-clean: distclean
+diff --git a/plugins/dect/dect.c b/plugins/dect/dect.c
+new file mode 100644
+index 0000000..11a3972
+--- /dev/null
++++ b/plugins/dect/dect.c
+@@ -0,0 +1,1919 @@
++#ifdef HAVE_CONFIG_H
++# include "config.h"
++#endif
++
++#include <epan/packet.h>
++#include <epan/prefs.h>
++#include <epan/etypes.h>
++#include <string.h>
++
++#define ETHERTYPE_DECT 0x2323				//sollte später in epan/etypes.h definiert werden
++
++guint16 calc_rcrc(guint8* data);
++guint8 calc_xcrc(guint8* data,guint8 length);
++unsigned char getbit(guint8 *data,int bit);
++void setbit(guint8 *data,int bit,guint8 value);
++
++void proto_register_dect();
++void proto_reg_handoff_dect();
++static void dissect_dect(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree);
++
++//scramble table
++guint8 scrt[8][31]=
++{
++	{0x3b,0xcd,0x21,0x5c,0x77,0x9a,0x42,0xb8,0xef,0x34,0x85,0x71,0xde,0x69,0x0a,0xe3,0xbc,0xd2,0x15,0xc7,0x79,0xa4,0x2b,0x8e,0xf3,0x48,0x57,0x1d,0xe6,0x90,0xae},
++	{0x32,0xde,0xa2,0x76,0x65,0xbd,0x44,0xec,0xcb,0x7a,0x89,0xd9,0x96,0xf5,0x13,0xb3,0x2d,0xea,0x27,0x66,0x5b,0xd4,0x4e,0xcc,0xb7,0xa8,0x9d,0x99,0x6f,0x51,0x3b},
++	{0x2d,0xea,0x27,0x78,0x5b,0xd4,0x4e,0xf0,0xb7,0xa8,0x9d,0xe1,0x6f,0x51,0x3b,0xc2,0xde,0xa2,0x77,0x85,0xbd,0x44,0xef,0x0b,0x7a,0x89,0xde,0x16,0xf5,0x13,0xbc},
++	{0x27,0x79,0xa4,0x2a,0x4e,0xf3,0x48,0x54,0x9d,0xe6,0x90,0xa9,0x3b,0xcd,0x21,0x52,0x77,0x9a,0x42,0xa4,0xef,0x34,0x85,0x49,0xde,0x69,0x0a,0x93,0xbc,0xd2,0x15},
++	{0x19,0x6f,0x51,0x3a,0x32,0xde,0xa2,0x74,0x65,0xbd,0x44,0xe8,0xcb,0x7a,0x89,0xd1,0x96,0xf5,0x13,0xa3,0x2d,0xea,0x27,0x46,0x5b,0xd4,0x4e,0x8c,0xb7,0xa8,0x9d},
++	{0x13,0xbc,0xd2,0x14,0x27,0x79,0xa4,0x28,0x4e,0xf3,0x48,0x50,0x9d,0xe6,0x90,0xa1,0x3b,0xcd,0x21,0x42,0x77,0x9a,0x42,0x84,0xef,0x34,0x85,0x09,0xde,0x69,0x0a},
++	{0x0c,0xb7,0xa8,0x9c,0x19,0x6f,0x51,0x38,0x32,0xde,0xa2,0x70,0x65,0xbd,0x44,0xe0,0xcb,0x7a,0x89,0xc1,0x96,0xf5,0x13,0x83,0x2d,0xea,0x27,0x06,0x5b,0xd4,0x4e},
++	{0x79,0xa4,0x2b,0xb0,0xf3,0x48,0x57,0x61,0xe6,0x90,0xae,0xc3,0xcd,0x21,0x5d,0x87,0x9a,0x42,0xbb,0x0f,0x34,0x85,0x76,0x1e,0x69,0x0a,0xec,0x3c,0xd2,0x15,0xd8}
++};
++
++
++#ifndef BOOL
++#  define BOOL int
++#endif
++
++struct dect_afield
++{
++	guint8	Header;
++	guint8	Tail[5];
++	guint16	RCRC;
++};
++
++struct dect_bfield
++{
++	guint8	Data[128];
++	guint8	Length;
++};
++
++void dissect_decttype(BOOL type,struct dect_afield *pkt_afield,struct dect_bfield *pkt_bfield,packet_info *pinfo,guint8 *pkt_ptr,tvbuff_t *tvb,proto_item *ti,proto_tree *DectTree);
++gint dissect_bfield(BOOL type,struct dect_afield *pkt_afield,struct dect_bfield *pkt_bfield,packet_info *pinfo,guint8 *pkt_ptr,tvbuff_t *tvb,proto_item *ti,proto_tree *DectTree,gint offset);
++
++
++
++static int proto_dect = -1;
++static dissector_handle_t dect_handle;
++	 
++static int proto_dect2 = -1;
++
++
++static gint subtree_dect					= -1;
++static gint subtree_afield					= -1;
++static gint subtree_ahead					= -1;
++static gint subtree_atail					= -1;
++static gint subtree_aqt						= -1;
++
++static gint subtree_bfield					= -1;
++
++
++static int hf_dect_transceivermode			= -1;
++static int hf_dect_preamble				= -1;
++static int hf_dect_type					= -1;
++static int hf_dect_channel				= -1;
++static int hf_dect_framenumber				= -1;
++static int hf_dect_rssi					= -1;
++static int hf_dect_slot					= -1;
++static int hf_dect_A					= -1;
++static int hf_dect_A_Head				= -1;
++static int hf_dect_A_Head_TA				= -1;
++static int hf_dect_A_Head_Q1				= -1;
++static int hf_dect_A_Head_BA				= -1;
++static int hf_dect_A_Head_Q2				= -1;
++static int hf_dect_A_Tail				= -1;
++static int hf_dect_A_Tail_Nt				= -1;
++static int hf_dect_A_Tail_Qt_Qh				= -1;
++static int hf_dect_A_Tail_Qt_0_Sn			= -1;
++static int hf_dect_A_Tail_Qt_0_Nr			= -1;
++static int hf_dect_A_Tail_Qt_0_Sp			= -1;
++static int hf_dect_A_Tail_Qt_0_Esc			= -1;
++static int hf_dect_A_Tail_Qt_0_Txs			= -1;
++static int hf_dect_A_Tail_Qt_0_Mc			= -1;
++static int hf_dect_A_Tail_Qt_0_Spr1			= -1;
++static int hf_dect_A_Tail_Qt_0_Cn			= -1;
++static int hf_dect_A_Tail_Qt_0_Spr2			= -1;
++static int hf_dect_A_Tail_Qt_0_PSCN			= -1;
++static int hf_dect_A_Tail_Qt_3_A12			= -1;
++static int hf_dect_A_Tail_Qt_3_A13			= -1;
++static int hf_dect_A_Tail_Qt_3_A14			= -1;
++static int hf_dect_A_Tail_Qt_3_A15			= -1;
++static int hf_dect_A_Tail_Qt_3_A16			= -1;
++static int hf_dect_A_Tail_Qt_3_A17			= -1;
++static int hf_dect_A_Tail_Qt_3_A18			= -1;
++static int hf_dect_A_Tail_Qt_3_A19			= -1;
++static int hf_dect_A_Tail_Qt_3_A20			= -1;
++static int hf_dect_A_Tail_Qt_3_A21			= -1;
++static int hf_dect_A_Tail_Qt_3_A22			= -1;
++static int hf_dect_A_Tail_Qt_3_A23			= -1;
++static int hf_dect_A_Tail_Qt_3_A24			= -1;
++static int hf_dect_A_Tail_Qt_3_A25			= -1;
++static int hf_dect_A_Tail_Qt_3_A26			= -1;
++static int hf_dect_A_Tail_Qt_3_A27			= -1;
++static int hf_dect_A_Tail_Qt_3_A28			= -1;
++static int hf_dect_A_Tail_Qt_3_A29			= -1;
++static int hf_dect_A_Tail_Qt_3_A30			= -1;
++static int hf_dect_A_Tail_Qt_3_A31			= -1;
++static int hf_dect_A_Tail_Mt_Mh				= -1;
++static int hf_dect_A_Tail_Mt_BasicConCtrl	= -1;
++static int hf_dect_A_Tail_Mt_Encr_Cmd1		= -1;
++static int hf_dect_A_Tail_Mt_Encr_Cmd2		= -1;
++static int hf_dect_A_Tail_Pt_ExtFlag		= -1;
++static int hf_dect_A_Tail_Pt_SDU			= -1;
++static int hf_dect_A_Tail_Pt_InfoType		= -1;
++static int hf_dect_A_Tail_Pt_Fill_Fillbits	= -1;
++static int hf_dect_A_Tail_Pt_Bearer_Sn		= -1;
++static int hf_dect_A_Tail_Pt_Bearer_Cn		= -1;
++static int hf_dect_A_Tail_Pt_Bearer_Sp		= -1;
++
++static int hf_dect_A_RCRC					= -1;
++
++
++static int hf_dect_B						= -1;
++static int hf_dect_B_Data					= -1;
++static int hf_dect_B_XCRC					= -1;
++
++
++const value_string tranceiver_mode[]=
++{
++	{0,"Receive"},
++	{1,"Send"},
++	{0,NULL}
++};
++
++
++const value_string TA_vals[]= 
++{
++	{0,"Ct Next Data Packet"},
++	{1,"Ct First Data Packet"},
++	{2,"Nt Identities Information on Connectionless Bearer"},
++	{3,"Nt Identities Information"},
++	{4,"Qt Multiframe Synchronisation and System Information"},
++	{5,"Escape"},
++	{6,"Mt MAC Layer Control"},
++	{7,"Pt Paging Tail"},
++	{0,NULL} 
++};
++
++const value_string BA_vals[]= 
++{
++	{0,"U-Type, In, SIn or Ip Packet No. 0 or No Valid Ip_error_detect Channel Data"},
++	{1,"U-Type, Ip_error_detect or Ip Packet No. 1 or SIn or No Valid In Channel Data"},
++	{2,"Double-Slot Required / E-Type, all Cf or CLf, Packet No. 0"},
++	{3,"E-Type, All Cf, Packet No. 1"},
++	{4,"Half-Slot Required / E-Type, not all Cf or CLf, Cf Packet No. 0"},
++	{5,"E-Type, not all Cf, Cf Packet No. 1"},
++	{6,"E-Type, All MAC control (unnumbered)"},
++	{7,"No B-Field"},
++	{0,NULL} 
++};
++
++
++const value_string QTHead_vals[]=  
++{
++	{0,"Static System Info"},
++	{1,"Static System Info"},
++	{2,"Extended RF Carriers Part 1"},
++	{3,"Fixed Part Capabilities"},
++	{4,"Extended Fixed Part Capabilities"},
++	{5,"SARI List Contents"},
++	{6,"Multi-Frame No."},
++	{7,"Escape"},
++	{8,"Obsolete"},
++	{9,"Extended RF Carriers Part 2"},
++	{10,"Reserved(?)"},
++	{11,"Transmit Information(?)"},
++	{12,"Reserved"},
++	{13,"Reserved"},
++	{14,"Reserved"},
++	{15,"Reserved"},
++	{0,NULL} 
++};
++
++const value_string QTNormalReverse_vals[]=
++{
++	{0,"Normal RFP Transmit Half-Frame"},
++	{1,"Normal PP Transmit Half-Frame"},
++	{0,NULL} 
++};
++
++const value_string QTSlotNumber_vals[]=
++{
++	{0,"Slot Pair 0/12"},
++	{1,"Slot Pair 1/13"},
++	{2,"Slot Pair 2/14"},
++	{3,"Slot Pair 3/15"},
++	{4,"Slot Pair 4/16"},
++	{5,"Slot Pair 5/17"},
++	{6,"Slot Pair 6/18"},
++	{7,"Slot Pair 7/19"},
++	{8,"Slot Pair 8/20"},
++	{9,"Slot Pair 9/21"},
++	{10,"Slot Pair 10/22"},
++	{11,"Slot Pair 11/23"},
++	{12,"Reserved"},
++	{13,"Reserved"},
++	{14,"Reserved"},
++	{15,"Reserved"},
++	{0,NULL} 
++};
++
++const value_string QTStartPosition_vals[]=
++{
++	{0,"S-Field starts at Bit F0"},
++	{1,"Reserved for Future Use"},
++	{2,"S-Field starts at Bit F240"},
++	{3,"Reserved for Future Use"},
++	{0,NULL} 
++};
++
++const value_string QTEscape_vals[]=
++{
++	{0,"No QT Escape is broadcast"},
++	{1,"The QT Escape is broadcast"},
++	{0,NULL} 
++};
++
++const value_string QTTranceiver_vals[]=
++{
++	{0,"RFP has 1 Transceiver"},
++	{1,"RFP has 2 Transceiver"},
++	{2,"RFP has 3 Transceiver"},
++	{3,"RFP has 4 or more Transceiver"},
++	{0,NULL} 
++};
++
++const value_string QTExtendedCarrier_vals[]=
++{
++	{0,"No Extended RF Carrier Information Message"},
++	{1,"Extended RF Carrier Information Message shall be transmitted in the next Multiframe"},
++	{0,NULL} 
++};
++
++const value_string QTSpr_vals[]=
++{
++	{0,"OK"},
++	{1,"Reserved"},
++	{2,"Reserved"},
++	{3,"Reserved"},
++	{0,NULL} 
++};
++
++
++const value_string QTCarrierNumber_vals[]=
++{
++	{0,"RF Carrier 0"},
++	{1,"RF Carrier 1"},
++	{2,"RF Carrier 2"},
++	{3,"RF Carrier 3"},
++	{4,"RF Carrier 4"},
++	{5,"RF Carrier 5"},
++	{6,"RF Carrier 6"},
++	{7,"RF Carrier 7"},
++	{8,"RF Carrier 8"},
++	{9,"RF Carrier 9"},
++	{10,"RF Carrier 10"},
++	{11,"RF Carrier 11"},
++	{12,"RF Carrier 12"},
++	{13,"RF Carrier 13"},
++	{14,"RF Carrier 14"},
++	{15,"RF Carrier 15"},
++	{16,"RF Carrier 16"},
++	{17,"RF Carrier 17"},
++	{18,"RF Carrier 18"},
++	{19,"RF Carrier 19"},
++	{20,"RF Carrier 20"},
++	{21,"RF Carrier 21"},
++	{22,"RF Carrier 22"},
++	{23,"RF Carrier 23"},
++	{24,"RF Carrier 24"},
++	{25,"RF Carrier 25"},
++	{26,"RF Carrier 26"},
++	{27,"RF Carrier 27"},
++	{28,"RF Carrier 28"},
++	{29,"RF Carrier 29"},
++	{30,"RF Carrier 30"},
++	{31,"RF Carrier 31"},
++	{32,"RF Carrier 32"},
++	{33,"RF Carrier 33"},
++	{34,"RF Carrier 34"},
++	{35,"RF Carrier 35"},
++	{36,"RF Carrier 36"},
++	{37,"RF Carrier 37"},
++	{38,"RF Carrier 38"},
++	{39,"RF Carrier 39"},
++	{40,"RF Carrier 40"},
++	{41,"RF Carrier 41"},
++	{42,"RF Carrier 42"},
++	{43,"RF Carrier 43"},
++	{44,"RF Carrier 44"},
++	{45,"RF Carrier 45"},
++	{46,"RF Carrier 46"},
++	{47,"RF Carrier 47"},
++	{48,"RF Carrier 48"},
++	{49,"RF Carrier 49"},
++	{50,"RF Carrier 50"},
++	{51,"RF Carrier 51"},
++	{52,"RF Carrier 52"},
++	{53,"RF Carrier 53"},
++	{54,"RF Carrier 54"},
++	{55,"RF Carrier 55"},
++	{56,"RF Carrier 56"},
++	{57,"RF Carrier 57"},
++	{58,"RF Carrier 58"},
++	{59,"RF Carrier 59"},
++	{60,"RF Carrier 60"},
++	{61,"RF Carrier 61"},
++	{62,"RF Carrier 62"},
++	{63,"RF Carrier 63"},
++	{0,NULL} 
++};
++
++const value_string QTScanCarrierNum_vals[]=
++{
++	{0,"Primary Scan next on RF Carrier 0"},
++	{1,"Primary Scan next on RF Carrier 1"},
++	{2,"Primary Scan next on RF Carrier 2"},
++	{3,"Primary Scan next on RF Carrier 3"},
++	{4,"Primary Scan next on RF Carrier 4"},
++	{5,"Primary Scan next on RF Carrier 5"},
++	{6,"Primary Scan next on RF Carrier 6"},
++	{7,"Primary Scan next on RF Carrier 7"},
++	{8,"Primary Scan next on RF Carrier 8"},
++	{9,"Primary Scan next on RF Carrier 9"},
++	{10,"Primary Scan next on RF Carrier 10"},
++	{11,"Primary Scan next on RF Carrier 11"},
++	{12,"Primary Scan next on RF Carrier 12"},
++	{13,"Primary Scan next on RF Carrier 13"},
++	{14,"Primary Scan next on RF Carrier 14"},
++	{15,"Primary Scan next on RF Carrier 15"},
++	{16,"Primary Scan next on RF Carrier 16"},
++	{17,"Primary Scan next on RF Carrier 17"},
++	{18,"Primary Scan next on RF Carrier 18"},
++	{19,"Primary Scan next on RF Carrier 19"},
++	{20,"Primary Scan next on RF Carrier 20"},
++	{21,"Primary Scan next on RF Carrier 21"},
++	{22,"Primary Scan next on RF Carrier 22"},
++	{23,"Primary Scan next on RF Carrier 23"},
++	{24,"Primary Scan next on RF Carrier 24"},
++	{25,"Primary Scan next on RF Carrier 25"},
++	{26,"Primary Scan next on RF Carrier 26"},
++	{27,"Primary Scan next on RF Carrier 27"},
++	{28,"Primary Scan next on RF Carrier 28"},
++	{29,"Primary Scan next on RF Carrier 29"},
++	{30,"Primary Scan next on RF Carrier 30"},
++	{31,"Primary Scan next on RF Carrier 31"},
++	{32,"Primary Scan next on RF Carrier 32"},
++	{33,"Primary Scan next on RF Carrier 33"},
++	{34,"Primary Scan next on RF Carrier 34"},
++	{35,"Primary Scan next on RF Carrier 35"},
++	{36,"Primary Scan next on RF Carrier 36"},
++	{37,"Primary Scan next on RF Carrier 37"},
++	{38,"Primary Scan next on RF Carrier 38"},
++	{39,"Primary Scan next on RF Carrier 39"},
++	{40,"Primary Scan next on RF Carrier 40"},
++	{41,"Primary Scan next on RF Carrier 41"},
++	{42,"Primary Scan next on RF Carrier 42"},
++	{43,"Primary Scan next on RF Carrier 43"},
++	{44,"Primary Scan next on RF Carrier 44"},
++	{45,"Primary Scan next on RF Carrier 45"},
++	{46,"Primary Scan next on RF Carrier 46"},
++	{47,"Primary Scan next on RF Carrier 47"},
++	{48,"Primary Scan next on RF Carrier 48"},
++	{49,"Primary Scan next on RF Carrier 49"},
++	{50,"Primary Scan next on RF Carrier 50"},
++	{51,"Primary Scan next on RF Carrier 51"},
++	{52,"Primary Scan next on RF Carrier 52"},
++	{53,"Primary Scan next on RF Carrier 53"},
++	{54,"Primary Scan next on RF Carrier 54"},
++	{55,"Primary Scan next on RF Carrier 55"},
++	{56,"Primary Scan next on RF Carrier 56"},
++	{57,"Primary Scan next on RF Carrier 57"},
++	{58,"Primary Scan next on RF Carrier 58"},
++	{59,"Primary Scan next on RF Carrier 59"},
++	{60,"Primary Scan next on RF Carrier 60"},
++	{61,"Primary Scan next on RF Carrier 61"},
++	{62,"Primary Scan next on RF Carrier 62"},
++	{63,"Primary Scan next on RF Carrier 63"},
++	{0,NULL} 
++};
++
++
++const value_string Qt_A12_vals[]=
++{
++	{0,""},
++	{1,"Extended FP Info"},
++	{0,NULL} 
++};
++
++const value_string Qt_A13_vals[]=
++{
++	{0,""},
++	{1,"Double Duplex Bearer Connections"},
++	{0,NULL} 
++};
++
++const value_string Qt_A14_vals[]=
++{
++	{0,""},
++	{1,"Reserved"},
++	{0,NULL} 
++};
++
++const value_string Qt_A15_vals[]=
++{
++	{0,""},
++	{1,"Double Slot"},
++	{0,NULL} 
++};
++
++const value_string Qt_A16_vals[]=
++{
++	{0,""},
++	{1,"Half Slot"},
++	{0,NULL} 
++};
++
++const value_string Qt_A17_vals[]=
++{
++	{0,""},
++	{1,"Full Slot"},
++	{0,NULL} 
++};
++
++const value_string Qt_A18_vals[]=
++{
++	{0,""},
++	{1,"Frequency Control"},
++	{0,NULL} 
++};
++
++const value_string Qt_A19_vals[]=
++{
++	{0,""},
++	{1,"Page Repetition"},
++	{0,NULL} 
++};
++
++const value_string Qt_A20_vals[]=
++{
++	{0,""},
++	{1,"C/O Setup on Dummy allowed"},
++	{0,NULL} 
++};
++
++const value_string Qt_A21_vals[]=
++{
++	{0,""},
++	{1,"C/L Uplink"},
++	{0,NULL} 
++};
++
++const value_string Qt_A22_vals[]=
++{
++	{0,""},
++	{1,"C/L Downlink"},
++	{0,NULL} 
++};
++
++const value_string Qt_A23_vals[]=
++{
++	{0,""},
++	{1,"Basic A-Field Set-Up"},
++	{0,NULL} 
++};
++
++const value_string Qt_A24_vals[]=
++{
++	{0,""},
++	{1,"Advanced A-Field Set-Up"},
++	{0,NULL} 
++};
++
++const value_string Qt_A25_vals[]=
++{
++	{0,""},
++	{1,"B-field Set-Up"},
++	{0,NULL} 
++};
++
++const value_string Qt_A26_vals[]=
++{
++	{0,""},
++	{1,"Cf Messages"},
++	{0,NULL} 
++};
++
++const value_string Qt_A27_vals[]=
++{
++	{0,""},
++	{1,"In Minimum Delay"},
++	{0,NULL} 
++};
++
++const value_string Qt_A28_vals[]=
++{
++	{0,""},
++	{1,"In Normal Delay"},
++	{0,NULL} 
++};
++
++const value_string Qt_A29_vals[]=
++{
++	{0,""},
++	{1,"Ip Error Detection"},
++	{0,NULL} 
++};
++
++const value_string Qt_A30_vals[]=
++{
++	{0,""},
++	{1,"Ip Error Correction"},
++	{0,NULL} 
++};
++
++const value_string Qt_A31_vals[]=
++{
++	{0,""},
++	{1,"Multibearer Connections"},
++	{0,NULL} 
++};
++
++
++
++const value_string MTHead_vals[]=
++{
++	{0,"Basic Connection Control"},
++	{1,"Advanced Connection Control"},
++	{2,"MAC Layer Test Messages"},
++	{3,"Quality Control"},
++	{4,"Broadcast and Connectionless Services"},
++	{5,"Encryption Control"},
++	{6,"Tail for use with the first Transmission of a B-Field \"bearer request\" Message"},
++	{7,"Escape"},
++	{8,"TARI Message"},
++	{9,"REP Connection Control"},
++	{10,"Reserved"},
++	{11,"Reserved"},
++	{12,"Reserved"},
++	{13,"Reserved"},
++	{14,"Reserved"},
++	{15,"Reserved"},
++	{0,NULL} 
++};
++
++const value_string MTBasicConCtrl_vals[]=
++{
++	{0,"Access Request"},
++	{1,"Bearer Handover Request"},
++	{2,"Connection Handover Request"},
++	{3,"Unconfirmed Access Request"},
++	{4,"Bearer Confirm"},
++	{5,"Wait"},
++	{6,"Attributes T Request"},
++	{7,"Attributes T Confirm"},
++	{8,"Reserved"},
++	{9,"Reserved"},
++	{10,"Reserved"},
++	{11,"Reserved"},
++	{12,"Reserved"},
++	{13,"Reserved"},
++	{14,"Reserved"},
++	{15,"Release"},
++	{0,NULL} 
++};
++
++const value_string MTEncrCmd1_vals[]=
++{
++	{0,"Start Encryption"},
++	{1,"Stop Encryption"},
++	{2,"reserved"},
++	{3,"reserved"},
++	{0,NULL} 
++};
++
++const value_string MTEncrCmd2_vals[]=
++{
++	{0,"Request"},
++	{1,"Confirm"},
++	{2,"Grant"},
++	{3,"Reserved"},
++	{0,NULL} 
++};
++
++const value_string PTExtFlag_vals[]=
++{
++	{0,"bla1"},
++	{1,"bla2"},
++	{0,NULL}
++};
++
++const value_string PTSDU_vals[]=
++{
++	{0,"Zero Length Page"},
++	{1,"Short Page"},
++	{2,"Full Page"},
++	{3,"MAC resume page"},
++	{4,"Not the last 36 Bits of a Long Page"},
++	{5,"The first 36 Bits of a Long Page"},
++	{6,"The last 36 Bits of a Long Page"},
++	{7,"All of a Long Page (first and last)"},
++	{0,NULL}
++};
++
++const value_string PTInfoType_vals[]=
++{
++	{0,"Fill Bits"},
++	{1,"Blind Full Slot Information for Circuit Mode Service"},
++	{2,"Other Bearer"},
++	{3,"Recommended Other Bearer"},
++	{4,"Good RFP Bearer"},
++	{5,"Dummy or connectionless Bearer Position"},
++	{6,"Extended Modulation Types"},
++	{7,"Escape"},
++	{8,"Dummy or connectionless Bearer Marker"},
++	{9,"Bearer Handover/Replacement Information"},
++	{10,"RFP Status and Modulation Types"},
++	{11,"Active Carriers"},
++	{12,"Connectionless Bearer Position"},
++	{13,"RFP Power Level"},
++	{14,"Blind Double Slot/RFP-FP Interface Resource Information"},
++	{15,"Blind Full Slot Information for Packet Mode Service"},
++	{0,NULL}
++};
++
++
++const value_string PTRFPPower_vals[]=
++{
++	{0,"0 dBm"},
++	{1,"2 dBm"},
++	{2,"4 dBm"},
++	{3,"6 dBm"},
++	{4,"8 dBm"},
++	{5,"10 dBm"},
++	{6,"12 dBm"},
++	{7,"14 dBm"},
++	{8,"16 dBm"},
++	{9,"18 dBm"},
++	{10,"20 dBm"},
++	{11,"22 dBm"},
++	{12,"24 dBm"},
++	{13,"26 dBm"},
++	{14,"28 dBm"},
++	{15,"30 dBm"}
++};
++
++
++
++void proto_register_dect(void)
++{
++	static hf_register_info hf[]= 
++	{
++		{ 	
++			&hf_dect_transceivermode,
++			{"Tranceiver-Mode","dect.tranceivermode",FT_UINT8,BASE_HEX,VALS(tranceiver_mode),0x0,NULL,HFILL}
++		},
++
++		{ 	
++			&hf_dect_channel,
++			{"Channel","dect.channel",FT_UINT8,BASE_DEC,NULL,0x0,NULL,HFILL}
++		},
++
++		{ 
++			&hf_dect_framenumber,
++			{"Frame#","dect.framenumber",FT_UINT16,BASE_DEC,NULL,0x0,NULL,HFILL}
++		},
++
++		{ 
++			&hf_dect_rssi,
++			{"RSSI","dect.rssi",FT_UINT8,BASE_DEC,NULL,0x0,NULL,HFILL}
++		},
++
++		{ 
++			&hf_dect_slot,
++			{"Slot","dect.slot",FT_UINT16,BASE_DEC,NULL,0x0,NULL,HFILL}
++		},
++
++		{ 	
++			&hf_dect_preamble,
++			{"Preamble","dect.preamble",FT_BYTES,BASE_NONE,NULL,0x0,NULL,HFILL}
++		},
++			
++		{ 
++			&hf_dect_type,
++			{"Packet-Type","dect.type",FT_BYTES,BASE_NONE,NULL,0x0,NULL,HFILL}
++		},
++
++
++	
++		// *********************************************** A-Field ***********************************************
++
++	
++		//*****  Header  *****
++		{ 
++			&hf_dect_A,
++			{"A-Field","dect.afield", FT_UINT8, BASE_DEC, NULL, 0x0,"", HFILL}
++		},
++		
++		{ 
++			&hf_dect_A_Head,
++			{"A-Field Header","dect.afield.head",FT_UINT8,BASE_DEC, NULL, 0x0,"",HFILL}
++		},
++
++		{ 
++			&hf_dect_A_Head_TA,
++			{"TA","dect.afield.head.TA",FT_UINT8,BASE_DEC,VALS(TA_vals),0xE0,"",HFILL}
++		},
++
++		{ 
++			&hf_dect_A_Head_Q1,
++			{"Q1","dect.afield.head.Q1",FT_UINT8,BASE_DEC,NULL			,0x10,"",HFILL}
++		},
++
++		{ 
++			&hf_dect_A_Head_BA,
++			{"BA","dect.afield.head.BA",FT_UINT8,BASE_DEC,VALS(BA_vals),0x0E,"",HFILL}
++		},
++
++
++		{ 
++			&hf_dect_A_Head_Q2,
++			{"Q2","dect.afield.head.Q2",FT_UINT8,BASE_DEC,NULL			,0x01,"",HFILL}
++		},
++
++		//*****   Tail   *****
++		{ 
++			&hf_dect_A_Tail,
++			{"A-Field Tail","dect.afield.tail",FT_UINT8,BASE_DEC, NULL, 0x0,"",HFILL}
++		},
++
++			//Nt
++		{ 
++			&hf_dect_A_Tail_Nt,
++			{"A-Field Header","dect.afield.tail.Nt",FT_UINT8,BASE_DEC, NULL, 0x0,"",HFILL}
++		},
++
++
++			//Qt
++		{ 
++			&hf_dect_A_Tail_Qt_Qh,
++			{"Qh","dect.afield.tail.Qt.Qh",FT_UINT8,BASE_DEC,VALS(QTHead_vals)	,0xF0,"",HFILL}
++		},
++
++			// Qt Static System Information
++
++			//Byte 0
++			{ 
++				&hf_dect_A_Tail_Qt_0_Nr,
++				{"NR","dect.afield.tail.Qt.NR",FT_UINT8,BASE_DEC,VALS(QTNormalReverse_vals)	,0x10,"",HFILL}
++			},
++		
++			{ 
++				&hf_dect_A_Tail_Qt_0_Sn,
++				{"SN","dect.afield.tail.Qt.SN",FT_UINT8,BASE_DEC,VALS(QTSlotNumber_vals)	,0x0F,"",HFILL}
++			},
++
++			//Byte 1
++			{ 
++				&hf_dect_A_Tail_Qt_0_Sp,
++				{"SP","dect.afield.tail.Qt.SP",FT_UINT8,BASE_DEC,VALS(QTStartPosition_vals)	,0xC0,"",HFILL}
++			},
++
++			{ 
++				&hf_dect_A_Tail_Qt_0_Esc,
++				{"Esc","dect.afield.tail.Qt.Esc",FT_UINT8,BASE_DEC,VALS(QTEscape_vals)	,0x20,"",HFILL}
++			},
++
++			{ 
++				&hf_dect_A_Tail_Qt_0_Txs,
++				{"Txs","dect.afield.tail.Qt.Txs",FT_UINT8,BASE_DEC,VALS(QTTranceiver_vals)	,0x18,"",HFILL}
++			},
++
++			{ 
++				&hf_dect_A_Tail_Qt_0_Mc,
++				{"Mc","dect.afield.tail.Qt.Mc",FT_UINT8,BASE_DEC,VALS(QTExtendedCarrier_vals)	,0x04,"",HFILL}
++			},
++
++			//Byte 3
++			{ 
++				&hf_dect_A_Tail_Qt_0_Spr1,
++				{"Spr","dect.afield.tail.Qt.Spr1",FT_UINT8,BASE_DEC,VALS(QTSpr_vals)	,0xC0,"",HFILL}
++			},
++
++			{ 
++				&hf_dect_A_Tail_Qt_0_Cn,
++				{"CN","dect.afield.tail.Qt.CN",FT_UINT8,BASE_DEC,VALS(QTCarrierNumber_vals)	,0x2F,"",HFILL}
++			},
++
++			//Byte 4
++			{ 
++				&hf_dect_A_Tail_Qt_0_Spr2,
++				{"Spr","dect.afield.tail.Qt.Spr2",FT_UINT8,BASE_DEC,VALS(QTSpr_vals)	,0xC0,"",HFILL}
++			},
++
++			{ 
++				&hf_dect_A_Tail_Qt_0_PSCN,
++				{"PSCN","dect.afield.tail.Qt.PSCN",FT_UINT8,BASE_DEC,VALS(QTScanCarrierNum_vals)	,0x3F,"",HFILL}
++			},
++
++
++			// Qt Fixed Part Capabilities
++
++			{ 
++				&hf_dect_A_Tail_Qt_3_A12,
++				{"A12","dect.afield.tail.Qt.Fp.A12",FT_UINT8,BASE_DEC,VALS(Qt_A12_vals)	,0x08,"",HFILL}
++			},
++
++			{ 
++				&hf_dect_A_Tail_Qt_3_A13,
++				{"A13","dect.afield.tail.Qt.Fp.A13",FT_UINT8,BASE_DEC,VALS(Qt_A13_vals)	,0x04,"",HFILL}
++			},			
++			
++			{ 
++				&hf_dect_A_Tail_Qt_3_A14,
++				{"A14","dect.afield.tail.Qt.Fp.A14",FT_UINT8,BASE_DEC,VALS(Qt_A14_vals)	,0x02,"",HFILL}
++			},			
++			
++			{ 
++				&hf_dect_A_Tail_Qt_3_A15,
++				{"A15","dect.afield.tail.Qt.Fp.A15",FT_UINT8,BASE_DEC,VALS(Qt_A15_vals)	,0x01,"",HFILL}
++			},			
++			
++			{ 
++				&hf_dect_A_Tail_Qt_3_A16,
++				{"A16","dect.afield.tail.Qt.Fp.A16",FT_UINT8,BASE_DEC,VALS(Qt_A16_vals)	,0x80,"",HFILL}
++			},			
++			
++			{ 
++				&hf_dect_A_Tail_Qt_3_A17,
++				{"A17","dect.afield.tail.Qt.Fp.A17",FT_UINT8,BASE_DEC,VALS(Qt_A17_vals)	,0x40,"",HFILL}
++			},			
++			
++			{ 
++				&hf_dect_A_Tail_Qt_3_A18,
++				{"A18","dect.afield.tail.Qt.Fp.A18",FT_UINT8,BASE_DEC,VALS(Qt_A18_vals)	,0x20,"",HFILL}
++			},			
++			
++			{ 
++				&hf_dect_A_Tail_Qt_3_A19,
++				{"A19","dect.afield.tail.Qt.Fp.A19",FT_UINT8,BASE_DEC,VALS(Qt_A19_vals)	,0x10,"",HFILL}
++			},			
++			
++			{ 
++				&hf_dect_A_Tail_Qt_3_A20,
++				{"A20","dect.afield.tail.Qt.Fp.A20",FT_UINT8,BASE_DEC,VALS(Qt_A20_vals)	,0x08,"",HFILL}
++			},			
++			
++			{ 
++				&hf_dect_A_Tail_Qt_3_A21,
++				{"A21","dect.afield.tail.Qt.Fp.A21",FT_UINT8,BASE_DEC,VALS(Qt_A21_vals)	,0x04,"",HFILL}
++			},			
++			
++			{ 
++				&hf_dect_A_Tail_Qt_3_A22,
++				{"A22","dect.afield.tail.Qt.Fp.A22",FT_UINT8,BASE_DEC,VALS(Qt_A22_vals)	,0x02,"",HFILL}
++			},
++
++			{ 
++				&hf_dect_A_Tail_Qt_3_A23,
++				{"A23","dect.afield.tail.Qt.Fp.A23",FT_UINT8,BASE_DEC,VALS(Qt_A23_vals)	,0x01,"",HFILL}
++			},
++			
++			{ 
++				&hf_dect_A_Tail_Qt_3_A24,
++				{"A24","dect.afield.tail.Qt.Fp.A24",FT_UINT8,BASE_DEC,VALS(Qt_A24_vals)	,0x80,"",HFILL}
++			},
++			
++			{ 
++				&hf_dect_A_Tail_Qt_3_A25,
++				{"A25","dect.afield.tail.Qt.Fp.A25",FT_UINT8,BASE_DEC,VALS(Qt_A25_vals)	,0x40,"",HFILL}
++			},
++			
++			{ 
++				&hf_dect_A_Tail_Qt_3_A26,
++				{"A26","dect.afield.tail.Qt.Fp.A26",FT_UINT8,BASE_DEC,VALS(Qt_A26_vals)	,0x20,"",HFILL}
++			},
++			
++			{ 
++				&hf_dect_A_Tail_Qt_3_A27,
++				{"A27","dect.afield.tail.Qt.Fp.A27",FT_UINT8,BASE_DEC,VALS(Qt_A27_vals)	,0x10,"",HFILL}
++			},
++				
++			{ 
++				&hf_dect_A_Tail_Qt_3_A28,
++				{"A28","dect.afield.tail.Qt.Fp.A28",FT_UINT8,BASE_DEC,VALS(Qt_A28_vals)	,0x08,"",HFILL}
++			},	
++				
++			{ 
++				&hf_dect_A_Tail_Qt_3_A29,
++				{"A29","dect.afield.tail.Qt.Fp.A29",FT_UINT8,BASE_DEC,VALS(Qt_A29_vals)	,0x04,"",HFILL}
++			},	
++				
++			{ 
++				&hf_dect_A_Tail_Qt_3_A30,
++				{"A30","dect.afield.tail.Qt.Fp.A30",FT_UINT8,BASE_DEC,VALS(Qt_A30_vals)	,0x02,"",HFILL}
++			},	
++				
++			{ 
++				&hf_dect_A_Tail_Qt_3_A31,
++				{"A31","dect.afield.tail.Qt.Fp.A31",FT_UINT8,BASE_DEC,VALS(Qt_A31_vals)	,0x01,"",HFILL}
++			},
++
++		
++		//Mt
++		{ 
++			&hf_dect_A_Tail_Mt_Mh,
++			{"Mh","dect.afield.tail.Mt.Mh",FT_UINT8,BASE_DEC,VALS(MTHead_vals)	,0xF0,"",HFILL}
++		},
++
++			// Mt Basic Connection Control
++			{ 
++				&hf_dect_A_Tail_Mt_BasicConCtrl,
++				{"Cmd","dect.afield.tail.Mt.BasicConCtrl",FT_UINT8,BASE_DEC,VALS(MTBasicConCtrl_vals)	,0x0F,"",HFILL}
++			},
++
++			// Mt Encryption Control
++			{ 
++				&hf_dect_A_Tail_Mt_Encr_Cmd1,
++				{"Cmd1","dect.afield.tail.Mt.Encr.Cmd1",FT_UINT8,BASE_DEC,VALS(MTEncrCmd1_vals)	,0x0C,"",HFILL}
++			},
++
++			{ 
++				&hf_dect_A_Tail_Mt_Encr_Cmd2,
++				{"Cmd2","dect.afield.tail.Mt.Encr.Cmd2",FT_UINT8,BASE_DEC,VALS(MTEncrCmd2_vals)	,0x03,"",HFILL}
++			},
++
++		//Pt
++		{ 
++			&hf_dect_A_Tail_Pt_ExtFlag,
++			{"ExtFlag","dect.afield.tail.Pt.ExtFlag",FT_UINT8,BASE_DEC,VALS(PTExtFlag_vals)	,0x80,"",HFILL}
++		},
++
++		{ 
++			&hf_dect_A_Tail_Pt_SDU,
++			{"SDU","dect.afield.tail.Pt.SDU",FT_UINT8,BASE_DEC,VALS(PTSDU_vals)	,0x70,"",HFILL}
++		},
++
++		{ 
++			&hf_dect_A_Tail_Pt_InfoType,
++			{"InfoType","dect.afield.tail.Pt.InfoType",FT_UINT8,BASE_DEC,VALS(PTInfoType_vals)	,0xF0,"",HFILL}
++		},
++
++		{ 
++			&hf_dect_A_Tail_Pt_Fill_Fillbits,
++			{"FillBits","dect.afield.tail.Pt.InfoType.FillBits",FT_UINT8,BASE_DEC,NULL	,0xFF,"",HFILL}
++		},
++
++				
++		{ 
++			&hf_dect_A_Tail_Pt_Bearer_Sn,
++			{"SN","dect.afield.tail.Pt.SN",FT_UINT8,BASE_DEC,VALS(QTSlotNumber_vals)	,0x0F,"",HFILL}
++		},
++
++		{ 
++			&hf_dect_A_Tail_Pt_Bearer_Sp,
++			{"SP","dect.afield.tail.Pt.SP",FT_UINT8,BASE_DEC,VALS(QTStartPosition_vals)	,0xC0,"",HFILL}
++		},
++
++		{ 
++			&hf_dect_A_Tail_Pt_Bearer_Cn,
++			{"CN","dect.afield.tail.Pt.CN",FT_UINT8,BASE_DEC,VALS(QTCarrierNumber_vals)	,0x2F,"",HFILL}
++		},
++
++
++		//*****   R-CRC  *****
++		{ 
++			&hf_dect_A_RCRC,
++			{"A-Field R-CRC","dect.afield.rcrc",FT_UINT8,BASE_DEC, NULL, 0x0,"",HFILL}
++		},
++
++
++
++
++		// *********************************************** B-Field ***********************************************
++
++		{ 
++			&hf_dect_B,
++			{"B-Field","dect.bfield", FT_UINT8, BASE_DEC, NULL, 0x0,"", HFILL}
++		},
++
++		{ 
++			&hf_dect_B_Data,
++			{"B-Field","dect.bfield.data", FT_UINT8, BASE_DEC, NULL, 0x0,"", HFILL}
++		},
++
++		//*****   X-CRC  *****
++		{ 
++			&hf_dect_B_XCRC,
++			{"B-Field X-CRC","dect.bfield.xcrc",FT_UINT8,BASE_DEC, NULL, 0x0,"",HFILL}
++		}
++	};
++
++
++	/* Setup protocol subtree array */
++	static gint *subtree[]= 
++	{
++		&subtree_dect,
++		&subtree_ahead,
++		&subtree_afield,
++		&subtree_atail,
++		&subtree_aqt,
++
++		&subtree_bfield
++	};
++
++
++	if(proto_dect==-1) 
++	{
++		proto_dect=proto_register_protocol("DECT Protocol","DECT","dect");
++	}
++
++
++	proto_register_field_array(proto_dect,hf,array_length(hf));
++	proto_register_subtree_array(subtree,array_length(subtree));	
++}
++
++void proto_reg_handoff_dect(void)
++{
++	static int initialized=FALSE;
++
++	if(!initialized) 
++	{
++		dect_handle = create_dissector_handle(dissect_dect,proto_dect);
++		dissector_add("ethertype",ETHERTYPE_DECT ,dect_handle);
++	}
++}	
++
++static void dissect_dect(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
++{
++	guint16				type;
++	guint16				pkt_len;
++	guint8				*pkt_ptr;
++	struct dect_afield	pkt_afield;
++	struct dect_bfield  pkt_bfield;
++
++	//Packet pointer holen
++	pkt_len=tvb_length(tvb);
++
++	if(pkt_len>140)
++			pkt_len=140;
++
++	if(pkt_len<13)
++	{
++		if(check_col(pinfo->cinfo,COL_PROTOCOL)) 
++		{
++			col_set_str(pinfo->cinfo,COL_PROTOCOL,"No Data");
++		}
++		return;
++	}
++	
++	pkt_ptr=(guint8*)tvb_get_ptr(tvb,11,pkt_len-11);
++
++
++	//A-Field füllen
++	pkt_afield.Header=pkt_ptr[0];
++	memcpy((char*)(&(pkt_afield.Tail)),(char*)(pkt_ptr+1),5);
++	pkt_afield.RCRC=(((guint16)pkt_ptr[6])<<8)|pkt_ptr[7];
++
++
++	//B-Field füllen
++	if(pkt_len>13)
++		memcpy((char*)(&(pkt_bfield.Data)),(char*)(pkt_ptr+8),pkt_len-5-8);
++	else
++		memset((char*)(&(pkt_bfield.Data)),0,128);
++
++	pkt_bfield.Length=pkt_len-13;
++
++
++
++	if(check_col(pinfo->cinfo,COL_PROTOCOL))
++		col_set_str(pinfo->cinfo, COL_PROTOCOL,"DECT");
++
++	/* Clear out stuff in the info column */
++	if(check_col(pinfo->cinfo,COL_INFO)) 
++	{
++		col_clear(pinfo->cinfo,COL_INFO);
++	}
++
++	if(tree) 
++	{
++		proto_item *ti			=NULL;
++		proto_item *typeti		=NULL;
++		proto_tree *DectTree	=NULL;
++
++
++		gint offset=0;
++
++		ti=proto_tree_add_item(tree,proto_dect,tvb,0,-1,FALSE);
++
++		DectTree=proto_item_add_subtree(ti,subtree_dect);
++		proto_tree_add_item(DectTree,hf_dect_transceivermode,tvb,offset,1,FALSE);	
++		offset++;
++
++		proto_tree_add_item(DectTree,hf_dect_channel,tvb,offset,1,FALSE);						
++		offset++;
++
++		proto_tree_add_item(DectTree,hf_dect_slot,tvb,offset,2,FALSE);						
++		offset+=2;
++
++		proto_tree_add_item(DectTree,hf_dect_framenumber,tvb,offset,1,FALSE);						
++		offset++;
++
++		proto_tree_add_item(DectTree,hf_dect_rssi,tvb,offset,1,FALSE);						
++		offset++;
++
++		proto_tree_add_item(DectTree,hf_dect_preamble,tvb,offset,3,FALSE);						
++		offset+=3;
++
++		typeti=proto_tree_add_item(DectTree,hf_dect_type,tvb,offset,2,FALSE);
++
++		type=tvb_get_ntohs(tvb, offset);													
++		offset+=2;
++
++
++
++		switch(type)
++		{
++			case 0x1675:
++				if(check_col(pinfo->cinfo,COL_PROTOCOL)) 
++				{
++					col_set_str(pinfo->cinfo,COL_PROTOCOL,"DECT PP");
++				}
++
++				proto_item_append_text(typeti,"  Phone Packet");
++				dissect_decttype(0,&pkt_afield,&pkt_bfield,pinfo,pkt_ptr,tvb,ti,DectTree);
++				break;
++
++			case 0xe98a:
++				if(check_col(pinfo->cinfo,COL_PROTOCOL)) 
++				{
++					col_set_str(pinfo->cinfo,COL_PROTOCOL,"DECT RFP");
++				}
++
++				proto_item_append_text(typeti,"  Station Packet");
++				dissect_decttype(1,&pkt_afield,&pkt_bfield,pinfo,pkt_ptr,tvb,ti,DectTree);
++				break;
++
++
++			default:
++				if(check_col(pinfo->cinfo,COL_PROTOCOL)) 
++				{
++					col_set_str(pinfo->cinfo,COL_PROTOCOL,"DECT Unk");
++				}
++
++				proto_item_append_text(typeti,"  Unknown Packet");
++				break;
++		}
++
++
++
++
++
++	}
++}	
++
++
++
++void dissect_decttype(BOOL type,struct dect_afield *pkt_afield,struct dect_bfield *pkt_bfield,packet_info *pinfo,guint8 *pkt_ptr,tvbuff_t *tvb,proto_item *ti,proto_tree *DectTree)
++{
++	char				string[30];
++
++	guint16				rcrc;
++	guint8				rcrcdat[8];
++	gint				offset=11;
++
++	proto_item *afieldti	=NULL;
++	proto_item *aheadti		=NULL;
++	proto_item *atailti		=NULL;
++	proto_item *arcrc		=NULL;
++	proto_item *aqtti		=NULL;
++
++
++	proto_tree *AField		=NULL;
++	proto_tree *AHead		=NULL;
++	proto_tree *ATail		=NULL;
++	proto_tree *AQT			=NULL;
++
++
++	//********************************************  A-Field  ********************************************
++
++	//A-Feld anlegen
++	afieldti	= proto_tree_add_uint_format(DectTree,hf_dect_A,tvb,offset,8,0/*0x2323*/,"A-Field");
++	AField		= proto_item_add_subtree(afieldti,subtree_afield);
++
++
++	//Header anlegen und füllen
++	aheadti		= proto_tree_add_uint_format(afieldti,hf_dect_A_Head,tvb,offset,1,0x2323,"Header");
++	AHead		= proto_item_add_subtree(aheadti,subtree_ahead);
++
++
++	proto_tree_add_uint(AHead,hf_dect_A_Head_TA,tvb,offset,1,pkt_afield->Header);
++	proto_tree_add_uint(AHead,hf_dect_A_Head_Q1,tvb,offset,1,pkt_afield->Header);
++	proto_tree_add_uint(AHead,hf_dect_A_Head_BA,tvb,offset,1,pkt_afield->Header);
++	proto_tree_add_uint(AHead,hf_dect_A_Head_Q2,tvb,offset,1,pkt_afield->Header);
++
++	offset++;
++
++
++	//Tail anlegen und füllen
++	atailti		= proto_tree_add_uint_format(afieldti,hf_dect_A_Tail,tvb,offset,5,0x2323,"Tail: %s",TA_vals[(pkt_afield->Header&0xE0)>>5].strptr);
++	ATail		= proto_item_add_subtree(atailti,subtree_atail);
++		
++		switch((pkt_afield->Header&0xE0)>>5)
++		{
++			case 0:		//Ct
++			case 1:
++				if(check_col(pinfo->cinfo,COL_HPUX_SUBSYS))
++					col_set_str(pinfo->cinfo,COL_HPUX_SUBSYS,"[Ct]");
++
++				break;
++			case 2:		//Nt
++			case 3:		//Nt connectionless bearer
++				if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++				{
++					sprintf(string,"RFPI:%.2x%.2x%.2x%.2x%.2x"
++							,pkt_afield->Tail[0],pkt_afield->Tail[1],pkt_afield->Tail[2]
++							,pkt_afield->Tail[3],pkt_afield->Tail[4]);
++
++					col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,string);
++
++					offset+=5;
++
++					//wegen addition weiter unten
++					offset-=5;
++				}
++
++				
++
++				if(check_col(pinfo->cinfo,COL_HPUX_SUBSYS))
++					col_set_str(pinfo->cinfo,COL_HPUX_SUBSYS,"[Nt]");
++
++				proto_tree_add_uint_format(atailti,hf_dect_A_Tail_Nt,tvb,offset,5,0x2323,"RFPI:%.2x%.2x%.2x%.2x%.2x"
++					,pkt_afield->Tail[0],pkt_afield->Tail[1],pkt_afield->Tail[2],pkt_afield->Tail[3]
++					,pkt_afield->Tail[4]);
++				break;						
++			case 4:		//Qt
++				if(check_col(pinfo->cinfo,COL_HPUX_SUBSYS))
++					col_set_str(pinfo->cinfo,COL_HPUX_SUBSYS,"[Qt]");
++
++				proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_Qh,tvb,offset,1,(pkt_afield->Tail[0]));
++
++				switch(pkt_afield->Tail[0]>>4)
++				{
++					case 0:		//Static System Info
++					case 1:
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Static System Info");
++
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_0_Nr,tvb,offset,1,(pkt_afield->Tail[0]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_0_Sn,tvb,offset,1,(pkt_afield->Tail[0]));
++						offset++;
++
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_0_Sp,tvb,offset,1,(pkt_afield->Tail[1]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_0_Esc,tvb,offset,1,(pkt_afield->Tail[1]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_0_Txs,tvb,offset,1,(pkt_afield->Tail[1]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_0_Mc,tvb,offset,1,(pkt_afield->Tail[1]));
++						offset++;
++
++						proto_tree_add_uint_format(ATail,hf_dect_A_Tail_Mt_Mh,tvb,offset,2,0x2323,"            Carrier%s%s%s%s%s%s%s%s%s%s available",
++							(pkt_afield->Tail[1]&0x02)?" 0":"",(pkt_afield->Tail[1]&0x01)?" 1":"",(pkt_afield->Tail[2]&0x80)?" 2":"",	
++							(pkt_afield->Tail[2]&0x40)?" 3":"",(pkt_afield->Tail[2]&0x20)?" 4":"",(pkt_afield->Tail[2]&0x10)?" 5":"",		
++							(pkt_afield->Tail[2]&0x08)?" 6":"",(pkt_afield->Tail[2]&0x04)?" 7":"",(pkt_afield->Tail[2]&0x02)?" 8":"",
++							(pkt_afield->Tail[2]&0x01)?" 9":"");
++
++						offset++;
++
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_0_Spr1,tvb,offset,1,(pkt_afield->Tail[3]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_0_Cn,tvb,offset,1,(pkt_afield->Tail[3]));
++						offset++;
++
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_0_Spr2,tvb,offset,1,(pkt_afield->Tail[4]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_0_PSCN,tvb,offset,1,(pkt_afield->Tail[4]));
++						offset++;
++
++
++						//wegen addition weiter unten
++						offset-=5;
++
++						break;
++					case 2:		//Extended RF Carriers Part 1
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Extended RF Carriers Part 1");
++						break;
++					case 3:		//Fixed Part Capabilities
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Fixed Part Capabilities");
++						
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A12,tvb,offset,1,(pkt_afield->Tail[0]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A13,tvb,offset,1,(pkt_afield->Tail[0]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A14,tvb,offset,1,(pkt_afield->Tail[0]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A15,tvb,offset,1,(pkt_afield->Tail[0]));
++						offset++;
++
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A16,tvb,offset,1,(pkt_afield->Tail[1]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A17,tvb,offset,1,(pkt_afield->Tail[1]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A18,tvb,offset,1,(pkt_afield->Tail[1]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A19,tvb,offset,1,(pkt_afield->Tail[1]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A20,tvb,offset,1,(pkt_afield->Tail[1]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A21,tvb,offset,1,(pkt_afield->Tail[1]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A22,tvb,offset,1,(pkt_afield->Tail[1]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A23,tvb,offset,1,(pkt_afield->Tail[1]));
++						offset++;
++						
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A24,tvb,offset,1,(pkt_afield->Tail[2]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A25,tvb,offset,1,(pkt_afield->Tail[2]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A26,tvb,offset,1,(pkt_afield->Tail[2]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A27,tvb,offset,1,(pkt_afield->Tail[2]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A28,tvb,offset,1,(pkt_afield->Tail[2]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A29,tvb,offset,1,(pkt_afield->Tail[2]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A30,tvb,offset,1,(pkt_afield->Tail[2]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Qt_3_A31,tvb,offset,1,(pkt_afield->Tail[2]));
++						offset++;						
++
++
++						offset+=2;
++
++
++						//wegen addition weiter unten
++						offset-=5;
++						break;
++					case 4:		//Extended Fixed Part Capabilities
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Extended Fixed Part Capabilities");
++						break;
++					case 5:		//SARI List Contents				
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"SARI List Contents");
++						break;
++					case 6:		//Multi-Frame No.
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Multi-Frame No.");
++						break;
++					case 7:		//Escape				
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Escape");
++						break;
++					case 8:		//Obsolete
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Obsolete");
++						break;
++					case 9:		//Extended RF Carriers Part 2
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Extended RF Carriers Part 2");
++						break;
++					case 10:	//Reserved(?)
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Reserved(?)");
++						break;
++					case 11:	//Transmit Information(?)
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Transmit Information(?)");
++						break;
++					case 12:	//Reserved
++					case 13:
++					case 14:
++					case 15:
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Reserved");
++						break;
++
++
++				}
++				break;
++			case 5:		//Escape
++				break;						
++			case 6:		//Mt
++				if(check_col(pinfo->cinfo,COL_HPUX_SUBSYS))
++					col_set_str(pinfo->cinfo,COL_HPUX_SUBSYS,"[Mt]");
++
++				proto_tree_add_uint(ATail,hf_dect_A_Tail_Mt_Mh,tvb,offset,1,(pkt_afield->Tail[0]));
++
++				switch(pkt_afield->Tail[0]>>4)
++				{
++					case 0:		//Basic Connection Control
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Basic Connection Control");
++
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Mt_BasicConCtrl,tvb,offset,1,(pkt_afield->Tail[0]));
++						offset++;
++
++						if(((pkt_afield->Tail[0]&&0x0f)==6)||((pkt_afield->Tail[0]&&0x0f)==7))
++						{
++							proto_tree_add_uint_format(ATail,hf_dect_A_Tail_Mt_Mh,tvb,offset,5,0x2323,"hier sollten attribute stehn...");
++						}
++						else
++						{
++							proto_tree_add_uint_format(ATail,hf_dect_A_Tail_Mt_Mh,tvb,offset,2,0x2323,"FMID:%.3x",(pkt_afield->Tail[1]<<4)|(pkt_afield->Tail[2]>>4));
++							offset++;
++						
++							proto_tree_add_uint_format(ATail,hf_dect_A_Tail_Mt_Mh,tvb,offset,3,0x2323,"PMID:%.5x",((pkt_afield->Tail[2]&0x0f)<<16)|(pkt_afield->Tail[3]<<8)|pkt_afield->Tail[4]);
++							offset+=3;
++						}
++
++						//wegen addition weiter unten
++						offset-=5;
++
++						break;
++					case 1:		//Advanced Connection Control
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Advanced Connection Control");
++						break;
++					case 2:		//MAC Layer Test Messages
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"MAC Layer Test Messages");
++						break;
++					case 3:		//Quality Control
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Quality Control");
++						break;
++					case 4:		//Broadcast and Connectionless Services
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Broadcast and Connectionless Services");
++						break;
++					case 5:		//Encryption Control
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Encryption Control");
++
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Mt_Encr_Cmd1,tvb,offset,1,(pkt_afield->Tail[0]));
++						proto_tree_add_uint(ATail,hf_dect_A_Tail_Mt_Encr_Cmd2,tvb,offset,1,(pkt_afield->Tail[0]));
++						offset++;
++
++						proto_tree_add_uint_format(ATail,hf_dect_A_Tail_Mt_Mh,tvb,offset,2,0x2323,"FMID:%.3x",(pkt_afield->Tail[1]<<4)|(pkt_afield->Tail[2]>>4));
++						offset++;
++						
++						proto_tree_add_uint_format(ATail,hf_dect_A_Tail_Mt_Mh,tvb,offset,3,0x2323,"PMID:%.5x",((pkt_afield->Tail[2]&0x0f)<<16)|(pkt_afield->Tail[3]<<8)|pkt_afield->Tail[4]);
++						offset+=3;
++
++
++						//wegen addition weiter unten
++						offset-=5;
++						break;
++					case 6:		//Tail for use with the first Transmission of a B-Field \"bearer request\" Message
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Tail for use with the first Transmission of a B-Field \"bearer request\" Message");
++						break;
++					case 7:		//Escape
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Escape");
++						break;
++					case 8:		//TARI Message
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"TARI Message");
++						break;
++					case 9:		//REP Connection Control
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"REP Connection Control");
++						break;
++					case 10:	//Reserved
++					case 11:	
++					case 12:
++					case 13:
++					case 14:
++					case 15:
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Reserved");
++						break;
++
++				}
++				break;
++			case 7:		//Pt
++				if(check_col(pinfo->cinfo,COL_HPUX_SUBSYS))
++					col_set_str(pinfo->cinfo,COL_HPUX_SUBSYS,"[Pt]");
++
++
++				proto_tree_add_uint(ATail,hf_dect_A_Tail_Pt_ExtFlag,tvb,offset,1,(pkt_afield->Tail[0]));
++				proto_tree_add_uint(ATail,hf_dect_A_Tail_Pt_SDU,tvb,offset,1,(pkt_afield->Tail[0]));
++				
++				switch((pkt_afield->Tail[0]&0x70)>>4)
++				{
++					case 0:		//Zero Length Page
++					case 1:		//Short Page
++						if(((pkt_afield->Tail[0]&0x70)>>4)==0)
++						{
++							if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++								col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Zero Length Page: ");
++
++							
++							proto_tree_add_uint_format(atailti,hf_dect_A_Tail_Pt_InfoType,tvb,offset,3,0x2323,"RFPI:xxxxx%.1x%.2x%.2x",(pkt_afield->Tail[0]&0x0f),pkt_afield->Tail[1],pkt_afield->Tail[2]);
++							offset+=3;
++
++							proto_tree_add_uint(ATail,hf_dect_A_Tail_Pt_InfoType,tvb,offset,1,(pkt_afield->Tail[3]));
++						
++						}
++						else
++						{
++							if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++								col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Short Page: ");
++
++														
++							proto_tree_add_uint_format(atailti,hf_dect_A_Tail_Pt_InfoType,tvb,offset,3,0x2323,"Bs Data:%.1x%.2x%.2x",(pkt_afield->Tail[0]&0x0f),pkt_afield->Tail[1],pkt_afield->Tail[2]);
++							offset+=3;
++
++							proto_tree_add_uint(ATail,hf_dect_A_Tail_Pt_InfoType,tvb,offset,1,(pkt_afield->Tail[3]));
++						}
++
++						
++						switch(pkt_afield->Tail[3]>>4)
++						{
++							case 0: //Fill Bits
++								proto_tree_add_uint_format(ATail,hf_dect_A_Tail_Pt_Fill_Fillbits,tvb,offset,2,0x2323,"Fillbits:%.1x%.2x",pkt_afield->Tail[3]&0x0f,pkt_afield->Tail[4]);
++								
++								offset+=2;
++								break;
++							case 1: //Blind Full Slot Information for Circuit Mode Service
++							case 7: //Escape
++							case 8: //Dummy or connectionless Bearer Marker
++								proto_tree_add_uint_format(ATail,hf_dect_A_Tail_Pt_InfoType,tvb,offset,2,0x2323,"            Slot-Pairs:%s%s%s%s%s%s%s%s%s%s%s%s available",
++									(pkt_afield->Tail[3]&0x08)?" 0/12":"",(pkt_afield->Tail[3]&0x04)?" 1/13":"",(pkt_afield->Tail[3]&0x02)?" 2/14":"",	
++									(pkt_afield->Tail[3]&0x01)?" 3/15":"",(pkt_afield->Tail[4]&0x80)?" 4/16":"",(pkt_afield->Tail[4]&0x40)?" 5/17":"",		
++									(pkt_afield->Tail[4]&0x20)?" 6/18":"",(pkt_afield->Tail[4]&0x10)?" 7/19":"",(pkt_afield->Tail[4]&0x08)?" 8/20":"",
++									(pkt_afield->Tail[4]&0x04)?" 9/21":"",(pkt_afield->Tail[4]&0x02)?" 10/22":"",(pkt_afield->Tail[4]&0x01)?" 11/23":"");
++
++								offset+=2;
++								break;
++
++							case 2: //Other Bearer
++							case 3: //Recommended Other Bearer
++							case 4: //Good RFP Bearer
++							case 5: //Dummy or connectionless Bearer Position
++							case 12: //Connectionless Bearer Position
++								proto_tree_add_uint(ATail,hf_dect_A_Tail_Pt_Bearer_Sn,tvb,offset,1,(pkt_afield->Tail[3]));
++								offset++;
++
++								proto_tree_add_uint(ATail,hf_dect_A_Tail_Pt_Bearer_Sp,tvb,offset,1,(pkt_afield->Tail[4]));
++								proto_tree_add_uint(ATail,hf_dect_A_Tail_Pt_Bearer_Cn,tvb,offset,1,(pkt_afield->Tail[4]));
++								offset++;
++
++								break;
++							case 6: //Extended Modulation Types
++								offset+=2;
++								break;
++
++							case 9: //Bearer Handover/Replacement Information
++								offset+=2;
++								break;
++							case 10: //RFP Status and Modulation Types
++								offset+=2;
++								break;
++							case 11: //Active Carriers
++								offset+=2;
++								break;
++							case 13: //RFP Power Level
++								offset+=2;
++								break;
++							case 14: //Blind Double Slot/RFP-FP Interface Resource Information
++								offset+=2;
++								break;
++							case 15: //Blind Full Slot Information for Packet Mode Service
++								offset+=2;
++								break;
++						}
++
++
++						//wegen addition weiter unten
++						offset-=5;
++						break;
++					case 2:		//Full Page
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Full Page: ");
++						break;
++					case 3:		//MAC Resume Page
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"MAC Resume Page: ");
++						break;
++					case 4:		//Not the Last 36 Bits of a Long Page
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"Not the Last 36 Bits: ");
++						break;
++					case 5:		//The First 36 Bits of a Long Page
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"The First 36 Bits: ");
++						break;
++					case 6:		//The Last 36 Bits of a Long Page
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"The Last 36 Bits: ");
++						break;
++					case 7:		//All of a Long Page
++						if(check_col(pinfo->cinfo,COL_DEF_NET_SRC))
++							col_append_str(pinfo->cinfo,COL_DEF_NET_SRC,"All of a Long Page: ");
++						break;
++
++				}
++				break;						
++
++		}
++
++		
++	offset+=5;
++
++	//R-CRC anlegen und füllen
++
++	memcpy(rcrcdat,pkt_ptr,6);
++	rcrcdat[6]=0;
++	rcrcdat[7]=0;
++	rcrc=calc_rcrc(rcrcdat);
++	if(rcrc!=pkt_afield->RCRC)
++		proto_tree_add_uint_format(afieldti,hf_dect_A_RCRC,tvb,offset,2,0,"R-CRC Error (Calc:%0.4x,Recv:%.4x)",rcrc,pkt_afield->RCRC);
++	else
++		proto_tree_add_uint_format(afieldti,hf_dect_A_RCRC,tvb,offset,2,1,"R-CRC Match (Calc:%0.4x,Recv:%.4x)",rcrc,pkt_afield->RCRC);
++
++	offset+=2;
++
++
++	//********************************************  B-Field  ********************************************
++
++	offset=dissect_bfield(type,pkt_afield,pkt_bfield,pinfo,pkt_ptr,tvb,ti,DectTree,offset);
++
++
++}
++
++
++gint dissect_bfield(BOOL type,struct dect_afield *pkt_afield,struct dect_bfield *pkt_bfield,packet_info *pinfo,guint8 *pkt_ptr,tvbuff_t *tvb,proto_item *ti,proto_tree *DectTree,gint offset)
++{
++	guint8 xcrc,xcrclen;
++	guint16 blen,x,y;
++
++	gint oldoffset,fn;
++
++
++	proto_item *bfieldti	=NULL;
++	proto_item *bxcrc		=NULL;
++
++
++	proto_tree *BField		=NULL;
++
++
++	//B-Feld anlegen
++	switch((pkt_afield->Header&0x0E)>>1)
++	{
++		case 0:
++		case 1:
++		case 3:
++		case 5:
++		case 6:
++			blen=40;
++			xcrclen=4;
++
++			if(check_col(pinfo->cinfo,COL_DEF_NET_DST))
++			{
++				col_append_str(pinfo->cinfo,COL_DEF_NET_DST,"Full Slot");
++			}
++			break;
++		case 2:
++			blen=100;
++			xcrclen=4;
++
++			if(check_col(pinfo->cinfo,COL_DEF_NET_DST))
++			{
++				col_append_str(pinfo->cinfo,COL_DEF_NET_DST,"Double Slot");
++			}
++			break;
++		case 4:
++			blen=10;
++			xcrclen=4;
++
++			if(check_col(pinfo->cinfo,COL_DEF_NET_DST))
++			{
++				col_append_str(pinfo->cinfo,COL_DEF_NET_DST,"Half Slot");
++			}
++			break;
++		case 7:
++			blen=0;
++			xcrclen=0;
++
++			if(check_col(pinfo->cinfo,COL_DEF_NET_DST))
++			{
++				col_append_str(pinfo->cinfo,COL_DEF_NET_DST,"No B-Field");
++			}
++			break;
++	}
++
++
++	if(blen)
++	{
++		bfieldti	= proto_tree_add_uint_format(DectTree,hf_dect_B,tvb,offset,40,0/*0x2323*/,"B-Field");
++		BField		= proto_item_add_subtree(bfieldti,subtree_bfield);
++	}
++
++	oldoffset=offset;
++
++	if((blen+(xcrclen/8)+1)<=pkt_bfield->Length)
++	{
++		for(x=0;x<blen;x+=16)
++		{
++			char string[60];
++			string[0]=0;
++
++			y=0;
++			for(y=0;y<16;y++)
++			{
++				if((x+y)>=blen)
++					break;
++
++				sprintf(string,"%s%.2x ",string,pkt_bfield->Data[x+y]);
++			}
++
++			proto_tree_add_uint_format(BField,hf_dect_B_Data,tvb,offset,y,0x2323,"Data: %s",string);
++				
++			if(y==16)
++				offset+=16;
++			else
++				offset+=16-y;
++
++		}
++
++
++
++		for(fn=0;fn<8;fn++)
++		{
++			guint16 bytecount=0;
++
++			proto_tree_add_uint_format(BField,hf_dect_B_Data,tvb,offset,y,0x2323,"\n");
++			offset=oldoffset;
++
++							proto_tree_add_uint_format(BField,hf_dect_B_Data,tvb,offset,y,0x2323,"Framenumber %u/%u",fn,fn+8);
++			for(x=0;x<blen;x+=16)
++			{
++				char string[60];
++				string[0]=0;
++
++				y=0;
++				for(y=0;y<16;y++)
++				{
++					if((x+y)>=blen)
++						break;
++
++					sprintf(string,"%s%.2x ",string,pkt_bfield->Data[x+y]^scrt[fn][bytecount%31]);
++					bytecount++;
++				}
++
++				proto_tree_add_uint_format(BField,hf_dect_B_Data,tvb,offset,y,0x2323,"Data: %s",string);
++					
++				if(y==16)
++					offset+=16;
++				else
++					offset+=16-y;
++			}
++		}
++
++
++		
++		
++		xcrc=calc_xcrc(pkt_bfield->Data,83);
++
++		if(xcrc!=(pkt_bfield->Data[40]&0xf0))
++			proto_tree_add_uint_format(bfieldti,hf_dect_B_XCRC,tvb,offset,1,0,"X-CRC Error (Calc:%.2x,Recv:%.2x)",xcrc,pkt_bfield->Data[40]&0xf0);
++		else
++			proto_tree_add_uint_format(bfieldti,hf_dect_B_XCRC,tvb,offset,1,1,"X-CRC Match (Calc:%.2x,Recv:%.2x)",xcrc,pkt_bfield->Data[40]&0xf0);
++
++	}
++	else
++		proto_tree_add_uint_format(BField,hf_dect_B_Data,tvb,offset,0,0x2323,"Data too Short");
++
++
++	return offset;
++}
++
++
++
++
++guint8 calc_xcrc(guint8* data,guint8 length)
++{
++	guint8 bits[21];
++
++
++	guint8 gp=0x1;
++
++	guint8 div;
++	guint8 next;
++	int y,x;
++	
++	for(y=0;y<80;y++)
++	{
++		setbit(bits,y,getbit(data,y+48*(1+(int)(y/16))));
++	}
++
++	length=10;
++
++
++
++	div=bits[0];
++
++	y=0;
++	while(y<length)
++	{
++		if(y<(length-1))
++			next=bits[y+1];
++		else
++			next=0;
++
++		y++;
++
++		x=0;
++		while(x<8)
++		{
++
++			while(!(div&0x80))
++			{
++				div<<=1;
++				div|=!!(next&0x80);
++				next<<=1;
++				x++;
++
++				if(x>7)
++					break;
++			}
++
++			if(x>7)
++				break;
++
++			div<<=1;
++			div|=!!(next&0x80);
++			next<<=1;
++			x++;
++
++			div^=(gp<<4);
++
++		}
++	}
++
++//	div^=0x10;
++	return div;
++}
++
++
++
++
++
++guint16 calc_rcrc(guint8* data)
++{
++	guint16 gp=0x0589;		//10000010110001001 ohne die 1 vorne
++
++	guint16 div;
++	guint8 next;
++	int y,x;
++	
++	div=data[0]<<8|data[1];
++
++
++	y=0;
++	while(y<6)
++	{
++		next=data[2+y];
++		y++;
++
++		x=0;
++		while(x<8)
++		{
++
++			while(!(div&0x8000))
++			{
++				div<<=1;
++				div|=!!(next&0x80);
++				next<<=1;
++				x++;
++
++				if(x>7)
++					break;
++			}
++
++			if(x>7)
++				break;
++
++			div<<=1;
++			div|=!!(next&0x80);
++			next<<=1;
++			x++;
++
++			div^=gp;
++
++		}
++	}
++
++	div^=1;
++	return div;
++
++}
++
++
++
++unsigned char getbit(guint8 *data,int bit)
++{
++	guint8 c;
++	guint8 byte=data[bit/8];
++
++	c=1;
++	c<<=bit%8;
++
++	return (byte&c)>>bit%8;
++
++}
++
++void setbit(guint8 *data,int bit,guint8 value)
++{
++	if(!value)
++		data[bit/8]&=~(1<<(bit%8));
++	else
++		data[bit/8]|=(1<<(bit%8));	
++}
+diff --git a/plugins/dect/moduleinfo.h b/plugins/dect/moduleinfo.h
+new file mode 100644
+index 0000000..abbf3ce
+--- /dev/null
++++ b/plugins/dect/moduleinfo.h
+@@ -0,0 +1,18 @@
++/* Included *after* config.h, in order to re-define these macros */
++
++#ifdef PACKAGE
++#undef PACKAGE
++#endif
++
++/* Name of package */
++#define PACKAGE "dect"
++
++
++#ifdef VERSION
++#undef VERSION
++#endif
++
++/* Version number of package */
++#define VERSION "0.1"
++
++
+diff --git a/plugins/dect/moduleinfo.nmake b/plugins/dect/moduleinfo.nmake
+new file mode 100644
+index 0000000..cfc77c5
+--- /dev/null
++++ b/plugins/dect/moduleinfo.nmake
+@@ -0,0 +1,28 @@
++#
++# $Id: moduleinfo.nmake 20036 2006-12-04 23:12:04Z jake $
++#
++
++# The name
++PACKAGE=dect
++
++# The version
++MODULE_VERSION_MAJOR=0
++MODULE_VERSION_MINOR=1
++MODULE_VERSION_MICRO=0
++MODULE_VERSION_EXTRA=0
++
++#
++# The RC_VERSION should be comma-separated, not dot-separated, 
++# as per Graham Bloice's message in
++#
++#	http://www.ethereal.com/lists/ethereal-dev/200303/msg00283.html
++#
++# "The RC_VERSION variable in config.nmake should be comma separated. 
++# This allows the resources to be built correctly and the version
++# number to be correctly displayed in the explorer properties dialog
++# for the executables, and XP's tooltip, rather than 0.0.0.0."
++#
++
++MODULE_VERSION=$(MODULE_VERSION_MAJOR).$(MODULE_VERSION_MINOR).$(MODULE_VERSION_MICRO).$(MODULE_VERSION_EXTRA)
++RC_MODULE_VERSION=$(MODULE_VERSION_MAJOR),$(MODULE_VERSION_MINOR),$(MODULE_VERSION_MICRO),$(MODULE_VERSION_EXTRA)
++
+diff --git a/plugins/dect/plugin.c b/plugins/dect/plugin.c
+new file mode 100644
+index 0000000..fd300c7
+--- /dev/null
++++ b/plugins/dect/plugin.c
+@@ -0,0 +1,28 @@
++/* Do not modify this file.  */
++/* It is created automatically by the Makefile.  */
++
++#ifdef HAVE_CONFIG_H
++# include "config.h"
++#endif
++
++#include <gmodule.h>
++
++#include "moduleinfo.h"
++
++#ifndef ENABLE_STATIC
++G_MODULE_EXPORT const gchar version[] = VERSION;
++
++/* Start the functions we need for the plugin stuff */
++
++G_MODULE_EXPORT void
++plugin_register (void)
++{
++  {extern void proto_register_dect (void); proto_register_dect ();}
++}
++
++G_MODULE_EXPORT void
++plugin_reg_handoff(void)
++{
++  {extern void proto_reg_handoff_dect (void); proto_reg_handoff_dect ();}
++}
++#endif
+diff --git a/plugins/dect/plugin.rc.in b/plugins/dect/plugin.rc.in
+new file mode 100644
+index 0000000..72b4de0
+--- /dev/null
++++ b/plugins/dect/plugin.rc.in
+@@ -0,0 +1,34 @@
++#include "winver.h"
++
++VS_VERSION_INFO VERSIONINFO
++ FILEVERSION @RC_MODULE_VERSION@
++ PRODUCTVERSION @RC_VERSION@,0
++ FILEFLAGSMASK 0x0L
++#ifdef _DEBUG
++ FILEFLAGS VS_FF_PRERELEASE+VS_FF_DEBUG
++#else
++ FILEFLAGS VS_FF_PRERELEASE
++#endif
++ FILEOS VOS_NT_WINDOWS32
++ FILETYPE VFT_DLL
++BEGIN
++    BLOCK "StringFileInfo"
++    BEGIN
++        BLOCK "040904b0"
++        BEGIN
++            VALUE "CompanyName", "The Wireshark developer community, http://www.wireshark.org/\0"
++            VALUE "FileDescription", "@PACKAGE@ dissector\0"
++            VALUE "FileVersion", "@MODULE_VERSION@\0"
++            VALUE "InternalName", "@PACKAGE@ @MODULE_VERSION@\0"
++            VALUE "LegalCopyright", "Copyright © 1998 Gerald Combs <gerald@wireshark.org>, Gilbert Ramirez <gram@alumni.rice.edu> and others\0"
++            VALUE "OriginalFilename", "@PLUGIN_NAME@.dll\0"
++            VALUE "ProductName", "Wireshark\0"
++            VALUE "ProductVersion", "@VERSION@\0"
++            VALUE "Comments", "Build with @MSVC_VARIANT@\0"
++        END
++    END
++    BLOCK "VarFileInfo"
++    BEGIN
++        VALUE "Translation", 0x409, 1200
++    END
++END
+diff --git a/plugins/mate/mate_grammar.c b/plugins/mate/mate_grammar.c
+index c842580..96c3c0d 100644
+--- a/plugins/mate/mate_grammar.c
++++ b/plugins/mate/mate_grammar.c
+@@ -337,109 +337,109 @@ typedef union {
+ **  yy_default[]       Default action for each state.
+ */
+ static const YYACTIONTYPE yy_action[] = {
+- /*     0 */   282,  106,  187,  107,  232,   96,  148,   97,   62,  424,
+- /*    10 */   426,  149,  161,  176,  123,  240,  241,  405,  200,  201,
+- /*    20 */   202,  203,  430,    1,  146,    5,  246,    4,  208,  225,
+- /*    30 */   405,  100,  206,  207,   19,  405,  405,  243,  244,  245,
+- /*    40 */   102,  101,  348,  226,    4,   93,   87,  233,  211,   19,
+- /*    50 */     3,  183,  184,  185,  186,  188,  189,  234,  235,  424,
+- /*    60 */   426,  424,  426,  424,  426,  405,  405,   99,  239,   11,
+- /*    70 */   254,  103,  264,   90,  261,    7,    8,  281,  260,  236,
+- /*    80 */   238,  422,  158,  104,  279,  105,  264,   67,  210,  214,
+- /*    90 */   215,  252,  253,  121,  122,   63,   66,  229,  257,  262,
+- /*   100 */   158,  256,  259,   93,   14,  127,  231,  237,  168,  131,
+- /*   110 */   130,   64,   71,  180,  135,   98,  119,  116,  110,  136,
+- /*   120 */   137,  138,  143,  139,   42,  113,   43,  144,  145,  154,
+- /*   130 */   155,  140,   74,   15,  156,  422,   44,   74,   20,  167,
+- /*   140 */   169,  170,  171,  172,  181,   47,   45,  132,  108,  126,
+- /*   150 */    22,   73,   48,   50,  124,   16,   18,  128,   27,   53,
+- /*   160 */    51,   26,   54,   25,   55,   24,   23,   56,   30,   57,
+- /*   170 */    29,    2,   28,    6,  147,  230,  100,   68,  228,   12,
+- /*   180 */   242,  151,   10,   32,   59,   34,   33,   60,  152,   69,
+- /*   190 */   141,  133,  157,   70,  160,   31,  275,  258,  263,  163,
+- /*   200 */    89,   79,   78,   88,  164,   80,   87,   11,   39,   37,
+- /*   210 */    81,   82,   38,   83,   36,   84,   85,   17,   86,   35,
+- /*   220 */   165,   40,   21,  280,  190,   41,   91,  191,   94,  173,
+- /*   230 */   174,   92,  175,  178,  109,  111,  192,  112,  115,  114,
+- /*   240 */   193,  117,  194,  118,  182,  120,  195,  196,  197,   61,
+- /*   250 */   150,   46,  224,  125,  198,  227,    9,  199,   49,  247,
+- /*   260 */    75,  204,   65,  129,  205,   77,  209,  431,  153,   52,
+- /*   270 */    13,  248,  134,  276,   58,  212,   76,   72,  213,  431,
+- /*   280 */   142,  216,  166,  220,  217,  265,  221,  218,  266,  222,
+- /*   290 */   219,  267,  223,  249,  268,  250,  251,  269,  431,  255,
+- /*   300 */   270,  431,  431,  271,  159,  431,  272,  273,  162,  274,
+- /*   310 */   431,  431,  277,  431,  179,  278,  177,   95,
++ /*     0 */   282,  105,  186,  106,  230,  231,  256,  233,    3,  430,
++ /*    10 */     1,  148,  160,  175,  122,  240,  241,  405,  199,  200,
++ /*    20 */   201,  202,  237,  100,  145,    5,  246,    4,  207,  147,
++ /*    30 */   405,   62,  205,  206,   96,  405,  405,  225,    4,  243,
++ /*    40 */   244,  245,  348,   98,  239,  210,  254,  232,  224,   93,
++ /*    50 */    87,  182,  183,  184,  185,  187,  188,  234,  235,  419,
++ /*    60 */    11,  419,   14,   67,   90,  405,  405,  101,   19,  102,
++ /*    70 */   264,  261,    7,  157,  260,  279,    8,  281,   63,  103,
++ /*    80 */   228,  104,  264,  238,   66,  209,  213,  214,  252,  253,
++ /*    90 */   120,  121,  418,  257,  418,  420,  262,  420,   19,   93,
++ /*   100 */   157,  259,   99,  236,  126,  167,  129,  179,   64,  134,
++ /*   110 */    71,   97,  118,  115,  130,  107,  112,  136,   43,  135,
++ /*   120 */    74,   15,  137,  138,  142,   20,   42,  143,  109,  144,
++ /*   130 */   153,  154,  155,  166,   74,  168,  169,  170,  171,  180,
++ /*   140 */    44,  139,   45,  131,  123,   47,   73,  125,   48,   50,
++ /*   150 */    22,   51,   18,  127,   16,   27,   53,   26,   54,   25,
++ /*   160 */    55,   24,   23,   30,   56,   29,   57,   28,    2,    6,
++ /*   170 */   146,   96,   68,   33,  227,  150,  242,  229,   10,   12,
++ /*   180 */    70,  132,   32,   31,  156,   59,   34,   69,   60,  159,
++ /*   190 */   151,  258,  263,  275,  162,  163,  140,   89,   78,   88,
++ /*   200 */    11,   79,   39,   80,   84,   87,   81,   38,   82,   37,
++ /*   210 */    83,   36,   85,   17,   86,   35,  164,   40,  280,   21,
++ /*   220 */   189,   41,   91,  177,   94,  172,  108,  173,  174,   92,
++ /*   230 */   190,  110,  191,  111,  113,  192,  114,  117,  116,  193,
++ /*   240 */   194,  181,  119,  195,  196,  124,  197,   46,  198,   49,
++ /*   250 */   203,  204,  128,  208,   52,  211,  212,  133,  215,  216,
++ /*   260 */   217,  218,   65,   61,   58,  247,  141,  219,    9,  220,
++ /*   270 */   221,  165,  222,  223,  152,  226,   75,  248,  249,  431,
++ /*   280 */   250,  251,  149,  431,  255,  431,  431,  265,  431,  158,
++ /*   290 */   266,  161,  431,  267,   77,  431,  268,  269,  431,  270,
++ /*   300 */    72,  431,   76,  271,   13,  272,  273,  431,  274,  431,
++ /*   310 */   178,  276,  431,  277,  278,  176,   95,
+ };
+ static const YYCODETYPE yy_lookahead[] = {
+- /*     0 */     0,    1,   63,    3,    7,    8,   68,   10,   70,    5,
+- /*    10 */     5,   11,   12,   13,   14,   29,   30,    5,   44,   45,
+- /*    20 */    46,   47,  110,  111,   24,   65,   66,   67,   47,    5,
+- /*    30 */    18,    8,   51,   52,   25,   23,   24,   26,   27,   28,
+- /*    40 */   108,  109,   56,   66,   67,   53,   54,   50,   10,   25,
+- /*    50 */     4,  112,  113,  114,  115,  116,  117,   60,   61,   55,
+- /*    60 */    55,   57,   57,   59,   59,   53,   54,  106,  107,   24,
+- /*    70 */    81,  102,  103,   86,   81,   82,   96,   97,   99,    5,
+- /*    80 */    57,    5,   37,  104,   97,  102,  103,   98,   50,   48,
+- /*    90 */    49,   35,   36,    7,    8,   55,    4,   57,    2,    2,
+- /*   100 */    37,    8,    8,   53,   58,   74,  108,  108,   74,   72,
+- /*   110 */   100,   69,   69,  100,   75,    6,    9,   11,   13,   75,
+- /*   120 */    72,   72,   75,   72,  118,   12,  119,   75,   75,   75,
+- /*   130 */    75,   11,   40,   59,   75,   59,  120,   40,   77,   75,
+- /*   140 */    75,   72,   72,   72,   72,  123,  121,   12,  122,   13,
+- /*   150 */    18,   55,  124,  135,  125,   21,   23,  136,   18,  129,
+- /*   160 */   133,   19,  130,   20,  131,   16,   22,  132,   15,  133,
+- /*   170 */    16,    4,   17,   56,   64,  107,    8,   76,  105,   33,
+- /*   180 */   105,  103,  101,   17,  126,   34,   16,  127,   80,   78,
+- /*   190 */   128,  134,  105,   79,  103,   39,    8,   99,  103,   73,
+- /*   200 */    42,   85,   84,   43,  105,   86,   54,   24,   18,   20,
+- /*   210 */    98,   90,   19,   91,   16,   92,   87,   21,   88,   22,
+- /*   220 */    89,   18,   23,    8,    2,    4,   98,    2,   71,  105,
+- /*   230 */   105,   94,  105,   95,    5,    9,    2,   10,   10,    9,
+- /*   240 */     2,    9,    2,   10,  105,   10,    2,    2,    2,    8,
+- /*   250 */     8,    4,    2,    5,    2,    2,   32,    2,    4,    2,
+- /*   260 */    41,    2,   31,    5,    2,    4,    2,  137,    5,    4,
+- /*   270 */     4,    2,    5,    2,    4,    2,   25,   38,    2,  137,
+- /*   280 */     5,    2,    5,    2,    2,    2,    2,    2,    2,    2,
+- /*   290 */     2,    2,    2,    2,    2,    2,    2,    2,  137,    2,
+- /*   300 */     2,  137,  137,    2,    8,  137,    2,    2,    8,    2,
+- /*   310 */   137,  137,    2,  137,    5,    2,    8,    2,
++ /*     0 */     0,    1,   63,    3,    7,    8,    8,   10,    4,  110,
++ /*    10 */   111,   11,   12,   13,   14,   29,   30,    5,   44,   45,
++ /*    20 */    46,   47,  108,  109,   24,   65,   66,   67,   47,   68,
++ /*    30 */    18,   70,   51,   52,    8,   23,   24,   66,   67,   26,
++ /*    40 */    27,   28,   56,  106,  107,   10,   81,   50,    5,   53,
++ /*    50 */    54,  112,  113,  114,  115,  116,  117,   60,   61,   55,
++ /*    60 */    24,   57,   58,   98,   86,   53,   54,    5,   25,  102,
++ /*    70 */   103,   81,   82,   37,   99,   97,   96,   97,   55,  104,
++ /*    80 */    57,  102,  103,   57,    4,   50,   48,   49,   35,   36,
++ /*    90 */     7,    8,   55,    2,   57,   55,    2,   57,   25,   53,
++ /*   100 */    37,    8,  108,  108,   74,   74,  100,  100,   69,   75,
++ /*   110 */    69,    6,    9,   11,   72,  122,   12,   72,  119,   75,
++ /*   120 */    40,   59,   72,   72,   75,   77,  118,   75,   13,   75,
++ /*   130 */    75,   75,   75,   75,   40,   75,   72,   72,   72,   72,
++ /*   140 */   120,   11,  121,   12,  125,  123,   55,   13,  124,  135,
++ /*   150 */    18,  133,   23,  136,   21,   18,  129,   19,  130,   20,
++ /*   160 */   131,   16,   22,   15,  132,   16,  133,   17,    4,   56,
++ /*   170 */    64,    8,   76,   16,  105,  103,  105,  107,  101,   33,
++ /*   180 */    79,  134,   17,   39,  105,  126,   34,   78,  127,  103,
++ /*   190 */    80,   99,  103,    8,   73,  105,  128,   42,   84,   43,
++ /*   200 */    24,   85,   18,   86,   92,   54,   98,   19,   90,   20,
++ /*   210 */    91,   16,   87,   21,   88,   22,   89,   18,    8,   23,
++ /*   220 */     2,    4,   98,   95,   71,  105,    5,  105,  105,   94,
++ /*   230 */     2,    9,    2,   10,    9,    2,   10,   10,    9,    2,
++ /*   240 */     2,  105,   10,    2,    2,    5,    2,    4,    2,    4,
++ /*   250 */     2,    2,    5,    2,    4,    2,    2,    5,    2,    2,
++ /*   260 */     2,    2,   31,    8,    4,    2,    5,    2,   32,    2,
++ /*   270 */     2,    5,    2,    2,    5,    2,   41,    2,    2,  137,
++ /*   280 */     2,    2,    8,  137,    2,  137,  137,    2,  137,    8,
++ /*   290 */     2,    8,  137,    2,    4,  137,    2,    2,  137,    2,
++ /*   300 */    38,  137,   25,    2,    4,    2,    2,  137,    2,  137,
++ /*   310 */     5,    2,  137,    2,    2,    8,    2,
+ };
+ #define YY_SHIFT_USE_DFLT (-27)
+-#define YY_SHIFT_MAX 182
++#define YY_SHIFT_MAX 181
+ static const short yy_shift_ofst[] = {
+- /*     0 */   -27,    0,    9,   -3,  -14,   24,   23,   45,   -8,   93,
+- /*    10 */    63,   94,   93,   50,   -3,   -3,  -26,  -26,  -19,   11,
+- /*    20 */    11,  -19,   38,   41,   41,   38,   38,   38,   41,   41,
+- /*    30 */    41,   41,   41,   41,   56,   41,   41,   38,   38,   38,
+- /*    40 */    38,  109,  107,  106,  113,  105,  120,  135,  136,  132,
+- /*    50 */   134,  133,  140,  142,  143,  149,  134,  144,  153,  154,
+- /*    60 */   155,  167,  117,  168,  117,   93,  146,  151,  170,  166,
+- /*    70 */   156,  117,   93,   94,   93,  188,  117,  158,  160,  152,
+- /*    80 */   183,  190,  193,  189,  198,  196,  197,  117,  117,  117,
+- /*    90 */   183,  203,  199,  215,  117,   12,    4,    5,   86,   40,
+- /*   100 */    46,   74,   76,   92,   96,   97,  222,  221,  229,  225,
+- /*   110 */   226,  227,  234,  230,  228,  238,  232,  233,  240,  235,
+- /*   120 */   244,  245,  246,  247,  248,  252,  254,  255,  258,  259,
+- /*   130 */   262,  264,  265,  267,  273,  276,  279,  282,  285,  288,
+- /*   140 */   270,  275,  281,  284,  287,  290,  241,  250,  253,  242,
+- /*   150 */   231,  224,  263,  257,  269,  291,  293,  294,  296,  239,
+- /*   160 */   297,  300,  219,  251,  261,  277,  283,  286,  289,  292,
+- /*   170 */   295,  298,  301,  304,  305,  307,  308,  266,  309,  271,
+- /*   180 */   310,  313,  315,
++ /*     0 */   -27,    0,   73,   -3,  -14,   43,   26,   36,   -4,   -2,
++ /*    10 */    63,   93,   -2,   46,   -3,   -3,  -26,  -26,  -19,   13,
++ /*    20 */    13,  -19,   35,   38,   38,   35,   35,   35,   38,   38,
++ /*    30 */    38,   38,   38,   38,   53,   38,   38,   35,   35,   35,
++ /*    40 */    35,  105,  103,  102,  104,  115,  130,  131,  134,  132,
++ /*    50 */   133,  129,  137,  138,  139,  145,  133,  140,  148,  149,
++ /*    60 */   150,  164,  113,  163,  113,   -2,  146,  152,  157,  165,
++ /*    70 */   144,  113,   -2,   93,   -2,  185,  113,  155,  156,  151,
++ /*    80 */   176,  184,  188,  189,  195,  192,  193,  113,  113,  113,
++ /*    90 */   176,  199,  196,  210,  113,   12,    4,   83,   23,   37,
++ /*   100 */    62,   40,   80,   91,   94,  218,  217,  221,  228,  222,
++ /*   110 */   223,  230,  225,  226,  233,  229,  227,  237,  232,  238,
++ /*   120 */   241,  242,  243,  240,  244,  245,  246,  247,  248,  249,
++ /*   130 */   251,  250,  252,  253,  254,  256,  257,  258,  259,  260,
++ /*   140 */   261,  265,  267,  268,  270,  255,  271,  273,  274,  231,
++ /*   150 */   236,  269,  263,  275,  276,  278,  279,  281,  262,  282,
++ /*   160 */   283,  235,  277,  290,  266,  285,  288,  291,  294,  295,
++ /*   170 */   297,  301,  303,  304,  306,  307,  300,  305,  309,  311,
++ /*   180 */   312,  314,
+ };
+-#define YY_REDUCE_USE_DFLT (-89)
++#define YY_REDUCE_USE_DFLT (-102)
+ #define YY_REDUCE_MAX 94
+ static const short yy_reduce_ofst[] = {
+- /*     0 */   -88,  -61,  -40,  -68,  -62,  -23,  -39,  -11,  -13,  -31,
+- /*    10 */    -7,  -21,  -17,  -20,   -2,   -1,   31,   34,   10,   42,
+- /*    20 */    43,   13,   37,   39,   44,   48,   49,   51,   47,   52,
+- /*    30 */    53,   54,   55,   59,   61,   64,   65,   69,   70,   71,
+- /*    40 */    72,    6,    7,   16,   25,   26,   22,   28,   29,   18,
+- /*    50 */    27,   21,   30,   32,   33,   35,   36,   57,   58,   60,
+- /*    60 */    62,  110,   73,   68,   75,   78,   81,  101,  111,  114,
+- /*    70 */   108,   87,   91,   98,   95,  126,   99,  118,  116,  119,
+- /*    80 */   112,  121,  122,  123,  129,  130,  131,  124,  125,  127,
+- /*    90 */   128,  137,  138,  157,  139,
++ /*     0 */  -101,  -61,  -40,  -86,  -39,  -29,  -63,  -35,  -22,  -33,
++ /*    10 */   -10,  -25,  -21,  -20,   -6,   -5,   30,   31,    6,   39,
++ /*    20 */    41,    7,   42,   34,   44,   45,   50,   51,   49,   52,
++ /*    30 */    54,   55,   56,   57,   48,   58,   60,   64,   65,   66,
++ /*    40 */    67,    8,   -1,   20,   21,   -7,   22,   24,   19,   14,
++ /*    50 */    18,   17,   27,   28,   29,   32,   33,   47,   59,   61,
++ /*    60 */    68,  106,   69,   70,   71,   72,   77,   96,  109,  101,
++ /*    70 */   110,   79,   86,   92,   89,  121,   90,  114,  116,  117,
++ /*    80 */   108,  118,  119,  112,  125,  126,  127,  120,  122,  123,
++ /*    90 */   124,  135,  128,  153,  136,
+ };
+ static const YYACTIONTYPE yy_default[] = {
+  /*     0 */   284,  429,  339,  429,  340,  339,  429,  410,  408,  429,
+@@ -452,7 +452,7 @@ static const YYACTIONTYPE yy_default[] = {
+  /*    70 */   365,  429,  429,  429,  429,  429,  429,  373,  375,  408,
+  /*    80 */   410,  381,  383,  385,  371,  377,  379,  429,  429,  429,
+  /*    90 */   410,  399,  397,  429,  429,  429,  429,  429,  429,  429,
+- /*   100 */   419,  429,  429,  429,  429,  429,  429,  429,  429,  429,
++ /*   100 */   429,  429,  429,  429,  429,  429,  429,  429,  429,  429,
+  /*   110 */   429,  429,  429,  429,  429,  429,  429,  429,  429,  429,
+  /*   120 */   429,  429,  429,  429,  429,  429,  429,  429,  429,  429,
+  /*   130 */   429,  429,  429,  429,  429,  429,  429,  429,  429,  429,
+@@ -460,12 +460,12 @@ static const YYACTIONTYPE yy_default[] = {
+  /*   150 */   429,  429,  429,  429,  429,  429,  429,  429,  429,  429,
+  /*   160 */   429,  429,  429,  429,  429,  429,  429,  429,  429,  429,
+  /*   170 */   429,  429,  429,  429,  429,  429,  429,  429,  429,  429,
+- /*   180 */   429,  429,  429,  283,  285,  286,  287,  288,  289,  290,
+- /*   190 */   291,  292,  302,  300,  298,  296,  293,  294,  304,  323,
+- /*   200 */   386,  387,  388,  389,  327,  331,  400,  401,  402,  329,
+- /*   210 */   393,  394,  313,  325,  390,  391,  321,  319,  317,  315,
+- /*   220 */   305,  311,  309,  307,  333,  334,  335,  337,  341,  414,
+- /*   230 */   416,  418,  423,  425,  427,  428,  420,  421,  415,  417,
++ /*   180 */   429,  429,  283,  285,  286,  287,  288,  289,  290,  291,
++ /*   190 */   292,  302,  300,  298,  296,  293,  294,  304,  323,  386,
++ /*   200 */   387,  388,  389,  327,  331,  400,  401,  402,  329,  393,
++ /*   210 */   394,  313,  325,  390,  391,  321,  319,  317,  315,  305,
++ /*   220 */   311,  309,  307,  333,  334,  335,  337,  341,  414,  416,
++ /*   230 */   423,  424,  425,  426,  427,  428,  421,  422,  415,  417,
+  /*   240 */   346,  347,  338,  343,  344,  345,  336,  349,  364,  362,
+  /*   250 */   360,  353,  355,  356,  357,  359,  368,  409,  411,  413,
+  /*   260 */   412,  358,  351,  366,  367,  369,  378,  376,  370,  384,
+diff --git a/svnversion.h b/svnversion.h
+index 46fba12..b3f53a6 100644
+--- a/svnversion.h
++++ b/svnversion.h
+@@ -1 +1 @@
+-#define SVNVERSION "SVN Rev 26954"
++/* #define SVNVERSION "" */
+diff --git a/tools/idl2wrs.sh b/tools/idl2wrs.sh
+index 9046f91..bca78f8 100644
+--- a/tools/idl2wrs.sh
++++ b/tools/idl2wrs.sh
+@@ -1,4 +1,4 @@
+-#! /bin/bash
++#! /bin/sh
+ #
+ #  $Id: idl2wrs.sh.in 19742 2006-10-30 18:17:10Z jmayer $
+ #
