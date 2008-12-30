@@ -471,7 +471,7 @@ void process_dect_data()
 			        read(cli.fd, &cli.packet, sizeof(cli.packet)))
 			{
 
-				/* stop hopping one we synchronized */
+				/* stop hopping once we synchronized */
 				cli.hop = 0;
 
 				if (!cli.pcap)
