@@ -496,6 +496,9 @@ static int com_on_air_probe (struct pcmcia_device *link)
 				link->irq.AssignedIRQ);
 		dev->irq = link->irq.AssignedIRQ;
 	}
+	/* FIXME: there are devces which arrive here but can only allocate a
+	 *        shared interrupt!
+	 * */
 
 	ret = pcmcia_request_configuration(link, &link->conf);
 	if (ret != CS_SUCCESS)

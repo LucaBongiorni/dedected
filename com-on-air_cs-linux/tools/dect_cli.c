@@ -460,7 +460,7 @@ void process_dect_data()
 		case MODE_CALLSCAN:
 			while (7 == (ret = read(cli.fd, buf, 7))){
 				memcpy(cli.station.RFPI, &buf[2], 5);
-				cli.station.channel = buf[0];	
+				cli.station.channel = buf[0];
 				cli.station.RSSI = buf[1];
 				cli.station.type = TYPE_PP;
 				try_add_station(&cli.station);
@@ -470,8 +470,14 @@ void process_dect_data()
 			while ( sizeof(cli.packet) ==
 			        read(cli.fd, &cli.packet, sizeof(cli.packet)))
 			{
+				memcpy(cli.station.RFPI, cli.RFPI, 5);
+				cli.station.channel = cli.packet.channel;
+				cli.station.RSSI = cli.packet.rssi;
+				cli.station.type = TYPE_PP;
+				/* to ypdate statistics only we try_add_station() */
+				try_add_station(&cli.station);
 
-				/* stop hopping once we synchronized */
+				/* stop hopping once we're synchronized */
 				cli.hop = 0;
 
 				if (!cli.pcap)
