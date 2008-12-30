@@ -65,6 +65,13 @@ Install:
 You are then able to start kismet_server and kismet_client and should be able
 to choose the Kismet DECT plugin from the menu.
 
+CONFIG
+======
+
+Make sure to add the following source to your kismet.conf: 
+
+    ncsource=dect:device=/dev/coa
+
 NOTES:
 =====
 
