@@ -353,20 +353,25 @@ void do_autorec(void)
 	LOG("### autorec turned %s\n", cli.autorec ? "ON":"OFF");
 }
 
+void do_stop_keep_autorec(void)
+{
+	LOG("### stopping DIP\n");
+	uint16_t val;
+	val = COA_MODE_IDLE;
+	if (ioctl(cli.fd, COA_IOCTL_MODE, &val)){
+		LOG("couldn't ioctl()\n");
+		exit(1);
+	}
+	cli.mode = MODE_STOP;
+}
+
 void do_stop(void)
 {
 	if (!(cli.mode & MODE_STOP))
 	{
-		LOG("### stopping DIP\n");
-		uint16_t val;
-		val = COA_MODE_IDLE;
-		if (ioctl(cli.fd, COA_IOCTL_MODE, &val)){
-			LOG("couldn't ioctl()\n");
-			exit(1);
-		}
-		cli.mode = MODE_STOP;
-		cli.autorec = 0;
+		do_stop_keep_autorec();
 	}
+	cli.autorec = 0;
 }
 
 void process_cli_data()
@@ -465,6 +470,10 @@ void process_dect_data()
 			while ( sizeof(cli.packet) ==
 			        read(cli.fd, &cli.packet, sizeof(cli.packet)))
 			{
+
+				/* stop hopping one we synchronized */
+				cli.hop = 0;
+
 				if (!cli.pcap)
 				{
 					LOG("### got sync\n");
@@ -625,6 +634,7 @@ void mainloop(void)
 
 		if( (cli.hop) &&
 				( (cli.mode & MODE_FPSCAN) || 
+				  (cli.mode & MODE_PPSCAN) || 
 				  (cli.mode & MODE_CALLSCAN) ||
 				  (cli.mode & MODE_JAM   ) ))
 		{
@@ -644,7 +654,7 @@ void mainloop(void)
 			      (cli.mode != MODE_CALLSCAN)
 			   )
 			{
-				do_stop();
+				do_stop_keep_autorec();
 				do_callscan();
 				if (cli.pcap)
 				{
@@ -652,6 +662,7 @@ void mainloop(void)
 					pcap_close(cli.pcap);
 					cli.pcap_d = NULL;
 					cli.pcap   = NULL;
+					cli.hop = 1;
 				}
 			}
 		}

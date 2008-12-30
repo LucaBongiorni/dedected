@@ -26,6 +26,9 @@
 
 struct file_info fi;
 
+int pp_slot = -1;
+int fp_slot = -1;
+
 void usage(void)
 {
 	fprintf(stderr, "usage: pcapstein <dect-pcap-file>\n");
@@ -90,10 +93,28 @@ void init(char * fname)
 
 void process_b_field(const struct pcap_pkthdr *h, const u_char *pkt)
 {
+
+
 	if ( (pkt[0x17] == 0x16) && (pkt[0x18] == 0x75) )
-		write(fi.fpp, &pkt[0x21], 40);
+	{
+		if (pp_slot < 0)
+		{
+			pp_slot = pkt[0x11];
+		}else{
+			if (pp_slot == pkt[0x11])
+				write(fi.fpp, &pkt[0x21], 40);
+		}
+	}
 	else
-		write(fi.ffp, &pkt[0x21], 40);
+	{
+		if (fp_slot < 0)
+		{
+			fp_slot = pkt[0x11];
+		}else{
+			if (fp_slot == pkt[0x11])
+				write(fi.ffp, &pkt[0x21], 40);
+		}
+	}
 }
 
 void process_pcap_packet(
