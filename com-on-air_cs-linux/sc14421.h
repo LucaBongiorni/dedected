@@ -14,7 +14,7 @@
 #ifndef SC14421_H
 #define SC14421_H
 
-#include <linux/byteorder/swab.h>
+//#include <linux/swab.h>
 
 #define SC14421_DIPSTOPPED      0x80
 #define SC14421_RAMBANK0        0x00

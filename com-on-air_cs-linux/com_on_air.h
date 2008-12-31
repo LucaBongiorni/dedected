@@ -19,11 +19,9 @@
 #include <pcmcia/cs_types.h>
 #include <pcmcia/cs.h>
 
-
 struct coa_info
 {
 	struct pcmcia_device    *p_dev;
-	config_info_t           config;
 	int                     open;
 
 	int                     irq;
