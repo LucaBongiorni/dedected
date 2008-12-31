@@ -38,7 +38,7 @@ void wait_4_IO_cycles()
 	inb_p(deviceConfigBase);
 }
 
-void to_dip(uint16_t *dst, unsigned char *src, int length)
+void to_dip(volatile uint16_t *dst, unsigned char *src, int length)
 {
 	int i;
 	for (i=0; i<length; i++)

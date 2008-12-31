@@ -270,7 +270,7 @@ int coa_ioctl(
 			printk("Setting Banking-Register to %.2x\n\n", bank);
 			for (a = 0; a < 16; a++)
 			{
-				unsigned short *sc14421_base = dev->sc14421_base;
+				volatile uint16_t *sc14421_base = dev->sc14421_base;
 				for (b = 0; b < 16; b++)
 					printk("%.2x ",
 						(unsigned char)
@@ -321,7 +321,7 @@ static ssize_t coa_read(
 	if (!dev->p_dev->dev_node)
 		return -EIO;
 
-	to_copy = min(kfifo_len(dev->rx_fifo), count_want);
+	to_copy = min((size_t)kfifo_len(dev->rx_fifo), count_want);
 	data = kmalloc(to_copy, GFP_KERNEL);
 	if (!data)
 		return -ENOMEM;
@@ -574,7 +574,7 @@ static int com_on_air_probe (struct pcmcia_device *link)
 
 	set_device_configbase(link->conf.ConfigBase);
 
-	dev->sc14421_base = ((unsigned short*)(dev->membase[0]));
+	dev->sc14421_base = ((volatile uint16_t*)(dev->membase[0]));
 
 	ret = get_card_id();
 	printk("com_on_air_cs: get_card_id() = %d\n", ret);

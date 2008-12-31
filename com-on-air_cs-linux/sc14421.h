@@ -39,7 +39,7 @@
 
 void set_device_configbase(u_int);
 void wait_4_IO_cycles(void);
-void to_dip(unsigned short *dst, unsigned char *src, int length);
+void to_dip(volatile unsigned short *dst, unsigned char *src, int length);
 void from_dip(unsigned char *dst, volatile uint16_t *src, int length);
 void SC14421_switch_to_bank(volatile uint16_t *sc14421_base, unsigned char bank);
 void SC14421_stop_dip(volatile uint16_t *sc14421_base);

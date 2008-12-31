@@ -171,7 +171,7 @@ void sniffer_init(struct coa_info *dev)
 
 void sniffer_init_sniff_scan(struct coa_info *dev)
 {
-	uint16_t *sc14421_base = dev->sc14421_base;
+	volatile uint16_t *sc14421_base = dev->sc14421_base;
 
 /*	printk("loading sniff_scan firmware\n"); */
 
@@ -250,7 +250,7 @@ void sniffer_init_sniff_scan(struct coa_info *dev)
 
 void sniffer_init_sniff_sync(struct coa_info *dev)
 {
-	uint16_t *sc14421_base = dev->sc14421_base;
+	volatile uint16_t *sc14421_base = dev->sc14421_base;
 
 	printk("loading sniff_sync firmware\n");
 
@@ -351,6 +351,8 @@ void sniffer_irq_handler(struct coa_info *dev)
 void sniffer_sniff_scan_irq(struct coa_info *dev, int irq)
 {
 	volatile uint16_t *sc14421_base = dev->sc14421_base;
+	int ret;
+	uint8_t station[7];
 
 	if (dev->open)
 	{
@@ -368,8 +370,6 @@ void sniffer_sniff_scan_irq(struct coa_info *dev, int irq)
 
 			if (dect_is_RFPI_Packet(fppacket))
 			{
-				int ret;
-				uint8_t station[7];
 
 				station[0] = dev->sniffer_config->channel;
 				station[1] = rssi;
@@ -390,8 +390,12 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 {
 	volatile uint16_t *sc14421_base = dev->sc14421_base;
 	struct sniffer_cfg *config = dev->sniffer_config;
+	struct sniffed_packet packet;
+	int ret;
+	int slot;
+	int a;
+	int memofs;
 
-	int r;
 	SC14421_switch_to_bank(sc14421_base, SC14421_RAMBANK1);
 
 
@@ -439,8 +443,6 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 	{
 		if (irq & 0x01)
 		{
-			int slot;
-			int i;
 
 #if 0
 			printk("S:");	
@@ -500,14 +502,12 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 					printk("we are in sync :)\n");
 
 
-					struct sniffed_packet packet;
 
 					packet.rssi = SC14421_READ(0x00);
 					packet.channel = config->channel;
 					packet.slot = slot;
 					memcpy(packet.data, fppacket, 53);
 
-					int ret;
 					packet.timestamp =
 						dev->irq_timestamp;
 					ret = kfifo_put(
@@ -524,7 +524,6 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 	}
 	else
 	{
-		int i, a;
 		if ( (irq & 0x09) == 0x09)
 			printk("interrupt too slow , lost packets!\n");
 
@@ -535,8 +534,6 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 			{
 				if (config->slottable[a].active)
 				{
-					int memofs;
-
 					SC14421_switch_to_bank(
 						sc14421_base,
 						sync_banktable[a]);
@@ -583,7 +580,6 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 
 						/* if (dev->open) */
 						{
-							int ret;
 							packet.timestamp = dev->irq_timestamp;
 							ret = kfifo_put(dev->rx_fifo, (unsigned char*) &packet, sizeof(struct sniffed_packet));
 							if (ret <= 0)
@@ -640,7 +636,6 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 			{
 				if (config->slottable[a].active)
 				{
-					int memofs;
 
 					SC14421_switch_to_bank(sc14421_base, sync_banktable[a]);
 
@@ -666,7 +661,6 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 
 						/* if (dev->open) */
 						{
-							int ret;
 							packet.timestamp = dev->irq_timestamp;
 							ret = kfifo_put(dev->rx_fifo, (unsigned char*) &packet, sizeof(struct sniffed_packet));
 							if (ret <= 0)
@@ -735,9 +729,12 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 
 void sniffer_sync_patchloop(struct coa_info *dev, struct dect_slot_info *slottable, int type)
 {
+	static int fixme_count = 23;
+
 	int slot, offset = 0;
 	volatile uint16_t *sc14421_base = dev->sc14421_base;
 	struct sniffer_cfg *config = dev->sniffer_config;
+	int memofs;
 
 
 	if (type == SNIFF_SLOTPATCH_PP)
@@ -751,7 +748,6 @@ void sniffer_sync_patchloop(struct coa_info *dev, struct dect_slot_info *slottab
 
 			if (slottable[slot].active && (slot%2))
 			{
-				static int fixme_count = 23;
 				if (fixme_count)
 				{
 					fixme_count--;
@@ -763,7 +759,6 @@ void sniffer_sync_patchloop(struct coa_info *dev, struct dect_slot_info *slottab
 
 			if (slottable[slot].active)
 			{
-				int memofs;
 
 				/* set channel */
 				switch(dev->radio_type)
