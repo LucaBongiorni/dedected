@@ -461,7 +461,7 @@ static int com_on_air_probe (struct pcmcia_device *link)
 	req.AccessSpeed = 0;
 
 	ret = pcmcia_request_window(&link, &req, &link->win);
-	if (ret != CS_SUCCESS)
+	if (ret != 0)
 	{
 		printk("couldn't pcmcia_request_window() = 0x%x\n", ret);
 		goto probe_out_4;
@@ -485,7 +485,7 @@ static int com_on_air_probe (struct pcmcia_device *link)
 	dev->irq_count = 0;
 
 	ret = pcmcia_request_irq(link, &link->irq);
-	if (ret != CS_SUCCESS)
+	if (ret != 0)
 	{
 		printk("\ncom_on_air_cs: unable to allocate IRQ %d, ret=%x\n",
 				link->irq.AssignedIRQ, ret);
@@ -501,14 +501,14 @@ static int com_on_air_probe (struct pcmcia_device *link)
 	 * */
 
 	ret = pcmcia_request_configuration(link, &link->conf);
-	if (ret != CS_SUCCESS)
+	if (ret != 0)
 	{
 		printk("could not pcmcia_request_configuration()\n");
 		goto probe_out_1;
 	}
 
 	ret = pcmcia_get_configuration_info(link, &(dev->config));
-	if (ret == CS_SUCCESS)
+	if (ret == 0)
 	{
 		printk("com_on_air_cs: %svalid client.\n",
 			(dev->config.Attributes & CONF_VALID_CLIENT) ? "":"in");
@@ -761,7 +761,7 @@ static int __init init_com_on_air_cs(void)
 		return -ENOMEM;
 
 	ret = pcmcia_register_driver(&coa_driver);
-	if (ret != CS_SUCCESS)
+	if (ret != 0)
 	{
 		printk("couldn't pcmcia_register_driver()\n");
 		goto init_out_3;
