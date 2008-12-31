@@ -417,7 +417,7 @@ static int com_on_air_probe (struct pcmcia_device *link)
 	if (!link->devname)
 	{
 		ret = -ENOMEM;
-		goto probe_out_5;
+		goto probe_out_4;
 	}
 
 	sprintf(link->devname, COA_DEVICE_NAME);
@@ -464,7 +464,7 @@ static int com_on_air_probe (struct pcmcia_device *link)
 	if (ret != 0)
 	{
 		printk("couldn't pcmcia_request_window() = 0x%x\n", ret);
-		goto probe_out_4;
+		goto probe_out_3;
 	}
 
 	dev->links[0]   = link;
@@ -475,7 +475,7 @@ static int com_on_air_probe (struct pcmcia_device *link)
 	{
 		printk("com_on_air_cs: ERROR: couldn't ioremap()\n");
 		ret = -EIO;
-		goto probe_out_3;
+		goto probe_out_2;
 	}
 	printk("com_on_air_cs: ioremap()'d baseaddr %p\n", dev->membase[0]);
 
@@ -490,7 +490,7 @@ static int com_on_air_probe (struct pcmcia_device *link)
 		printk("\ncom_on_air_cs: unable to allocate IRQ %d, ret=%x\n",
 				link->irq.AssignedIRQ, ret);
 		dev->irq = -1;
-		goto probe_out_2;
+		goto probe_out_1;
 	} else {
 		printk("com_on_air_cs: registered IRQ %d\n",
 				link->irq.AssignedIRQ);
@@ -504,7 +504,7 @@ static int com_on_air_probe (struct pcmcia_device *link)
 	if (ret != 0)
 	{
 		printk("could not pcmcia_request_configuration()\n");
-		goto probe_out_1;
+		goto probe_out_0;
 	}
 
 	printk("com_on_air_cs: %svalid client.\n",
@@ -599,15 +599,14 @@ static int com_on_air_probe (struct pcmcia_device *link)
 
 probe_out_0:
 	pcmcia_disable_device(link);
-probe_out_1:
 	free_irq(dev->irq, dev);
-probe_out_2:
+probe_out_1:
 	iounmap(dev->membase[0]);
-probe_out_3:
+probe_out_2:
 	pcmcia_release_window(link->win);
-probe_out_4:
+probe_out_3:
 	kfree(link->devname);
-probe_out_5:
+probe_out_4:
 	kfree(link->dev_node);
 	link->dev_node = NULL;
 	return ret;
