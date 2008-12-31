@@ -508,7 +508,7 @@ static int com_on_air_probe (struct pcmcia_device *link)
 	}
 
 	printk("com_on_air_cs: %svalid client.\n",
-	       (link->conf.Attributes & CONF_VALID_CLIENT) ? "":"in");
+	       (link->conf.Attributes) ? "":"in");
 	printk("com_on_air_cs: type          0x%x\n",
 	       link->socket->state);
 
