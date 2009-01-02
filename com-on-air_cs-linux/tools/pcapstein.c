@@ -171,7 +171,7 @@ void play()
 		fi.p,
 		-1, /* forever */
 		process_pcap_packet,
-		"beckstein");
+		NULL);
 	fprintf(stderr, "pcap_loop() = %d\n", ret);
 	if (*errbuf)
 		fprintf(stderr, "pcap error: %s\n", errbuf);

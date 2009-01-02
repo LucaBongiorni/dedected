@@ -514,7 +514,7 @@ void process_dect_data()
 				pcap_packet[19] = cli.packet.rssi;
 				memcpy(&pcap_packet[20], cli.packet.data, 53);
 
-				pcap_dump(cli.pcap_d, &pcap_hdr, pcap_packet);
+				pcap_dump((u_char *)cli.pcap_d, &pcap_hdr, pcap_packet);
 			}
 			break;
 	}
