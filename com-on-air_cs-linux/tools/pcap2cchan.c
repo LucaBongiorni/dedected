@@ -213,7 +213,7 @@ void printcpacket(struct cpacket packet,char *prefix)
 		switch(packet.data[0]&0x0f)
 		{
 			case 0:
-				printf("%s :%s",msgtype[packet.data[0]&0x0f].name,NULL);
+				printf("%s :NULL",msgtype[packet.data[0]&0x0f].name);
 				break;
 			case 3:
 				printf("%s :%s",msgtype[packet.data[0]&0x0f].name,getstring(cctype,id,256));
@@ -225,10 +225,10 @@ void printcpacket(struct cpacket packet,char *prefix)
 				printf("%s :%s",msgtype[packet.data[0]&0x0f].name,getstring(mmtype,id,256));
 				break;
 			case 6:
-				printf("%s :%s",msgtype[packet.data[0]&0x0f].name,NULL);
+				printf("%s :NULL",msgtype[packet.data[0]&0x0f].name);
 				break;
 			case 7:
-				printf("%s :%s",msgtype[packet.data[0]&0x0f].name,NULL);
+				printf("%s :NULL",msgtype[packet.data[0]&0x0f].name);
 				break;
 
 			default:
