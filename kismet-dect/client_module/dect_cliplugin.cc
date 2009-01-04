@@ -23,10 +23,13 @@
 #define SORT_BY_CHANNEL 2
 #define SORT_BY_COUNTSEEN 5
 
+#define MODE_ASYNC_FP_SCAN 0
+#define MODE_ASYNC_PP_SCAN 1
+
 // default: sort by RSSI
 static int sort_by = SORT_BY_RSSI;
 static bool descending = true;
-static int mode = 0;
+static int mode = MODE_ASYNC_FP_SCAN;
 
 class DecTable : public Kis_Scrollable_Table {
 public:
@@ -151,7 +154,7 @@ public:
                 globalreg->panel_interface->FetchFirstNetclient()) {
                 globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 1 1 0");
             }
-            mode = 0;
+            mode = MODE_ASYNC_FP_SCAN;
             return 0;
         }
         if (in_key == 'A') {
@@ -160,7 +163,7 @@ public:
                 globalreg->panel_interface->FetchFirstNetclient()) {
                 globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 1 1 1");
             }
-            mode = 1;
+            mode = MODE_ASYNC_PP_SCAN;
             return 0;
         }
         if (in_key == 'r') {
@@ -260,7 +263,7 @@ void DectDetailsProtoDECT(CLIPROTO_CB_PARMS)
     if (descending) {
         reverse(ddata->info_vec.begin(), ddata->info_vec.end());
     }
-    if (mode == 0) {
+    if (mode == MODE_ASYNC_FP_SCAN) {
         ddata->dtable->Clear();
         i = ddata->info_vec.begin();
         for (int j = 0; i < ddata->info_vec.end(); ++i, ++j) {

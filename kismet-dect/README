@@ -1,5 +1,5 @@
-KISMET DECT MODULES
-===================
+                            KISMET DECT MODULES
+                            ===================
 
 ------------------------------------------------------------------------------
 WARNING: THIS IS PRE-ALPHA CODE AND THEREFORE HIGHLY UNSTABLE/EXPERIMENTAL!
@@ -65,7 +65,7 @@ Install:
 You are then able to start kismet_server and kismet_client and should be able
 to choose the Kismet DECT plugin from the menu.
 
-CONFIG
+CONFIG:
 ======
 
 Make sure to add the following source to your kismet.conf: 
@@ -92,5 +92,5 @@ AUTHORS:
 =======
 
 Mike Kershaw <dragorn (at) kismetwireless (dot) net
-Jake Appelbaum <ioerror (at) appelbaum (dot) net
+Jake Appelbaum <jacob (at) appelbaum (dot) net
 Christian Fromme <kaner (at) strace (dot) org
