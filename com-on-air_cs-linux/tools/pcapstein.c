@@ -91,7 +91,22 @@ void init(char * fname)
 	free (imafname);
 }
 
-void process_b_field(const struct pcap_pkthdr *h, const u_char *pkt)
+void write_to_file(int fh, u_char * d, int len)
+{
+	int i;
+	u_char t;
+	/* exchange nibbles */
+	for (i=0; i<len; i++)
+	{
+		t=d[i];
+		d[i] <<= 4;
+		t >>= 4;
+		d[i] |= t;
+	}
+	write(fh, d, len);
+}
+
+void process_b_field(const struct pcap_pkthdr *h, u_char *pkt)
 {
 
 
@@ -102,7 +117,7 @@ void process_b_field(const struct pcap_pkthdr *h, const u_char *pkt)
 			pp_slot = pkt[0x11];
 		}else{
 			if (pp_slot == pkt[0x11])
-				write(fi.fpp, &pkt[0x21], 40);
+				write_to_file(fi.fpp, &pkt[0x21], 40);
 		}
 	}
 	else
@@ -112,35 +127,19 @@ void process_b_field(const struct pcap_pkthdr *h, const u_char *pkt)
 			fp_slot = pkt[0x11];
 		}else{
 			if (fp_slot == pkt[0x11])
-				write(fi.ffp, &pkt[0x21], 40);
+				write_to_file(fi.ffp, &pkt[0x21], 40);
 		}
 	}
 }
 
 void process_pcap_packet(
 	u_char *user, const struct pcap_pkthdr *h,
-	const u_char *pkt)
+	u_char *pkt)
 {
-#if 0
-	int i;
-	printf("packet for %s [%u/%u] @%d.%d\n",
-		user,
-		h->len,
-		h->caplen,
-		h->ts.tv_sec,
-		h->ts.tv_usec
-		);
-#endif
-
 	if (pkt[ETH_TYPE_0_OFF] != ETH_TYPE_0)
 		return;
 	if (pkt[ETH_TYPE_1_OFF] != ETH_TYPE_1)
 		return;
-#if 0
-	for (i=0; i<sizeof(dect_pkt_hdr); i++)
-		printf("%.2x ", pkt[i]);
-	printf("\n");
-#endif
 
 	if ((pkt[PKT_OFF_H] & DECT_H_BA_MASK) == DECT_H_BA_NO_B_FIELD)
 		return;
@@ -157,11 +156,6 @@ void process_pcap_packet(
 		return;
 	}
 	process_b_field(h, pkt);
-#if 0
-	for (i=0; i<23; i++)
-		printf("%.2x ", pkt[i]);
-	printf("\n");
-#endif
 }
 
 void play()

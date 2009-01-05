@@ -259,18 +259,18 @@ void do_chan(char * str_chan)
 	set_channel(cli.channel);
 }
 
-void do_slot(char * str_chan)
+void do_slot(char * str_slot)
 {
 	uint32_t slot;
 	char * end;
-	slot = strtoul(str_chan, &end, 0);
+	slot = strtoul(str_slot, &end, 0);
 	if ((errno == ERANGE && (slot == LONG_MAX || slot == LONG_MIN))
 			|| (errno != 0 && slot == 0))
 	{
 		LOG("!!! please enter a valid slot number [0-23]\n");
 		return;
 	}
-	if (end == str_chan)
+	if (end == str_slot)
 	{
 		LOG("!!! please enter a valid slot number [0-23]\n");
 		return;
@@ -514,7 +514,7 @@ void process_dect_data()
 				pcap_packet[19] = cli.packet.rssi;
 				memcpy(&pcap_packet[20], cli.packet.data, 53);
 
-				pcap_dump((u_char *)cli.pcap_d, &pcap_hdr, pcap_packet);
+				pcap_dump(cli.pcap_d, &pcap_hdr, pcap_packet);
 			}
 			break;
 	}
@@ -639,8 +639,8 @@ void mainloop(void)
 #endif
 
 		if( (cli.hop) &&
-				( (cli.mode & MODE_FPSCAN) || 
-				  (cli.mode & MODE_PPSCAN) || 
+				( (cli.mode & MODE_FPSCAN) ||
+				  (cli.mode & MODE_PPSCAN) ||
 				  (cli.mode & MODE_CALLSCAN) ||
 				  (cli.mode & MODE_JAM   ) ))
 		{
@@ -654,7 +654,7 @@ void mainloop(void)
 
 		if (cli.autorec)
 		{
-			if ( (time (NULL) - cli.autorec_last_bfield 
+			if ( (time (NULL) - cli.autorec_last_bfield
 			      > cli.autorec_timeout)
 			    &&
 			      (cli.mode != MODE_CALLSCAN)
