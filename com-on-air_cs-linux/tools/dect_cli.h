@@ -19,6 +19,9 @@
 // too verbose #define LOG(fmt, args...) printf("%s(): " fmt, __FUNCTION__, ##args)
 #define LOG(fmt, args...) printf(fmt, ##args)
 
+#define RFPI_LENGTH 5
+
+#define PCAP_CAPTURE_LENGTH 73
 
 #define TYPE_FP 23
 #define TYPE_PP 42
@@ -45,6 +48,13 @@ struct sniffed_packet
 };
 
 
+/* Scanning mode:
+- MODE_STOP: Stop scanning
+- MODE_FP_SCAN: Scan for FP
+- MODE_PP_SCAN: Scan for PP
+- MODE_CALLSCAN: Scan for calls
+- MODE_JAM: Jamming (not yet implemented)
+*/
 #define MODE_STOP     0x00000001
 #define MODE_FPSCAN   0x00000002
 #define MODE_PPSCAN   0x00000004
