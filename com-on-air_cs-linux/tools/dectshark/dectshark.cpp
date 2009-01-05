@@ -35,9 +35,27 @@ pthread_t show_thread;
 
 void set_channel(int dev,int channel);
 
+int scan_type = 0;
 int main(int argc, char *argv[])
 {
 	int ch;
+	if ( argc > 1 ) {
+		if ( strcmp( argv[1], "--help" ) == 0 ) {
+			printf("Usage: %s [--fp|--pp]\n", argv[0]);
+			printf("  --fp    Scan Fixed Part (DECT Basestation)\n");
+			printf("  --pp    Scan Portable Part (DECT Handset)\n");
+			printf("  --help  This text\n");
+			printf("%s without any parameter scans for Fixed Parts by default.\n", argv[0]);
+			printf("\n");
+			return 0;
+		}
+		if ( strcmp( argv[1], "--fp" ) == 0 ) {
+			scan_type = 0;
+		}
+		if ( strcmp( argv[1], "--pp" ) == 0 ) {
+			scan_type = 1;
+		}
+	}
 
 	pthread_create(&pcap_thread, NULL, pcap_threadmain, (void *)0);
 //	pthread_create(&show_thread, NULL, show_threadmain, (void *)0);
@@ -65,7 +83,12 @@ void *pcap_threadmain(void *threadid)
 	}
 
         uint16_t val;
-	val = COA_MODE_SNIFF|COA_SUBMODE_SNIFF_SCANPP;
+	if ( scan_type == 0 ) {
+		val = COA_MODE_SNIFF|COA_SUBMODE_SNIFF_SCANFP; // scan fixed part
+	} else { 
+		val = COA_MODE_SNIFF|COA_SUBMODE_SNIFF_SCANPP; // scan portable part
+	}
+
 	if (ioctl(dev, COA_IOCTL_MODE, &val)){
 		printf("couldn't set sniff mode\n");
 	}
