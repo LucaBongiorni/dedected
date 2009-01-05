@@ -91,19 +91,9 @@ void init(char * fname)
 	free (imafname);
 }
 
-void swap_nibbles(u_char * buf, int len)
-{
-	int i;
-	u_char v;
-	for (i = 0; i < len; i++) {
-		v = buf[i];
-		buf[i] = ((v>>4)&15)|((v&15)<<4);
-	}
-}
-
 void process_b_field(const struct pcap_pkthdr *h, const u_char *pkt)
 {
-	u_char buf[40];
+
 
 	if ( (pkt[0x17] == 0x16) && (pkt[0x18] == 0x75) )
 	{
@@ -112,11 +102,7 @@ void process_b_field(const struct pcap_pkthdr *h, const u_char *pkt)
 			pp_slot = pkt[0x11];
 		}else{
 			if (pp_slot == pkt[0x11])
-			{
-				memcpy(buf, &pkt[0x21], 40);
-				swap_nibbles(buf, 40);
-				write(fi.fpp, buf, 40);
-			}
+				write(fi.fpp, &pkt[0x21], 40);
 		}
 	}
 	else
@@ -126,11 +112,7 @@ void process_b_field(const struct pcap_pkthdr *h, const u_char *pkt)
 			fp_slot = pkt[0x11];
 		}else{
 			if (fp_slot == pkt[0x11])
-			{
-				memcpy(buf, &pkt[0x21], 40);
-				swap_nibbles(buf, 40);
-				write(fi.ffp, buf, 40);
-			}
+				write(fi.ffp, &pkt[0x21], 40);
 		}
 	}
 }

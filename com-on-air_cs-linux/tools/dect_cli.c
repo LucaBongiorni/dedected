@@ -41,16 +41,6 @@ char buf[RXBUF];
 /* pcap errors */
 char errbuf[PCAP_ERRBUF_SIZE];
 
-void print_rfpi(uint8_t * rfpi)
-{
-	int i;
-	for (i = 0; i < RFPI_LENGTH; ++i)
-	{
-		LOG(" %.2x", rfpi[i]);
-	}
-}
-
-/* Display help. */
 void print_help(void)
 {
 	LOG("\n");
@@ -70,7 +60,6 @@ void print_help(void)
 	LOG("\n");
 }
 
-/* Set channel. */
 void set_channel(uint32_t channel)
 {
 	if (cli.verbose)
@@ -82,13 +71,11 @@ void set_channel(uint32_t channel)
 	cli.last_hop = time(NULL);
 }
 
-/* Set slot - Not yet implement. */
 void set_slot(uint32_t slot)
 {
 	LOG("!!! not yet implemented :(\n");
 }
 
-/* Start PP scan for a specific RFPI. */
 void do_ppscan(uint8_t * RFPI)
 {
 	LOG("### trying to sync on %.2x %.2x %.2x %.2x %.2x\n",
@@ -115,22 +102,20 @@ void do_ppscan(uint8_t * RFPI)
 
 	set_channel(cli.channel);
 
-	memcpy(cli.RFPI, RFPI, RFPI_LENGTH);
+	memcpy(cli.RFPI, RFPI, 5);
 	cli.mode = MODE_PPSCAN;
 
 	cli.autorec_last_bfield = time(NULL);
 }
 
-/* Add station to the list of stations. */
 void add_station(struct dect_station * station)
 {
+	int i;
 	LOG("### found new %s", station->type == TYPE_FP ? "station":"call on");
-
-	print_rfpi(station->RFPI);
-
+	for (i=0; i<5; i++)
+		LOG(" %.2x", station->RFPI[i]);
 	LOG(" on channel %d RSSI %d\n", station->channel, station->RSSI);
 
-	/* Create or update linked list of stations. */
 	struct dect_station * p = cli.station_list;
 	if (p)
 	{ /* append to existing list */
@@ -150,8 +135,7 @@ void add_station(struct dect_station * station)
 	}
 	memset(p, 0, sizeof(*p));
 
-	/* Add all informations. */
-	memcpy(p->RFPI, station->RFPI, RFPI_LENGTH);
+	memcpy(p->RFPI, station->RFPI, 5);
 	p->channel = station->channel;
 	p->RSSI = station->RSSI;
 	p->type = station->type;
@@ -162,23 +146,23 @@ void add_station(struct dect_station * station)
 		do_ppscan(station->RFPI);
 }
 
-/* Add or update station information */
 void try_add_station(struct dect_station * station)
 {
 	struct dect_station * p = cli.station_list;
 	int found = 0;
 	while (p)
 	{
-		/* If station already exist, update its information */
-		if (!memcmp(p->RFPI, station->RFPI, RFPI_LENGTH))
+		if (!memcmp(p->RFPI, station->RFPI, 5))
 		{
 			if (p->type == station->type)
 			{
 				if ( (p->channel != station->channel) &&
 						(cli.verbose) )
 				{
+					int i;
 					LOG("### station");
-					print_rfpi(station->RFPI);
+					for (i=0; i<5; i++)
+						LOG(" %.2x", station->RFPI[i]);
 					LOG(" switched from channel %d to channel %d\n",
 							p->channel,
 							station->channel);
@@ -188,20 +172,15 @@ void try_add_station(struct dect_station * station)
 				p->count_seen++;
 				p->last_seen = time(NULL);
 				p->RSSI += station->RSSI; /* we avg on dump */
-
-				/* Stop processing if we found the station. */
-				break;
 			}
 		}
 		p = p->next;
 	}
-
-	/* If it doesn't exist, add it */
 	if (!found)
 		add_station(station);
 }
 
-/* Change mode to FP scanning. */
+
 void do_fpscan(void)
 {
 	LOG("### starting fpscan\n");
@@ -217,7 +196,6 @@ void do_fpscan(void)
 	cli.autorec = 0;
 }
 
-/* Change mode to calls scan. */
 void do_callscan(void)
 {
 	LOG("### starting callscan\n");
@@ -232,16 +210,12 @@ void do_callscan(void)
 	cli.mode = MODE_CALLSCAN;
 }
 
-/*
-Scan for PP.
-str_rfpi: String with the RFPI to look for (in hexadecimal, 5 bytes).
-*/
 void do_ppscan_str(char * str_rfpi)
 {
-	uint8_t RFPI[RFPI_LENGTH];
+	uint8_t RFPI[5];
 	char * end;
 	int i;
-	for (i=0; i<RFPI_LENGTH; i++)
+	for (i=0; i<5; i++)
 	{
 		RFPI[i] = strtoul(str_rfpi, &end, 16);
 		if ((errno == ERANGE )
@@ -257,15 +231,9 @@ void do_ppscan_str(char * str_rfpi)
 		}
 		str_rfpi = end;
 	}
-
-	/* Change mode to PP scanning */
 	do_ppscan(RFPI);
 }
 
-/*
-Change channel
-str_chan: String with the channel number (0 to 9)
-*/
 void do_chan(char * str_chan)
 {
 	uint32_t channel;
@@ -291,22 +259,18 @@ void do_chan(char * str_chan)
 	set_channel(cli.channel);
 }
 
-/*
-Change the slot
-str_slot: String with the slot number (0 to 23).
-*/
-void do_slot(char * str_slot)
+void do_slot(char * str_chan)
 {
 	uint32_t slot;
 	char * end;
-	slot = strtoul(str_slot, &end, 0);
+	slot = strtoul(str_chan, &end, 0);
 	if ((errno == ERANGE && (slot == LONG_MAX || slot == LONG_MIN))
 			|| (errno != 0 && slot == 0))
 	{
 		LOG("!!! please enter a valid slot number [0-23]\n");
 		return;
 	}
-	if (end == str_slot)
+	if (end == str_chan)
 	{
 		LOG("!!! please enter a valid slot number [0-23]\n");
 		return;
@@ -320,32 +284,29 @@ void do_slot(char * str_slot)
 	set_slot(cli.slot);
 }
 
-/* Do jamming - Not yet implemented. */
 void do_jam(void)
 {
 	LOG("!!! not yet implemented :(\n");
 }
 
-/* Display information about stations and calls. */
 void do_dump(void)
 {
+	int i;
 	struct dect_station * p = cli.station_list;
-
-	/* Check if we have information yet. */
 	if (!p)
 	{
 		LOG("### nothing found so far\n");
 		return;
 	}
 
-	/* Display a list of stations and their information */
 	LOG("### stations\n");
 	do
 	{
 		if (p->type == TYPE_FP)
 		{
 			LOG("   ");
-			print_rfpi(p->RFPI);
+			for (i=0; i<5; i++)
+				LOG(" %.2x", p->RFPI[i]);
 			LOG("  ch %1.1d ", p->channel);
 			LOG(" RSSI %5.2f ", (double)p->RSSI / p->count_seen);
 			LOG(" count %4.u ", p->count_seen);
@@ -355,7 +316,6 @@ void do_dump(void)
 		}
 	} while ((p = p->next));
 
-	/* Display a list of calls and their information */
 	p = cli.station_list;
 	LOG("### calls\n");
 	do
@@ -363,7 +323,8 @@ void do_dump(void)
 		if (p->type == TYPE_PP)
 		{
 			LOG("   ");
-			print_rfpi(p->RFPI);
+			for (i=0; i<5; i++)
+				LOG(" %.2x", p->RFPI[i]);
 			LOG("  ch %1.1d ", p->channel);
 			LOG(" RSSI %5.2f ", (double)p->RSSI / p->count_seen);
 			LOG(" count %4.u ", p->count_seen);
@@ -374,28 +335,24 @@ void do_dump(void)
 	} while ((p = p->next));
 }
 
-/* Toggle channel hopping. */
 void do_hop(void)
 {
 	cli.hop = cli.hop ? 0:1;
 	LOG("### channel hopping turned %s\n", cli.hop ? "ON":"OFF");
 }
 
-/* Toggle verbose mode. */
 void do_verb(void)
 {
 	cli.verbose = cli.verbose ? 0:1;
 	LOG("### verbosity turned %s\n", cli.verbose ? "ON":"OFF");
 }
 
-/* Toggle autorec */
 void do_autorec(void)
 {
 	cli.autorec = cli.autorec ? 0:1;
 	LOG("### autorec turned %s\n", cli.autorec ? "ON":"OFF");
 }
 
-/* XXX */
 void do_stop_keep_autorec(void)
 {
 	LOG("### stopping DIP\n");
@@ -408,7 +365,6 @@ void do_stop_keep_autorec(void)
 	cli.mode = MODE_STOP;
 }
 
-/* Stop everything (including autorec). */
 void do_stop(void)
 {
 	if (!(cli.mode & MODE_STOP))
@@ -418,7 +374,6 @@ void do_stop(void)
 	cli.autorec = 0;
 }
 
-/* Process command line. */
 void process_cli_data()
 {
 	int ret;
@@ -459,7 +414,6 @@ void process_cli_data()
 
 }
 
-/* Initialize capture file. */
 void init_pcap(struct sniffed_packet * packet)
 {
 	char fname[100];
@@ -482,7 +436,6 @@ void init_pcap(struct sniffed_packet * packet)
 	}
 }
 
-/* XXX */
 int has_b_field()
 {
 	if ((cli.packet.data[0x19] & 0x0e) != 0x0e)
@@ -490,34 +443,26 @@ int has_b_field()
 	return 0;
 }
 
-/* Process DECT data. */
 void process_dect_data()
 {
 	int ret;
 	switch (cli.mode)
 	{
-		case MODE_CALLSCAN:
 		case MODE_FPSCAN:
-			/*
-				Every time we have 7 bytes of data, parse it:
-				- First byte is the channel
-				- Second byte is signal (RSSI)
-				- The 5 other bytes is the RFPI.
-
-				and add or update the station information.
-			*/
 			while (7 == (ret = read(cli.fd, buf, 7))){
 				memcpy(cli.station.RFPI, &buf[2], 5);
 				cli.station.channel = buf[0];	
 				cli.station.RSSI = buf[1];
-				if (cli.mode == MODE_CALLSCAN)
-				{
-					cli.station.type = TYPE_PP;
-				}
-				else /* if FP scan */
-				{
-					cli.station.type = TYPE_FP;
-				}
+				cli.station.type = TYPE_FP;
+				try_add_station(&cli.station);
+			}
+			break;
+		case MODE_CALLSCAN:
+			while (7 == (ret = read(cli.fd, buf, 7))){
+				memcpy(cli.station.RFPI, &buf[2], 5);
+				cli.station.channel = buf[0];
+				cli.station.RSSI = buf[1];
+				cli.station.type = TYPE_PP;
 				try_add_station(&cli.station);
 			}
 			break;
@@ -547,10 +492,9 @@ void process_dect_data()
 				if (has_b_field())
 					cli.autorec_last_bfield = time(NULL);
 
-				/* Initialize the pcap packet structure */
 				struct pcap_pkthdr pcap_hdr;
-				pcap_hdr.caplen = PCAP_CAPTURE_LENGTH;
-				pcap_hdr.len = PCAP_CAPTURE_LENGTH;
+				pcap_hdr.caplen = 73;
+				pcap_hdr.len = 73;
 				ret = gettimeofday(&pcap_hdr.ts, NULL);
 				if (ret)
 				{
@@ -558,7 +502,6 @@ void process_dect_data()
 							strerror(errno));
 					exit(1);
 				}
-				/* Create the DECT packet */
 				uint8_t pcap_packet[100];
 				memset(pcap_packet, 0, 100);
 				pcap_packet[12] = 0x23;
@@ -571,14 +514,12 @@ void process_dect_data()
 				pcap_packet[19] = cli.packet.rssi;
 				memcpy(&pcap_packet[20], cli.packet.data, 53);
 
-				/* and write it to the file */
 				pcap_dump((u_char *)cli.pcap_d, &pcap_hdr, pcap_packet);
 			}
 			break;
 	}
 }
 
-/* Initialization: open the device. */
 void init_dect()
 {
 	cli.fd = open(DEV, O_RDWR | O_NONBLOCK);
@@ -592,7 +533,6 @@ void init_dect()
 	cli.pcap = NULL;
 }
 
-/* Initialize command line interface. */
 void init_cli()
 {
 	cli.channel      = 0;
@@ -613,14 +553,12 @@ void init_cli()
 	cli.autorec_last_bfield = 0;
 }
 
-/* Initialization: DECT (opening device) and command line. */
 void init(void)
 {
 	init_dect();
 	init_cli();
 }
 
-/* Return the highest value between a & b */
 int max_int(int a, int b)
 {
 	if (a>b)
@@ -629,7 +567,6 @@ int max_int(int a, int b)
 		return b;
 }
 
-/* XXX */
 void mainloop(void)
 {
 	fd_set rfd;
@@ -654,7 +591,6 @@ void mainloop(void)
 		tv.tv_sec  = 1;
 		tv.tv_usec = 0;
 
-		/* Initialize file descriptors */
 		FD_ZERO(&rfd);
 		FD_ZERO(&wfd);
 		FD_ZERO(&efd);
@@ -665,7 +601,6 @@ void mainloop(void)
 		FD_SET(cli.in, &efd);
 		FD_SET(cli.fd, &efd);
 
-		/* Check if we have data */
 		ret = select(nfds, &rfd, &wfd, &efd, &tv);
 		if (ret < 0)
 		{
@@ -685,15 +620,12 @@ void mainloop(void)
 			exit(1);
 		}
 
-		/* Checking if we have to process CLI data and DECT data */
 		if (FD_ISSET(cli.in, &rfd))
 			process_cli_data();
 		if (FD_ISSET(cli.fd, &rfd))
 			process_dect_data();
 
 #ifdef DUMP_IRQ_COUNT_ONCE_PER_SEC
-
-		/* Dump IRQ count once per second */
 		if (!(cli.mode & MODE_STOP))
 			if (time(NULL) >= lasttime + 1)
 			{
@@ -706,26 +638,23 @@ void mainloop(void)
 			}
 #endif
 
-		/* If channel hopping is enabled and it's scanning (or jamming), change channel */
 		if( (cli.hop) &&
-				( (cli.mode & MODE_FPSCAN) ||
-				  (cli.mode & MODE_PPSCAN) ||
+				( (cli.mode & MODE_FPSCAN) || 
+				  (cli.mode & MODE_PPSCAN) || 
 				  (cli.mode & MODE_CALLSCAN) ||
 				  (cli.mode & MODE_JAM   ) ))
 		{
 			if ( time(NULL) > cli.last_hop + cli.hop_ch_time )
 			{
 				cli.channel++;
-				/* Channel range: 0-9 */
 				cli.channel %= 10;
 				set_channel(cli.channel);
 			}
 		}
 
-		/* If autorec is enabled, XXX */
 		if (cli.autorec)
 		{
-			if ( (time (NULL) - cli.autorec_last_bfield
+			if ( (time (NULL) - cli.autorec_last_bfield 
 			      > cli.autorec_timeout)
 			    &&
 			      (cli.mode != MODE_CALLSCAN)
