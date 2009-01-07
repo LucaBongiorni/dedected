@@ -23,6 +23,7 @@
 #include <sys/ioctl.h>
 #include <time.h>
 #include <limits.h>
+#include <signal.h>
 #include <pcap.h>
 
 
@@ -372,6 +373,13 @@ void do_stop(void)
 	cli.autorec = 0;
 }
 
+void do_quit(void)
+{
+	do_stop();
+	do_dump();
+	exit(0);
+}
+
 void process_cli_data()
 {
 	int ret;
@@ -405,7 +413,7 @@ void process_cli_data()
 	if ( !strncasecmp((char *)buf, "stop", 4) )
 		{ do_stop(); done = 1; }
 	if ( !strncasecmp((char *)buf, "quit", 4) )
-		{ do_stop(); exit(0); }
+		do_quit();
 
 	if(!done)
 		LOG("!!! no such command %s\n", buf);
@@ -541,6 +549,12 @@ void init_dect()
 	cli.pcap = NULL;
 }
 
+void signal_handler(int s)
+{
+	LOG("### got signal %d, will dump & quit\n", s);
+	do_quit();
+}
+
 void init_cli()
 {
 	cli.channel      = 0;
@@ -559,6 +573,16 @@ void init_cli()
 	cli.autorec             = 0;
 	cli.autorec_timeout     = 10;
 	cli.autorec_last_bfield = 0;
+
+	signal(SIGHUP, signal_handler);
+	signal(SIGINT, signal_handler);
+	signal(SIGQUIT, signal_handler);
+	signal(SIGABRT, signal_handler);
+	signal(SIGKILL, signal_handler);
+	signal(SIGALRM, signal_handler);
+	signal(SIGTERM, signal_handler);
+	signal(SIGUSR1, signal_handler);
+	signal(SIGUSR2, signal_handler);
 }
 
 void init(void)
