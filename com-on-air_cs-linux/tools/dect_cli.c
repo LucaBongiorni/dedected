@@ -29,8 +29,6 @@
 #include "com_on_air_user.h"
 #include "dect_cli.h"
 
-//#define DUMP_IRQ_COUNT_ONCE_PER_SEC
-
 struct cli_info cli;
 
 
@@ -590,12 +588,6 @@ void mainloop(void)
 
 	int ret;
 
-#ifdef DUMP_IRQ_COUNT_ONCE_PER_SEC
-#define COA_IOCTL_COUNT_IRQ 0xF002
-	uint32_t lasttime = time(NULL);
-#endif
-
-
 	while (0xDEC + 'T')
 	{
 		tv.tv_sec  = 1;
@@ -634,19 +626,6 @@ void mainloop(void)
 			process_cli_data();
 		if (FD_ISSET(cli.fd, &rfd))
 			process_dect_data();
-
-#ifdef DUMP_IRQ_COUNT_ONCE_PER_SEC
-		if (!(cli.mode & MODE_STOP))
-			if (time(NULL) >= lasttime + 1)
-			{
-				if (ioctl(cli.fd, COA_IOCTL_COUNT_IRQ, NULL))
-				{
-					printf("couldn't ioctl()\n");
-					exit(1);
-				}
-				lasttime = time(NULL);
-			}
-#endif
 
 		if( (cli.hop) &&
 				( (cli.mode & MODE_FPSCAN) ||
