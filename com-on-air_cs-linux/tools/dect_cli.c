@@ -45,7 +45,7 @@ void print_help(void)
 	LOG("   help          - this help\n");
 	LOG("   fpscan        - async scan for basestations, dump RFPIs\n");
 	LOG("   callscan      - async scan for active calls, dump RFPIs\n");
-	LOG("   autorec       - sync on any calls in callscan, autodump in pcap, currently %s\n", cli.autorec ? "ON":"OFF");
+	LOG("   autorec       - sync on any calls in callscan, autodump in pcap\n");
 	LOG("   ppscan <rfpi> - sync scan for active calls\n");
 	LOG("   chan <ch>     - set current channel [0-9], currently %d\n", cli.channel);
 //	LOG("   slot <sl>     - set current slot [0-23], currently %d\n", cli.slot);
@@ -348,7 +348,7 @@ void do_verb(void)
 void do_autorec(void)
 {
 	cli.autorec = cli.autorec ? 0:1;
-	LOG("### autorec turned %s\n", cli.autorec ? "ON":"OFF");
+	LOG("### starting autorec\n");
 }
 
 void do_stop_keep_autorec(void)
@@ -446,7 +446,7 @@ void init_pcap(struct sniffed_packet * packet)
 
 int has_b_field()
 {
-	if ((cli.packet.data[0x19] & 0x0e) != 0x0e)
+	if ((cli.packet.data[5] & 0x0e) != 0x0e)
 		return 1;
 	return 0;
 }
@@ -557,7 +557,7 @@ void init_cli()
 	cli.station_list = NULL;
 
 	cli.autorec             = 0;
-	cli.autorec_timeout     = 5;
+	cli.autorec_timeout     = 10;
 	cli.autorec_last_bfield = 0;
 }
 
