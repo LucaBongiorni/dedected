@@ -140,8 +140,6 @@ void add_station(struct dect_station * station)
 	p->first_seen = time(NULL);
 	p->last_seen = p->first_seen;
 	p->count_seen = 1;
-	if (cli.autorec)
-		do_ppscan(station->RFPI);
 }
 
 void try_add_station(struct dect_station * station)
@@ -176,6 +174,8 @@ void try_add_station(struct dect_station * station)
 	}
 	if (!found)
 		add_station(station);
+	if (cli.autorec && (cli.mode != MODE_PPSCAN))
+		do_ppscan(station->RFPI);
 }
 
 
@@ -557,7 +557,7 @@ void init_cli()
 	cli.station_list = NULL;
 
 	cli.autorec             = 0;
-	cli.autorec_timeout     = 10;
+	cli.autorec_timeout     = 5;
 	cli.autorec_last_bfield = 0;
 }
 
