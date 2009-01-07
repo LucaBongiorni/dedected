@@ -416,13 +416,23 @@ void process_cli_data()
 
 void init_pcap(struct sniffed_packet * packet)
 {
-	char fname[100];
-	sprintf(fname, "dump_%.2x_%.2x_%.2x_%.2x_%.2x.pcap",
-		cli.RFPI[0],
-		cli.RFPI[1],
-		cli.RFPI[2],
-		cli.RFPI[3],
-		cli.RFPI[4]);
+	char fname[512];
+	char ftime[256];
+	time_t rawtime;
+	struct tm *timeinfo;
+
+	time (&rawtime);
+	timeinfo = localtime(&rawtime);
+
+	strftime(ftime, sizeof(ftime), "%Y-%m-%d_%H_%M_%S", timeinfo);
+
+	sprintf(fname, "dump_%s_RFPI_%.2x_%.2x_%.2x_%.2x_%.2x.pcap",
+			ftime,
+			cli.RFPI[0],
+			cli.RFPI[1],
+			cli.RFPI[2],
+			cli.RFPI[3],
+			cli.RFPI[4]);
 	LOG("### dumping to %s\n", fname);
 	cli.pcap = pcap_open_dead(DLT_EN10MB, 73);
 	if (!cli.pcap)
