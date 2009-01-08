@@ -50,9 +50,6 @@
 // Globals
 int dect_comp_datachunk;
 
-class PacketSource_Dect;
-static PacketSource_Dect *static_ref;
-
 static int mode = DECT_SUBCMD_SCAN_STATIONS;
 
 // Prototypes
@@ -117,18 +114,25 @@ public:
 			close(serial_fd);
 		}
 	}
+    
+    virtual void SetExternal(PacketSource_Dect *ex) {
+        external = ex;
+    }
+
+    virtual PacketSource_Dect* GetExternal(void) {
+        return external;
+    }
 
 	virtual PacketSource_Dect *CreateSource(GlobalRegistry *in_globalreg,
 											string interface,
 											vector<opt_pair> *in_opts) {
         PacketSource_Dect *ref = new PacketSource_Dect(in_globalreg, interface, in_opts);
         // XXX Hackalert
-        static_ref = ref;
+        SetExternal(ref);
 		return ref;
 	}
 
 	virtual int AutotypeProbe(string in_device) {
-		// expect ncsource=dect:device=/dev/tty...
 		if (StrLower(in_device) == "dect") {
 			type = "dect";
 			return 1;
@@ -288,6 +292,7 @@ protected:
 	string serialdevice;
 	int serial_fd;
     bool locked;
+    PacketSource_Dect *external;
 };
 
 int dect_cc_callback(CLIENT_PARMS)
@@ -296,8 +301,10 @@ int dect_cc_callback(CLIENT_PARMS)
     int subcmd = -1;
     int arg = -1;
 
-    PacketSource_Dect *psd = static_ref;
-    if (!psd) {
+    //PacketSource_Dect *psd = static_ref;
+    PacketSource_Dect *psd = (PacketSource_Dect*)auxptr;
+    PacketSource_Dect *ex_psd = psd->GetExternal();
+    if (!psd || !ex_psd) {
         fprintf(stderr, "Bad args.\n");
         return 0;
     }
@@ -331,12 +338,12 @@ int dect_cc_callback(CLIENT_PARMS)
                 case DECT_SUBCMD_SCAN_STATIONS:
                     printf("DECT_CMD_SCAN STATIONS\n");
                     mode = 0;
-                    psd->startScanFp();
+                    ex_psd->startScanFp();
                     break;
                 case DECT_SUBCMD_SCAN_CALLS:
                     printf("DECT_CMD_SCAN CALLS\n");
                     mode = 1;
-                    psd->startCallScan();
+                    ex_psd->startCallScan();
                     break;
                 default:
                     fprintf(stderr, "Bad DECT_CMD_SCAN subcommand.\n");
