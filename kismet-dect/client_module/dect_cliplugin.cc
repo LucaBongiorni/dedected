@@ -3,7 +3,7 @@
  *             Jake Appelbaum <ioerror (at) appelbaum (dot) net,
  *             Christian Fromme <kaner (at) strace (dot) org
  *
- * Don't distribute (yet)
+ * GPL'd code, see LICENCE file for licence information
  */
 
 #include <config.h>
