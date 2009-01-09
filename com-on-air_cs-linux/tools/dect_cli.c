@@ -214,18 +214,19 @@ void do_ppscan_str(char * str_rfpi)
 	uint8_t RFPI[5];
 	char * end;
 	int i;
+	errno = 0;
 	for (i=0; i<5; i++)
 	{
 		RFPI[i] = strtoul(str_rfpi, &end, 16);
 		if ((errno == ERANGE )
 			|| (errno != 0 && RFPI[i] == 0))
 		{
-			LOG("!!! please enter a valid RFPI (e.g. 00 01 02 03 04)\n");
+			LOG("!!! please enter a valid RFPI (e.g. 00 01 02 03 04) RFPI out of range\n");
 			return;
 		}
 		if (end == str_rfpi)
 		{
-			LOG("!!! please enter a valid RFPI (e.g. 00 01 02 03 04)\n");
+			LOG("!!! please enter a valid RFPI (e.g. 00 01 02 03 04) RFPI too short\n");
 			return;
 		}
 		str_rfpi = end;
