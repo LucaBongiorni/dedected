@@ -238,6 +238,7 @@ void do_chan(char * str_chan)
 {
 	uint32_t channel;
 	char * end;
+	errno = 0;
 	channel = strtoul(str_chan, &end, 0);
 	if ((errno == ERANGE && (channel == LONG_MAX || channel == LONG_MIN))
 			|| (errno != 0 && channel == 0))
@@ -263,6 +264,7 @@ void do_slot(char * str_slot)
 {
 	uint32_t slot;
 	char * end;
+	errno = 0;
 	slot = strtoul(str_slot, &end, 0);
 	if ((errno == ERANGE && (slot == LONG_MAX || slot == LONG_MIN))
 			|| (errno != 0 && slot == 0))
