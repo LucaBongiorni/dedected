@@ -81,12 +81,13 @@ void SC14421_write_cmd(volatile uint16_t *sc14421_base, int label, unsigned char
 	SC14421_WRITE(label*2 + 1, operand);
 }
 
-unsigned char SC14421_clear_interrupt(volatile uint16_t *sc14421_base)
+uint8_t SC14421_clear_interrupt(volatile uint16_t *sc14421_base)
 {
         unsigned char int1, int2, cnt = 0;
 
         int1 = SC14421_READ(511);
 
+	/* is the card still plugged */
         if (int1 == 0xff)
                 return 0;
 
@@ -95,7 +96,7 @@ unsigned char SC14421_clear_interrupt(volatile uint16_t *sc14421_base)
         while (int1)
         {
                 cnt++;
-                if (!cnt)
+                if (cnt>254)
                         return 0;
 
                 int1 = SC14421_READ(511) & 0x0f;

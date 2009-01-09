@@ -326,9 +326,9 @@ void sniffer_init_sniff_sync(struct coa_info *dev)
 
 }
 
-void sniffer_irq_handler(struct coa_info *dev)
+uint8_t sniffer_irq_handler(struct coa_info *dev)
 {
-	int irq;
+	uint8_t irq = 0;
 
 	if (dev->sc14421_base)
 	{
@@ -345,7 +345,7 @@ void sniffer_irq_handler(struct coa_info *dev)
 				break;
 		}
 	}
-
+	return irq;
 }
 
 void sniffer_sniff_scan_irq(struct coa_info *dev, int irq)

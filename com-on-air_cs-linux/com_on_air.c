@@ -379,6 +379,9 @@ static irqreturn_t
 com_on_air_irq_handler(int irq, void *dev_id)
 {
 	struct coa_info * dev = dev_id;
+
+	uint8_t dip_irq = 0;
+
 	jiffies_to_timespec(jiffies, &dev->irq_timestamp);
 	dev->irq_count++;
 
@@ -391,14 +394,14 @@ com_on_air_irq_handler(int irq, void *dev_id)
 		/*phone_irq_handler(dev); */
 		break;
 	case COA_MODE_SNIFF:
-		sniffer_irq_handler(dev);
+		dip_irq = sniffer_irq_handler(dev);
 		break;
 	default:
 		if (dev->sc14421_base)
-			SC14421_clear_interrupt(dev->sc14421_base);
+			dip_irq = SC14421_clear_interrupt(dev->sc14421_base);
 	}
 
-	return IRQ_HANDLED;
+	return dip_irq ? IRQ_HANDLED:IRQ_NONE;
 }
 
 static int com_on_air_probe (struct pcmcia_device *link)
@@ -439,20 +442,20 @@ static int com_on_air_probe (struct pcmcia_device *link)
 		printk("com_on_air_cs: prod_id[3]          %s\n",
 				link->prod_id[3]);
 
-	link->io.Attributes1 	= IO_DATA_PATH_WIDTH_AUTO;
-	link->io.NumPorts1   	= 16;
-	link->io.Attributes2 	= 0;
+	link->io.Attributes1   = IO_DATA_PATH_WIDTH_AUTO;
+	link->io.NumPorts1     = 16;
+	link->io.Attributes2   = 0;
 
-	link->irq.Attributes  	= IRQ_TYPE_EXCLUSIVE | IRQ_HANDLE_PRESENT;
-	link->irq.IRQInfo1 	= IRQ_LEVEL_ID;
-	link->irq.Handler     	= com_on_air_irq_handler;
-	link->irq.Instance    	= dev;
+	link->irq.Attributes   = IRQ_TYPE_DYNAMIC_SHARING | IRQ_HANDLE_PRESENT;
+	link->irq.IRQInfo1     = IRQ_LEVEL_ID;
+	link->irq.Handler      = com_on_air_irq_handler;
+	link->irq.Instance     = dev;
 
-	link->conf.Attributes 	= CONF_ENABLE_IRQ;
-	link->conf.IntType 	= INT_MEMORY_AND_IO;
-	link->conf.ConfigIndex 	= 1;
-	link->conf.Present 	= PRESENT_OPTION;
-	link->conf.ConfigBase 	= 0x1020;
+	link->conf.Attributes  = CONF_ENABLE_IRQ;
+	link->conf.IntType     = INT_MEMORY_AND_IO;
+	link->conf.ConfigIndex = 1;
+	link->conf.Present     = PRESENT_OPTION;
+	link->conf.ConfigBase  = 0x1020;
 
 
 	req.Attributes = WIN_DATA_WIDTH_16 | WIN_ENABLE;

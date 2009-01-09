@@ -61,15 +61,15 @@ struct sniffed_packet
 };
 
 
-void sniffer_init(struct coa_info *dev);
-void sniffer_init_sniff_all(struct coa_info *dev);
-void sniffer_init_sniff_scan(struct coa_info *dev);
-void sniffer_init_sniff_sync(struct coa_info *dev);
-void sniffer_irq_handler(struct coa_info *dev);
-void sniffer_sniff_all_irq(struct coa_info *dev,int irq);
-void sniffer_sniff_scan_irq(struct coa_info *dev,int irq);
-void sniffer_sniff_sync_irq(struct coa_info *dev,int irq);
-void sniffer_sync_patchloop(struct coa_info *dev,struct dect_slot_info *slottable,int type);
-void sniffer_clear_slottable(struct dect_slot_info *slottable);
+void    sniffer_init(struct coa_info *dev);
+void    sniffer_init_sniff_all(struct coa_info *dev);
+void    sniffer_init_sniff_scan(struct coa_info *dev);
+void    sniffer_init_sniff_sync(struct coa_info *dev);
+uint8_t sniffer_irq_handler(struct coa_info *dev);
+void    sniffer_sniff_all_irq(struct coa_info *dev,int irq);
+void    sniffer_sniff_scan_irq(struct coa_info *dev,int irq);
+void    sniffer_sniff_sync_irq(struct coa_info *dev,int irq);
+void    sniffer_sync_patchloop(struct coa_info *dev,struct dect_slot_info *slottable,int type);
+void    sniffer_clear_slottable(struct dect_slot_info *slottable);
 #endif
 
