@@ -24,6 +24,7 @@
 #include <time.h>
 #include <limits.h>
 #include <signal.h>
+#include <ctype.h>
 #include <pcap.h>
 
 
@@ -40,6 +41,8 @@ char buf[RXBUF];
 /* pcap errors */
 char errbuf[PCAP_ERRBUF_SIZE];
 
+int rfpi_is_ignored(const uint8_t * RFPI);
+
 void print_help(void)
 {
 	LOG("\n");
@@ -51,6 +54,7 @@ void print_help(void)
 	LOG("   chan <ch>     - set current channel [0-9], currently %d\n", cli.channel);
 //	LOG("   slot <sl>     - set current slot [0-23], currently %d\n", cli.slot);
 //	LOG("   jam           - jam current channel\n");
+	LOG("   ignore <rfpi> - toggle ignoring of an RFPI in autorec\n");
 	LOG("   dump          - dump stations and calls we have seen\n");
 	LOG("   hop           - toggle channel hopping, currently %s\n", cli.hop ? "ON":"OFF");
 	LOG("   verb          - toggle verbosity, currently %s\n", cli.verbose ? "ON":"OFF");
@@ -176,7 +180,21 @@ void try_add_station(struct dect_station * station)
 	if (!found)
 		add_station(station);
 	if (cli.autorec && (cli.mode != MODE_PPSCAN))
-		do_ppscan(station->RFPI);
+	{
+		if (rfpi_is_ignored(station->RFPI))
+		{
+			if (cli.verbose)
+			{
+				LOG("### skipping ignored RFPI %.2x %.2x %.2x %.2x %.2x\n",
+						station->RFPI[0], station->RFPI[1], station->RFPI[2],
+						station->RFPI[3], station->RFPI[4]);
+			}
+		}
+		else
+		{
+			do_ppscan(station->RFPI);
+		}
+	}
 }
 
 
@@ -209,30 +227,137 @@ void do_callscan(void)
 	cli.mode = MODE_CALLSCAN;
 }
 
+int hexvalue(int hexdigit)
+{
+	if (hexdigit >= '0' && hexdigit <= '9')
+		return hexdigit - '0';
+	if (hexdigit >= 'a' && hexdigit <= 'f')
+		return hexdigit - ('a' - 10);
+	if (hexdigit >= 'A' && hexdigit <= 'F')
+		return hexdigit - ('A' - 10);
+	return -1;
+}
+
+int parse_rfpi(const char * str_rfpi, uint8_t * rfpi)
+{
+	int i = 0;
+
+	// Skip initial whitespace:
+	while (isspace(*str_rfpi))
+		str_rfpi++;
+
+	for (;;)
+	{
+		int highnibble, lownibble;
+		highnibble = hexvalue(str_rfpi[0]);
+		// Need to check for validity of the first character before
+		// continuing with the next, in case the first one was \0:
+		if (highnibble == -1)
+			return -1;
+		lownibble = hexvalue(str_rfpi[1]);
+		if (lownibble == -1)
+			return -1;
+		rfpi[i] = (highnibble << 4) | lownibble;
+		
+		if (i == 4)
+			break;
+		i++;
+		str_rfpi += 2;
+
+		// Accept space or colon as byte separator. None at all is ok too.
+		if (*str_rfpi == ' ' || *str_rfpi == ':')
+			str_rfpi++;
+	}
+
+	return 0;
+}
+
 void do_ppscan_str(char * str_rfpi)
 {
 	uint8_t RFPI[5];
-	char * end;
-	int i;
-	errno = 0;
-	for (i=0; i<5; i++)
+
+	if (parse_rfpi(str_rfpi, RFPI) == -1)
 	{
-		RFPI[i] = strtoul(str_rfpi, &end, 16);
-		if ((errno == ERANGE )
-			|| (errno != 0 && RFPI[i] == 0))
-		{
-			LOG("!!! please enter a valid RFPI (e.g. 00 01 02 03 04) RFPI out of range\n");
-			return;
-		}
-		if (end == str_rfpi)
-		{
-			LOG("!!! please enter a valid RFPI (e.g. 00 01 02 03 04) RFPI too short\n");
-			return;
-		}
-		str_rfpi = end;
+		LOG("!!! please enter a valid RFPI (e.g. 00 01 02 03 04)\n");
+		return;
 	}
 	do_ppscan(RFPI);
 }
+
+// Returns true if 'RFPI' occurs in 'list'.
+int rfpi_list_present(struct rfpi_list * list, const uint8_t * RFPI)
+{
+	for (; list != NULL; list = list->next)
+	{
+		if (!memcmp(RFPI, list->RFPI, 5))
+			return 1;
+	}
+	return 0;
+}
+
+// Adds 'RFPI' at the front of '*list_ptr'.
+void rfpi_list_add(struct rfpi_list ** list_ptr, const uint8_t * RFPI)
+{
+	struct rfpi_list * new_link = malloc(sizeof (struct rfpi_list));
+	memcpy(new_link->RFPI, RFPI, 5);
+	new_link->next = *list_ptr;
+	*list_ptr = new_link;
+}
+
+// Removes the first occurence of 'RFPI' from '*list_ptr'.
+void rfpi_list_remove(struct rfpi_list ** list_ptr, const uint8_t * RFPI)
+{
+	for (; *list_ptr != NULL; list_ptr = &(*list_ptr)->next)
+	{
+		struct rfpi_list * link = *list_ptr;
+		if (!memcmp(RFPI, link->RFPI, 5))
+		{
+			*list_ptr = link->next;
+			free(link);
+			return;
+		}
+	}
+}
+
+int rfpi_is_ignored(const uint8_t * RFPI)
+{
+	return rfpi_list_present(cli.ignored_rfpis, RFPI);
+}
+
+void rfpi_ignore_rfpi(const uint8_t * RFPI)
+{
+	rfpi_list_add(&cli.ignored_rfpis, RFPI);
+}
+
+void rfpi_unignore_rfpi(const uint8_t * RFPI)
+{
+	rfpi_list_remove(&cli.ignored_rfpis, RFPI);
+}
+
+void do_ignore_str(const char * str_rfpi)
+{
+	uint8_t RFPI[5];
+
+	if (parse_rfpi(str_rfpi, RFPI) == -1)
+	{
+		LOG("!!! please enter a valid RFPI (e.g. 00 01 02 03 04)\n");
+		return;
+	}
+
+	if (rfpi_is_ignored(RFPI))
+	{
+		LOG("### no longer ignoring RFPI %.2x %.2x %.2x %.2x %.2x\n",
+				RFPI[0], RFPI[1], RFPI[2], RFPI[3], RFPI[4]);
+		rfpi_unignore_rfpi(RFPI);
+	}
+	else
+	{
+		LOG("### ignoring RFPI %.2x %.2x %.2x %.2x %.2x\n",
+				RFPI[0], RFPI[1], RFPI[2], RFPI[3], RFPI[4]);
+		rfpi_ignore_rfpi(RFPI);
+	}
+}
+
 
 void do_chan(char * str_chan)
 {
@@ -295,10 +420,11 @@ void do_dump(void)
 {
 	int i;
 	struct dect_station * p = cli.station_list;
+	struct rfpi_list * r = cli.ignored_rfpis;
 	if (!p)
 	{
 		LOG("### nothing found so far\n");
-		return;
+		goto dump_ignore;
 	}
 
 	LOG("### stations\n");
@@ -335,6 +461,21 @@ void do_dump(void)
 			LOG("\n");
 		}
 	} while ((p = p->next));
+
+dump_ignore:
+	if (!r)
+		return;
+
+	LOG("### RFPIs ignored\n");
+	do{
+		LOG("   %.2x %.2x %.2x %.2x %.2x is ignored\n",
+			r->RFPI[0],
+			r->RFPI[1],
+			r->RFPI[2],
+			r->RFPI[3],
+			r->RFPI[4]
+			);
+	} while ((r = r->next));
 }
 
 void do_hop(void)
@@ -407,6 +548,8 @@ void process_cli_data()
 		{ do_slot(&buf[4]); done = 1; }
 	if ( !strncasecmp((char *)buf, "jam", 3) )
 		{ do_jam(); done = 1; }
+	if ( !strncasecmp((char *)buf, "ignore", 6) )
+		{ do_ignore_str(&buf[6]); done = 1; }
 	if ( !strncasecmp((char *)buf, "dump", 4) )
 		{ do_dump(); done = 1; }
 	if ( !strncasecmp((char *)buf, "hop", 3) )
@@ -572,6 +715,7 @@ void init_cli()
 	cli.verbose      = 0;
 
 	cli.station_list = NULL;
+	cli.ignored_rfpis= NULL;
 
 	cli.autorec             = 0;
 	cli.autorec_timeout     = 10;

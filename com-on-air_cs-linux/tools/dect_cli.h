@@ -45,6 +45,13 @@ struct sniffed_packet
 };
 
 
+struct rfpi_list
+{
+	struct rfpi_list * next;
+	uint8_t RFPI[5];
+};
+
+
 #define MODE_STOP     0x00000001
 #define MODE_FPSCAN   0x00000002
 #define MODE_PPSCAN   0x00000004
@@ -74,6 +81,9 @@ struct cli_info
 	/* fpscan (async) list of stations */
 	struct dect_station   station;
 	struct dect_station   * station_list;
+
+	/* ignored RFPIs */
+	struct rfpi_list * ignored_rfpis;
 
 	/* ppscan (sync) */
 	struct sniffed_packet packet;
