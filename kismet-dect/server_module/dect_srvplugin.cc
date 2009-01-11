@@ -22,8 +22,9 @@
 #include <plugintracker.h>
 #include <globalregistry.h>
 
-#define COA_IOCTL_MODE  0xD000
-#define COA_IOCTL_CHAN  0xD004
+#define COA_IOCTL_MODE                  0xD000
+#define COA_IOCTL_CHAN                  0xD004
+#define COA_IOCTL_SETRFPI               0xD008
 #define COA_MODE_SNIFF                  0x0300
 #define COA_SUBMODE_SNIFF_ALL           0x0000
 #define COA_SUBMODE_SNIFF_SCANFP        0x0001
@@ -44,13 +45,14 @@
 /* Subcommands */
 #define DECT_SUBCMD_CHANHOP_ENABLE  1
 #define DECT_SUBCMD_CHANHOP_DISABLE 0
-#define DECT_SUBCMD_SCAN_STATIONS   0
-#define DECT_SUBCMD_SCAN_CALLS      1
+#define DECT_SUBCMD_SCAN_FP         0
+#define DECT_SUBCMD_SCAN_PP         1
+#define DECT_SUBCMD_SCAN_CALLS      2
 
 // Globals
 int dect_comp_datachunk;
 
-static int mode = DECT_SUBCMD_SCAN_STATIONS;
+static int mode = DECT_SUBCMD_SCAN_FP;
 static int switched = 0;
 
 /* This is the 7 bytes we read while scanning */
@@ -204,14 +206,8 @@ public:
 	}
 
 	virtual int SetChannel(unsigned int in_ch) {
-		// Set a channel - channel can be # or frequency, rest of the code doesn't
-		// care.
-
         if (locked) {
-            printf("Not switching..\n");
             return 0;
-        } else { 
-            printf("Locker is %d: %x\n", locked, this);
         }
         printf("switching to channel %d\n", in_ch);
         if (ioctl(serial_fd, COA_IOCTL_CHAN, &in_ch)){
@@ -232,10 +228,13 @@ public:
             fprintf(stderr, "Couldn't ioctl to COA_MODE_SNIFF\n");
             return;
         }
-        this->SetChannel(0);
+        mode = COA_SUBMODE_SNIFF_SCANFP;
+        switched = 1;
+        // Remove lock, if there is any, and start scanning at channel 0
+        setLock(false, 0);
     }
 
-    void startCallScan()
+    void startScanPp()
     {
         if (serial_fd == -1) 
             return;
@@ -245,7 +244,31 @@ public:
             fprintf(stderr, "Couldn't ioctl to COA_MODE_SNIFF\n");
             return;
         }
-        this->SetChannel(0);
+        mode = COA_SUBMODE_SNIFF_SCANFP;
+        switched = 1;
+        // Remove lock, if there is any, and start scanning at channel 0
+        setLock(false, 0);
+    }
+
+    void startScanCalls(uint8_t *RFPI, int channel)
+    {
+        if (serial_fd == -1 || !RFPI)
+            return;
+        /* set sync sniff mode */
+        uint16_t val;
+        val = COA_MODE_SNIFF | COA_SUBMODE_SNIFF_SYNC;
+        if (ioctl(serial_fd, COA_IOCTL_MODE, &val)){
+            fprintf(stderr, "Couldn't ioctl to COA_MODE_SNIFF\n");
+            return;
+        }
+        /* set rfpi to sync with */
+        if(ioctl(serial_fd, COA_IOCTL_SETRFPI, RFPI)){
+            fprintf(stderr, "Couldn't ioctl SETRFPI\n");
+            return;
+        }
+        mode = 2;
+        // Don't hop channels while synced
+        setLock(true, channel);
     }
 
 	virtual int FetchDescriptor() {
@@ -283,6 +306,7 @@ public:
         // Don't remove this, or it's gonna lock your box
         usleep(10000);
 
+        // Async FP/PP scan read 7 bytes each
         if (mode == 0 || mode == 1) {
             if ((rbytes = read(serial_fd, &(dc->sdata), 7)) != 7) {
                 // Fail
@@ -293,20 +317,20 @@ public:
                     printf("%.2x:", dc->sdata.RFPI[i]);
                 }
                 printf("\n");
-                /*
-                printf("RSSI: %d\n", dc->sdata.RSSI);
-                printf("channel: %d\n", dc->sdata.channel);
-                */
                 newpack->insert(dect_comp_datachunk, dc);
                 globalreg->packetchain->ProcessPacket(newpack);
             }
-        } else {
+        } else if (mode == 2) {
+            // XXX Have this is a while loop?
             if ((rbytes = read(serial_fd, &(dc->pdata), sizeof(dc->pdata))) != sizeof(dc->pdata)) {
                     return 0;
             } else {
                 printf("%d %d %d %s\n", dc->pdata.rssi, dc->pdata.channel,
                                         dc->pdata.slot, dc->pdata.data);
             }
+        } else {
+            fprintf(stderr, "Bad mode selected\n");
+            return 0;
         }
 
 		return 1;
@@ -314,7 +338,6 @@ public:
 
     void setLock(bool lock, int arg) 
     {
-        printf("Setting lock: %d, arg: %d -- %x\n", lock, arg, this);
         if (arg != -1) {
             SetChannel(arg);
         }
@@ -453,6 +476,8 @@ int dect_cc_callback(CLIENT_PARMS)
     int cmd = -1;
     int subcmd = -1;
     int arg = -1;
+    uint8_t rfpi[5];
+    char rfpi_s[15];
 
     DectCcc *dc = (DectCcc *)auxptr;
     if (!dc) {
@@ -467,13 +492,33 @@ int dect_cc_callback(CLIENT_PARMS)
         fprintf(stderr, "Bad args.\n");
         return 0;
     }
+    memset(rfpi, 0, sizeof(rfpi));
+    memset(rfpi_s, 0, sizeof(rfpi_s));
 
-    sscanf(cmdline.c_str(), "%d %d %d", &cmd, &subcmd, &arg);
-    if (cmd < DECT_CMD_START || cmd > DECT_CMD_END ||
-        subcmd < DECT_SUBCMD_START || subcmd > DECT_SUBCMD_END) {
-        fprintf(stderr, "Bad DECT client command.\n");
+    if (parsedcmdline->size() < 3) {
+        fprintf(stderr, "Bad client command.\n");
         return 0;
     }
+    cmd = atoi((*parsedcmdline)[0].word.c_str());
+    subcmd = atoi((*parsedcmdline)[1].word.c_str());
+    arg = atoi((*parsedcmdline)[2].word.c_str());
+    if (cmd < DECT_CMD_START || cmd > DECT_CMD_END ||
+        subcmd < DECT_SUBCMD_START || subcmd > DECT_SUBCMD_END) {
+        fprintf(stderr, "Bad DECT client command: %s.\n", cmdline.c_str());
+        return 0;
+    }
+    if (parsedcmdline->size() == 4) {
+        // XXX Do this much more elegant
+        long rfpi0, rfpi1, rfpi2, rfpi3, rfpi4;
+        strncpy(rfpi_s, (*parsedcmdline)[3].word.c_str(), 14);
+        sscanf(rfpi_s, "%x:%x:%x:%x:%x", &rfpi0, &rfpi1, &rfpi2, &rfpi3, &rfpi4);
+        rfpi[0] = (uint8_t)rfpi0;
+        rfpi[1] = (uint8_t)rfpi1;
+        rfpi[2] = (uint8_t)rfpi2;
+        rfpi[3] = (uint8_t)rfpi3;
+        rfpi[4] = (uint8_t)rfpi4;
+    }
+    printf("CMD: %d SUBCMD: %d ARG: %d\n", cmd, subcmd, arg);
 
     switch (cmd) {
         case DECT_CMD_CHANHOP:
@@ -493,19 +538,25 @@ int dect_cc_callback(CLIENT_PARMS)
             break;
         case DECT_CMD_SCAN:
             switch(subcmd) {
-                case DECT_SUBCMD_SCAN_STATIONS:
-                    printf("DECT_CMD_SCAN STATIONS\n");
-                    mode = 0;
-                    switched = 1;
+                case DECT_SUBCMD_SCAN_FP:
+                    printf("DECT_CMD_SCAN FP\n");
                     ex_psd->startScanFp();
+                    dtracker->emptyMap();
+                    break;
+                case DECT_SUBCMD_SCAN_PP:
+                    printf("DECT_CMD_SCAN PP\n");
+                    ex_psd->startScanPp();
                     dtracker->emptyMap();
                     break;
                 case DECT_SUBCMD_SCAN_CALLS:
                     printf("DECT_CMD_SCAN CALLS\n");
-                    mode = 1;
-                    switched = 1;
-                    ex_psd->startCallScan();
-                    dtracker->emptyMap();
+                    printf("Station %.2x:%.2x:%.2x:%.2x:%.2x\n",
+                                              rfpi[0],
+                                              rfpi[1],
+                                              rfpi[2],
+                                              rfpi[3],
+                                              rfpi[4]);
+                    ex_psd->startScanCalls(rfpi, arg);
                     break;
                 default:
                     fprintf(stderr, "Bad DECT_CMD_SCAN subcommand.\n");
@@ -625,8 +676,9 @@ int dect_register(GlobalRegistry *globalreg) {
     // Hopefully this won't break since we don't know about memory management
     // of packetsources
     PacketSource_Dect *psd = new PacketSource_Dect(globalreg);
-    if (!psd)
+    if (!psd) {
         return -1;
+    }
 
 	// Add the packet source
 	if (globalreg->sourcetracker->RegisterPacketSource(psd) < 0 || globalreg->fatal_condition) {
@@ -637,13 +689,13 @@ int dect_register(GlobalRegistry *globalreg) {
 	// Make a tracker
 	DectTracker *dtracker;
 	dtracker = new DectTracker(globalreg);
-    if (!dtracker)
+    if (!dtracker) {
         return -1;
-
+    }
     DectCcc *dc = new DectCcc;
-    if (!dc)
+    if (!dc) {
         return -1;
-
+    }
     dc->dtracker = dtracker;
     dc->psd = psd;
 

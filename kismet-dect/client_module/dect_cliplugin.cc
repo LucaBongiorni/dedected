@@ -19,12 +19,13 @@
 
 #define KCLI_DECT_CHANNEL_FIELDS "rfpi,rssi,channel,first_seen,last_seen,count_seen"
 
-#define SORT_BY_RSSI 1
-#define SORT_BY_CHANNEL 2
-#define SORT_BY_COUNTSEEN 5
+#define SORT_BY_RSSI        1
+#define SORT_BY_CHANNEL     2
+#define SORT_BY_COUNTSEEN   5
 
-#define MODE_ASYNC_FP_SCAN 0
-#define MODE_ASYNC_PP_SCAN 1
+#define MODE_ASYNC_FP_SCAN  0
+#define MODE_ASYNC_PP_SCAN  1
+#define MODE_SYNC_CALL_SCAN 2
 
 // default: sort by RSSI
 static int sort_by = SORT_BY_RSSI;
@@ -131,21 +132,19 @@ public:
         if (in_key == 'h' || in_key == '?') {
             string help_title = "  Help  ";
             string help_text = "h       - Display this help\n"
-                               "<enter> - Show details of currently selected station\n"
                                "L       - Lock channel hopping to current channel\n"
                                "U       - Unlock channel hopping\n"
-                               //"S       - Set (and lock) channel\n"
                                "F       - Do async FP scan (default)\n"
                                "A       - Do async PP scan\n"
                                "M       - Show current mode\n"
-                               //"P       - PP scan for active calls\n"
                                "r       - Sort by RSSI (ascending)\n"
                                "R       - Sort by RSSI (descending)\n"
                                "c       - Sort by Channel (ascending)\n"
                                "C       - Sort by Channel (descending)\n"
                                "s       - Sort by view count (ascending)\n"
-                               "S       - Sort by view count (descending)\n";
-                               
+                               "S       - Sort by view count (descending)\n"
+                               "<enter> - In FP mode: Show details of currently selected station\n"
+                               "          In PP mode: Sync with selected station and record call\n";
             Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
             ma->Position(2, 2, 19, 55);
             ma->ConfigureAlert(help_title, help_text);
@@ -155,7 +154,10 @@ public:
         if (in_key == 'L') {
             // Return currently selected channel to server
             vector<string> s = GetSelectedData();
-            string cmd("DECT 1 0 0 " + s[2]);
+            if (s.size() < 2) {
+                return 1;
+            }
+            string cmd("DECT 0 0 0 " + s[2]);
             if (globalreg && 
                 globalreg->panel_interface && 
                 globalreg->panel_interface->FetchFirstNetclient()) {
@@ -167,7 +169,7 @@ public:
             if (globalreg && 
                 globalreg->panel_interface && 
                 globalreg->panel_interface->FetchFirstNetclient()) {
-                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 1 0 1");
+                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 0 1 0");
             }
             return 0;
         }
@@ -175,7 +177,7 @@ public:
             if (globalreg && 
                 globalreg->panel_interface && 
                 globalreg->panel_interface->FetchFirstNetclient()) {
-                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 1 1 0");
+                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 1 0 0");
             }
             mode = MODE_ASYNC_FP_SCAN;
             if (ddata) {
@@ -188,7 +190,7 @@ public:
             if (globalreg && 
                 globalreg->panel_interface && 
                 globalreg->panel_interface->FetchFirstNetclient()) {
-                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 1 1 1");
+               globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 1 1 0");
             }
             mode = MODE_ASYNC_PP_SCAN;
             if (ddata) {
@@ -387,31 +389,62 @@ int menu_callback(void *auxptr)
 int DectListerButtonCB(COMPONENT_CALLBACK_PARMS)
 {
     dect_data *ddata = (dect_data *) aux;
-    vector<string> data = ddata->dtable->GetSelectedData();    
+    GlobalRegistry *greg = globalreg;
 
-    vector<vector<string> >::iterator i = ddata->info_vec_fp.begin();
-    for (int j = 0; i < ddata->info_vec_fp.end(); ++i, ++j) {
-        if ((*i)[0] == data[0]) {
-            time_t first, last;
-            char first_s[30], last_s[30];
-            first = atoi((*i)[3].c_str());
-            last = atoi((*i)[4].c_str());
-            ctime_r(&first, first_s);
-            ctime_r(&last, last_s);
-            string in_title = "Station details";
-            string in_text =  "Station:    " + data[0] + "\n" + 
-                    "RSSI:       " + (*i)[1] + "\n" +
-                    "Channel:    " + (*i)[2] + "\n" +
-                    "First seen: " + first_s +
-                    "Last seen:  " + last_s +
-                    "Count seen: " + (*i)[5] + "\n";
-            // XXX: This could be another panel as well
-            Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
-            ma->Position((LINES / 2) - 5, (COLS / 2) - 20, 12, 40);
-            ma->ConfigureAlert(in_title, in_text);
-            globalreg->panel_interface->AddPanel(ma);
-            return 1;
+    if(!ddata || !greg) {
+        printf("Fooo!\n");
+        return 0;
+    }
+
+    if (mode == MODE_ASYNC_FP_SCAN) {
+        vector<string> data = ddata->dtable->GetSelectedData();    
+        vector<vector<string> >::iterator i = ddata->info_vec_fp.begin();
+        for (int j = 0; i < ddata->info_vec_fp.end(); ++i, ++j) {
+            if ((*i)[0] == data[0]) {
+                time_t first, last;
+                char first_s[30], last_s[30];
+                first = atoi((*i)[3].c_str());
+                last = atoi((*i)[4].c_str());
+                ctime_r(&first, first_s);
+                ctime_r(&last, last_s);
+                string in_title = "Station details";
+                string in_text =  "Station:    " + data[0] + "\n" + 
+                        "RSSI:       " + (*i)[1] + "\n" +
+                        "Channel:    " + (*i)[2] + "\n" +
+                        "First seen: " + first_s +
+                        "Last seen:  " + last_s +
+                        "Count seen: " + (*i)[5] + "\n";
+                // XXX: This could be another panel as well
+                Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
+                ma->Position((LINES / 2) - 8, (COLS / 2) - 25, 12, 40);
+                ma->ConfigureAlert(in_title, in_text);
+                globalreg->panel_interface->AddPanel(ma);
+                return 1;
+            }
         }
+    } else if (mode == MODE_ASYNC_PP_SCAN) {
+        vector<string> data = ddata->dtable->GetSelectedData();    
+        vector<vector<string> >::iterator i = ddata->info_vec_pp.begin();
+        for (int j = 0; i < ddata->info_vec_pp.end(); ++i, ++j) {
+            if ((*i)[0] == data[0]) {
+                string cmd("DECT 1 2 " + data[2] + " " + data[0]);
+                printf("%s\n", cmd.c_str());
+                if (globalreg &&
+                    globalreg->panel_interface &&
+                    globalreg->panel_interface->FetchFirstNetclient()) {
+                    globalreg->panel_interface->FetchFirstNetclient()->InjectCommand(cmd);
+                }
+                Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
+                ma->Position((LINES / 2) - 8, (COLS / 2) - 25, 12, 50);
+                ma->ConfigureAlert("", "Syncing to chosen station " + data[0]);
+                globalreg->panel_interface->AddPanel(ma);
+            }
+        }
+    } else {
+        Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
+        ma->Position((LINES / 2) - 5, (COLS / 2) - 20, 12, 40);
+        ma->ConfigureAlert("Warning", "No Mode selected: Use keys 'A' or 'F'");
+        globalreg->panel_interface->AddPanel(ma);
     }
 
     return 0;
