@@ -136,7 +136,8 @@ public:
                                "U       - Unlock channel hopping\n"
                                //"S       - Set (and lock) channel\n"
                                "F       - Do async FP scan (default)\n"
-                               "A       - Do async call scan\n"
+                               "A       - Do async PP scan\n"
+                               "M       - Show current mode\n"
                                //"P       - PP scan for active calls\n"
                                "r       - Sort by RSSI (ascending)\n"
                                "R       - Sort by RSSI (descending)\n"
@@ -194,6 +195,22 @@ public:
                 ddata->info_vec_fp.clear();
                 ddata->dtable->Clear();
             }
+            return 0;
+        }
+        if (in_key == 'M') {
+            string current_mode = "Unkown/Other";
+            string mode_title = "";
+            if (mode == MODE_ASYNC_FP_SCAN) {
+                current_mode = "Async FP Scan";
+            } else if (mode == MODE_ASYNC_PP_SCAN) {
+                current_mode = "Async PP Scan";
+            }
+            string mode_text = "Current mode is: " + current_mode;
+                               
+            Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
+            ma->Position(6, 10, 5, 45);
+            ma->ConfigureAlert(mode_title, mode_text);
+            globalreg->panel_interface->AddPanel(ma);
             return 0;
         }
         if (in_key == 'r') {
