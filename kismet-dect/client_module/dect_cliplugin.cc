@@ -31,14 +31,36 @@ static int sort_by = SORT_BY_RSSI;
 static bool descending = true;
 static int mode = MODE_ASYNC_FP_SCAN;
 
+class DecTable;
+struct dect_data {
+    DecTable *dtable;
+    DecTable *ctable;
+    vector<vector <string> > info_vec_fp; 
+    vector<vector <string> > info_vec_pp;
+    int addref;
+    int numrows;
+    int mode;
+};
+
 class DecTable : public Kis_Scrollable_Table {
 public:
-    DecTable(GlobalRegistry *in_globalreg, Kis_Panel *in_panel) :
+    DecTable(GlobalRegistry *in_globalreg, Kis_Panel *in_panel, dect_data *ddata) :
         Kis_Scrollable_Table(in_globalreg, in_panel)
     {
         this->globalreg = in_globalreg;
+        this->ddata = ddata;
     }
     ~DecTable() {}
+
+    void setModePPTable(DecTable *ppt) 
+    {
+        this->pptable = ppt;
+    }
+
+    void setModeFPTable(DecTable *fpt)
+    {
+        this->fptable = fpt;
+    }
 
     int KeyPress(int in_key)
     {
@@ -155,6 +177,10 @@ public:
                 globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 1 1 0");
             }
             mode = MODE_ASYNC_FP_SCAN;
+            if (ddata) {
+                ddata->info_vec_pp.clear();
+                ddata->dtable->Clear();
+            }
             return 0;
         }
         if (in_key == 'A') {
@@ -164,6 +190,10 @@ public:
                 globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 1 1 1");
             }
             mode = MODE_ASYNC_PP_SCAN;
+            if (ddata) {
+                ddata->info_vec_fp.clear();
+                ddata->dtable->Clear();
+            }
             return 0;
         }
         if (in_key == 'r') {
@@ -196,17 +226,9 @@ public:
 
 private:
     GlobalRegistry *globalreg;
-};
-
-struct dect_data {
-    DecTable *dtable;
-    DecTable *ctable;
-    // This should be something else than just strings,
-    // but it's too handy at the moment since we have
-    // to put strings into 
-    vector<vector <string> > info_vec; 
-    int addref;
-    int numrows;
+    DecTable *pptable;
+    DecTable *fptable;
+    dect_data *ddata;
 };
 
 bool less_by_RSSI(const vector<string> &v1, const vector<string> &v2)
@@ -246,37 +268,64 @@ void DectDetailsProtoDECT(CLIPROTO_CB_PARMS)
     */
     
     // RFPI is primary key
-    vector<vector <string> >::iterator i = ddata->info_vec.begin();
-    for (int j = 0; i < ddata->info_vec.end(); ++i, ++j) {
-        if ((*i)[0] == inf[0]) {
-            match = true;
-            // Update
-            ddata->info_vec[j] = inf;
-            //ddata->dtable->ReplaceRow(j, inf);
+    if (mode == MODE_ASYNC_FP_SCAN) {
+        vector<vector <string> >::iterator i = ddata->info_vec_fp.begin();
+        for (int j = 0; i < ddata->info_vec_fp.end(); ++i, ++j) {
+            if ((*i)[0] == inf[0]) {
+                match = true;
+                // Update
+                ddata->info_vec_fp[j] = inf;
+            }
+        }
+        if (!match) {
+            ddata->info_vec_fp.push_back(inf);
+        }
+        sort(ddata->info_vec_fp.begin(), ddata->info_vec_fp.end(), less_by_RSSI);   
+        if (descending) {
+            reverse(ddata->info_vec_fp.begin(), ddata->info_vec_fp.end());
+        }
+    } else if (mode == MODE_ASYNC_PP_SCAN) {
+        vector<vector <string> >::iterator i = ddata->info_vec_pp.begin();
+        for (int j = 0; i < ddata->info_vec_pp.end(); ++i, ++j) {
+            if ((*i)[0] == inf[0]) {
+                match = true;
+                // Update
+                ddata->info_vec_pp[j] = inf;
+            }
+        }
+        if (!match) {
+            ddata->info_vec_pp.push_back(inf);
+        }
+        sort(ddata->info_vec_pp.begin(), ddata->info_vec_pp.end(), less_by_RSSI);   
+        if (descending) {
+            reverse(ddata->info_vec_pp.begin(), ddata->info_vec_pp.end());
         }
     }
-    if (!match) {
-        ddata->info_vec.push_back(inf);
-        //ddata->dtable->AddRow(ddata->info_vec.size(), inf);
-    }
-    sort(ddata->info_vec.begin(), ddata->info_vec.end(), less_by_RSSI);   
-    if (descending) {
-        reverse(ddata->info_vec.begin(), ddata->info_vec.end());
-    }
-    if (mode == MODE_ASYNC_FP_SCAN) {
+    if (mode == MODE_ASYNC_FP_SCAN || mode == MODE_ASYNC_PP_SCAN) {
+        ddata->ctable->Hide();
         ddata->dtable->Clear();
-        i = ddata->info_vec.begin();
-        for (int j = 0; i < ddata->info_vec.end(); ++i, ++j) {
-            ddata->dtable->AddRow(j, (*i));
+        if (mode == MODE_ASYNC_FP_SCAN) {
+            vector<vector <string> >::iterator i = ddata->info_vec_fp.begin();
+            for (int j = 0; i < ddata->info_vec_fp.end(); ++i, ++j) {
+                ddata->dtable->AddRow(j, (*i));
+            }
+        } else if (mode == MODE_ASYNC_PP_SCAN) {
+            vector<vector <string> >::iterator i = ddata->info_vec_pp.begin();
+            for (int j = 0; i < ddata->info_vec_pp.end(); ++i, ++j) {
+                ddata->dtable->AddRow(j, (*i));
+            }
         }
         ddata->dtable->Show();
         ddata->dtable->DrawComponent();
     } else {
+        ddata->dtable->Hide();
         ddata->ctable->Clear();
+        /*
         i = ddata->info_vec.begin();
         for (int j = 0; i < ddata->info_vec.end(); ++i, ++j) {
             ddata->ctable->AddRow(j, (*i));
         }
+        */
         ddata->ctable->Show();
         ddata->ctable->DrawComponent();
     }
@@ -323,8 +372,8 @@ int DectListerButtonCB(COMPONENT_CALLBACK_PARMS)
     dect_data *ddata = (dect_data *) aux;
     vector<string> data = ddata->dtable->GetSelectedData();    
 
-    vector<vector<string> >::iterator i = ddata->info_vec.begin();
-    for (int j = 0; i < ddata->info_vec.end(); ++i, ++j) {
+    vector<vector<string> >::iterator i = ddata->info_vec_fp.begin();
+    for (int j = 0; i < ddata->info_vec_fp.end(); ++i, ++j) {
         if ((*i)[0] == data[0]) {
             time_t first, last;
             char first_s[30], last_s[30];
@@ -362,8 +411,8 @@ int panel_plugin_init(GlobalRegistry *globalreg, KisPanelPluginData *pdata) {
 	_MSG("Loading DECT plugin", MSGFLAG_INFO);
 
 	pdata->mainpanel->AddPluginMenuItem("DECT Plugin", menu_callback, pdata);
-    ddata->dtable = new DecTable(globalreg, pdata->mainpanel);
-    ddata->ctable = new DecTable(globalreg, pdata->mainpanel);
+    ddata->dtable = new DecTable(globalreg, pdata->mainpanel, ddata);
+    ddata->ctable = new DecTable(globalreg, pdata->mainpanel, ddata);
 
     vector<Kis_Scrollable_Table::title_data> ti;
     Kis_Scrollable_Table::title_data t1;
@@ -409,6 +458,7 @@ int panel_plugin_init(GlobalRegistry *globalreg, KisPanelPluginData *pdata) {
     ti.push_back(t6);
 
     ddata->dtable->AddTitles(ti);
+    ddata->ctable->AddTitles(ti);
     pdata->mainpanel->AddComponentVec(ddata->dtable, (KIS_PANEL_COMP_DRAW | 
                                                       KIS_PANEL_COMP_TAB | 
 													  KIS_PANEL_COMP_EVT));
@@ -416,6 +466,7 @@ int panel_plugin_init(GlobalRegistry *globalreg, KisPanelPluginData *pdata) {
                                                       ddata->dtable, 1, 0);
 
     ddata->dtable->Activate(1);
+    ddata->ctable->Activate(1);
     ddata->dtable->Show();
     ddata->dtable->DrawComponent();
     // Callback shows details on the station list

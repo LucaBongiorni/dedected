@@ -51,10 +51,7 @@
 int dect_comp_datachunk;
 
 static int mode = DECT_SUBCMD_SCAN_STATIONS;
-
-// Prototypes
-int dect_register(GlobalRegistry *);
-int dect_unregister(GlobalRegistry *);
+static int switched = 0;
 
 /* This is the 7 bytes we read while scanning */
 typedef struct {
@@ -78,6 +75,42 @@ typedef struct
    struct timespec   timestamp;
    unsigned char data[53];
 } pp_packet_t;
+
+// Define an enum of all the fields we send
+enum DECT_fields {
+	DECT_RFPI, 
+    DECT_RSSI, 
+    DECT_channel, 
+    DECT_first_seen, 
+    DECT_last_seen,
+    DECT_count_seen, 
+	DECT_maxfield
+};
+
+// Define the names of each
+const char *DECT_fields_text[] = {
+	"rfpi", 
+    "rssi", 
+    "channel", 
+    "first_seen", 
+    "last_seen", 
+    "count_seen", 
+    NULL
+};
+
+// Prototypes
+int dect_register(GlobalRegistry *);
+int dect_unregister(GlobalRegistry *);
+
+// Prototype the network write function
+int Protocol_DECT(PROTO_PARMS);
+void Protocol_DECT_enable(PROTO_ENABLE_PARMS);
+
+// Timer prototype for kicking DECT network data at regular intervals
+int dect_timer(TIMEEVENT_PARMS);
+
+// Prototype callback hook for attaching to the chain
+int dect_chain_hook(CHAINCALL_PARMS);
 
 // DECT data in a packet
 class dect_datachunk : public packet_component {
@@ -295,107 +328,6 @@ protected:
     PacketSource_Dect *external;
 };
 
-int dect_cc_callback(CLIENT_PARMS)
-{
-    int cmd = -1;
-    int subcmd = -1;
-    int arg = -1;
-
-    //PacketSource_Dect *psd = static_ref;
-    PacketSource_Dect *psd = (PacketSource_Dect*)auxptr;
-    PacketSource_Dect *ex_psd = psd->GetExternal();
-    if (!psd || !ex_psd) {
-        fprintf(stderr, "Bad args.\n");
-        return 0;
-    }
-
-    //fprintf(stderr, "Callback for CHANHOP called: %s\n", cmdline.c_str());
-    sscanf(cmdline.c_str(), "%d %d %d", &cmd, &subcmd, &arg);
-    if (cmd < DECT_CMD_START || cmd > DECT_CMD_END ||
-        subcmd < DECT_SUBCMD_START || subcmd > DECT_SUBCMD_END) {
-        fprintf(stderr, "Bad DECT client command.\n");
-        return 0;
-    }
-
-    switch (cmd) {
-        case DECT_CMD_CHANHOP:
-            switch (subcmd) {
-                case DECT_SUBCMD_CHANHOP_ENABLE:
-                    printf("DECT_CMD_CHANHOP ENABLE\n");
-                    psd->setLock(false, arg);
-                    break;
-                case DECT_SUBCMD_CHANHOP_DISABLE:
-                    printf("DECT_CMD_CHANHOP DISABLE\n");
-                    psd->setLock(true, arg);
-                    break;
-                default:
-                    fprintf(stderr, "Bad DECT_CMD_CHANHOP subcommand.\n");
-                    break;
-            }
-            break;
-        case DECT_CMD_SCAN:
-            switch(subcmd) {
-                case DECT_SUBCMD_SCAN_STATIONS:
-                    printf("DECT_CMD_SCAN STATIONS\n");
-                    mode = 0;
-                    ex_psd->startScanFp();
-                    break;
-                case DECT_SUBCMD_SCAN_CALLS:
-                    printf("DECT_CMD_SCAN CALLS\n");
-                    mode = 1;
-                    ex_psd->startCallScan();
-                    break;
-                default:
-                    fprintf(stderr, "Bad DECT_CMD_SCAN subcommand.\n");
-                    break;
-            }
-            break;
-        default:
-            fprintf(stderr, "Bad DECT client command.\n");
-            return 0;
-    }
-
-    return 1;
-}
-
-
-// Tracker - reads later in the chain and turns data streams into records,
-// also handles exporting the tracked into to the network layer
-
-// Prototype callback hook for attaching to the chain
-int dect_chain_hook(CHAINCALL_PARMS);
-
-// network protocol definitions and prototypes
-
-// Define an enum of all the fields we send
-enum DECT_fields {
-	DECT_RFPI, 
-    DECT_RSSI, 
-    DECT_channel, 
-    DECT_first_seen, 
-    DECT_last_seen,
-    DECT_count_seen, 
-	DECT_maxfield
-};
-
-// Define the names of each
-const char *DECT_fields_text[] = {
-	"rfpi", 
-    "rssi", 
-    "channel", 
-    "first_seen", 
-    "last_seen", 
-    "count_seen", 
-    NULL
-};
-
-// Prototype the network write function
-int Protocol_DECT(PROTO_PARMS);
-void Protocol_DECT_enable(PROTO_ENABLE_PARMS);
-
-// Timer prototype for kicking DECT network data at regular intervals
-int dect_timer(TIMEEVENT_PARMS);
-
 class DectTracker {
 public:
 	DectTracker() { fprintf(stderr, "FATAL OOPS: DectTracker()\n"); }
@@ -443,11 +375,17 @@ public:
 	int chain_handler(kis_packet *in_pack) {
 		dect_datachunk *dectinfo = (dect_datachunk *)
 			in_pack->fetch(dect_comp_datachunk);
+
+        int currentmode = mode;
 		// If this packet doesn't have dect info, we can't do anything, move 
 		// along.
 		if (dectinfo == NULL) {
 			return 0;
 		}
+        if (switched) {
+            dect_map.clear();
+            switched = 0;
+        }
 
         dect_data_t *td = new dect_data_t;
         memcpy(td->sdata.RFPI, &(dectinfo->sdata.RFPI), 5);
@@ -488,6 +426,11 @@ public:
 		return 1;
 	}
 
+    void emptyMap(void)
+    {
+        this->dect_map.clear();
+    }
+
 protected:
 	GlobalRegistry *globalreg;
 	map<int, dect_data_t *> dect_map;
@@ -497,6 +440,85 @@ protected:
     dect_data_t ddata;
 
 };
+
+// This really should be a struct
+class DectCcc {
+public:
+    PacketSource_Dect *psd;
+    DectTracker *dtracker;
+};
+
+int dect_cc_callback(CLIENT_PARMS)
+{
+    int cmd = -1;
+    int subcmd = -1;
+    int arg = -1;
+
+    DectCcc *dc = (DectCcc *)auxptr;
+    if (!dc) {
+        fprintf(stderr, "Bad arg.\n");
+        return 0;
+    }
+
+    PacketSource_Dect *psd = dc->psd;
+    PacketSource_Dect *ex_psd = psd->GetExternal();
+    DectTracker *dtracker = dc->dtracker;
+    if (!psd || !ex_psd || !dtracker) {
+        fprintf(stderr, "Bad args.\n");
+        return 0;
+    }
+
+    sscanf(cmdline.c_str(), "%d %d %d", &cmd, &subcmd, &arg);
+    if (cmd < DECT_CMD_START || cmd > DECT_CMD_END ||
+        subcmd < DECT_SUBCMD_START || subcmd > DECT_SUBCMD_END) {
+        fprintf(stderr, "Bad DECT client command.\n");
+        return 0;
+    }
+
+    switch (cmd) {
+        case DECT_CMD_CHANHOP:
+            switch (subcmd) {
+                case DECT_SUBCMD_CHANHOP_ENABLE:
+                    printf("DECT_CMD_CHANHOP ENABLE\n");
+                    psd->setLock(false, arg);
+                    break;
+                case DECT_SUBCMD_CHANHOP_DISABLE:
+                    printf("DECT_CMD_CHANHOP DISABLE\n");
+                    psd->setLock(true, arg);
+                    break;
+                default:
+                    fprintf(stderr, "Bad DECT_CMD_CHANHOP subcommand.\n");
+                    break;
+            }
+            break;
+        case DECT_CMD_SCAN:
+            switch(subcmd) {
+                case DECT_SUBCMD_SCAN_STATIONS:
+                    printf("DECT_CMD_SCAN STATIONS\n");
+                    mode = 0;
+                    switched = 1;
+                    ex_psd->startScanFp();
+                    dtracker->emptyMap();
+                    break;
+                case DECT_SUBCMD_SCAN_CALLS:
+                    printf("DECT_CMD_SCAN CALLS\n");
+                    mode = 1;
+                    switched = 1;
+                    ex_psd->startCallScan();
+                    dtracker->emptyMap();
+                    break;
+                default:
+                    fprintf(stderr, "Bad DECT_CMD_SCAN subcommand.\n");
+                    break;
+            }
+            break;
+        default:
+            fprintf(stderr, "Bad DECT client command.\n");
+            return 0;
+    }
+
+    return 1;
+}
 
 int dect_chain_hook(CHAINCALL_PARMS) {
 	return ((DectTracker *) auxdata)->chain_handler(in_pack);
@@ -615,10 +637,19 @@ int dect_register(GlobalRegistry *globalreg) {
 	// Make a tracker
 	DectTracker *dtracker;
 	dtracker = new DectTracker(globalreg);
+    if (!dtracker)
+        return -1;
+
+    DectCcc *dc = new DectCcc;
+    if (!dc)
+        return -1;
+
+    dc->dtracker = dtracker;
+    dc->psd = psd;
 
     globalreg->kisnetserver->RegisterClientCommand("DECT",
                                                     dect_cc_callback,
-                                                    psd);
+                                                    dc);
 
 	return 1;
 }
