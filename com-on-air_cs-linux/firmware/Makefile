@@ -11,27 +11,33 @@ BIN2C=./bin2c
 
 all: ../$(FW).h ../$(FW).c
 
-../$(FW).h: $(FW1).h $(FW2).h
+../$(FW).h: $(foreach f,$(ALL_FW),$f.decl $f.label)
 	cat sc14421_header.h $^ sc14421_footer.h > $@
 
-../$(FW).c: $(FW1).c $(FW2).c
+../$(FW).c: $(foreach f,$(ALL_FW),$f.c)
 	cat $^ > $@
 
-$(FW1).c $(FW2).c: $(FW1).bin $(FW2).bin $(BIN2C)
+$(foreach f,$(ALL_FW),$f.c): $(foreach f,$(ALL_FW),$f.bin) $(BIN2C)
 	$(BIN2C) $(@:.c=.bin) $(@:.c=)_fw > $@
 
 %.bin: %.p
 	p2bin $^ $@ -r 0-507
 
 %.p: %.asm
-	asl $^
+	asl -c $^
+	mv $(@:.p=.h) $(@:.p=).label
 
-$(FW1).h $(FW2).h:
-	echo "extern unsigned char $(@:.h=)_fw[509];" > $@
+%.label:%.p
+	@echo "labels in $@"
+
+$(foreach f,$(ALL_FW),$f.decl):
+	@echo "extern unsigned char $(@:.decl=)_fw[509];" > $@
 
 clean:
 	rm -f ../$(FW).h ../$(FW).c $(BIN2C)
 	rm -f $(foreach f,$(ALL_FW),$f.c)
-	rm -f $(foreach f,$(ALL_FW),$f.h)
+	rm -f $(foreach f,$(ALL_FW),$f.p)
+	rm -f $(foreach f,$(ALL_FW),$f.decl)
+	rm -f $(foreach f,$(ALL_FW),$f.label)
 	rm -f $(foreach f,$(ALL_FW),$f.bin)
 

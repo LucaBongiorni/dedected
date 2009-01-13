@@ -47,7 +47,7 @@ PP22:		WNT	2
 		BR	SlotTable
 ;-------------------------------------------------------------
 
-label_28:	JMP	RFInit
+sync_label_28:	JMP	RFInit
 		JMP	label_B1
 		BR	label_2D
 ;-------------------------------------------------------------
@@ -264,10 +264,10 @@ label_C0:	JMP	RFInit
 
 SFieldFound:	WNT	23
 		P_SC	0x00
-label_D1:	JMP	label_28
+sync_label_D1:	JMP	sync_label_28
 		U_INT0	
 		WNT	22
-label_D4:	BR	label_C0
+sync_label_D4:	BR	label_C0
 ;-------------------------------------------------------------
 
 InitDIP:	B_RST	
@@ -295,4 +295,4 @@ InitDIP:	B_RST
 
 		SHARED		PP0,PP2,PP4,PP6,PP8,PP10,PP12,PP14,PP16,PP18,PP20,PP22
 		SHARED		JP0,JP2,JP4,JP6,JP8,JP10,JP12,JP14,JP16,JP18,JP20,JP22
-		SHARED		label_D1,label_D4,label_28
+		SHARED		sync_label_D1,sync_label_D4,sync_label_28
