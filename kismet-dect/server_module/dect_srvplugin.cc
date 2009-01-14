@@ -21,6 +21,7 @@
 #include <configfile.h>
 #include <plugintracker.h>
 #include <globalregistry.h>
+#include <dumpfile.h>
 
 #define COA_IOCTL_MODE                  0xD000
 #define COA_IOCTL_CHAN                  0xD004
@@ -119,7 +120,115 @@ class dect_datachunk : public packet_component {
 public:
     dect_data_scan_t sdata;
     pp_packet_t pdata;
+    int kind;
 };
+
+class Dumpfile_Dectpcap : public Dumpfile {
+public:
+    Dumpfile_Dectpcap();
+    Dumpfile_Dectpcap(GlobalRegistry *in_globalreg);
+    virtual ~Dumpfile_Dectpcap();
+
+    virtual int chain_handler(kis_packet *in_pack);
+    virtual int Flush();
+private:
+    FILE *dectpcapfile;
+};
+
+// Dumpfile stuff
+int dumpfiledectpcap_chain_hook(CHAINCALL_PARMS) {
+	Dumpfile_Dectpcap *auxptr = (Dumpfile_Dectpcap *) auxdata;
+	return auxptr->chain_handler(in_pack);
+}
+
+Dumpfile_Dectpcap::Dumpfile_Dectpcap() {
+    fprintf(stderr, "FATAL OOPS: Dumpfile_Dectpcap called with no globalreg\n");
+    exit(1);
+}
+
+Dumpfile_Dectpcap::Dumpfile_Dectpcap(GlobalRegistry *in_globalreg) : 
+    Dumpfile(in_globalreg) {
+
+    char errstr[STATUS_MAX];
+    globalreg = in_globalreg;
+
+    dectpcapfile = NULL;
+
+    type = "dectpcap";
+
+    if (globalreg->packetchain == NULL) {
+        fprintf(stderr, "FATAL OOPS:  Packetchain missing before "
+                "Dumpfile_Dectpcap\n");
+        exit(1);
+    }
+
+    // Find the file name
+    if ((fname = ProcessConfigOpt("dectpcap")) == "" || 
+        globalreg->fatal_condition) {
+        return;
+    }
+
+    dectpcapfile = fopen(fname.c_str(), "w");
+    if (dectpcapfile == NULL) {
+        snprintf(errstr, STATUS_MAX, "Failed to open dectpcap dump file '%s': %s",
+                 fname.c_str(), strerror(errno));
+        globalreg->fatal_condition = 1;
+        return;
+    }
+
+    printf("Pcap open\n");
+
+    globalreg->packetchain->RegisterHandler(&dumpfiledectpcap_chain_hook, this,
+                                            CHAINPOS_LOGGING, -100);
+
+    globalreg->RegisterDumpFile(this);
+}
+
+Dumpfile_Dectpcap::~Dumpfile_Dectpcap() {
+    int opened = 0;
+
+    globalreg->packetchain->RemoveHandler(&dumpfiledectpcap_chain_hook, 
+                                          CHAINPOS_LOGGING);
+    
+    // Close files
+    if (dectpcapfile != NULL) {
+        Flush();
+        fclose(dectpcapfile);
+        opened = 1;
+    }
+
+    dectpcapfile = NULL;
+
+}
+
+int Dumpfile_Dectpcap::Flush() {
+    if (dectpcapfile == NULL)
+        return 0;
+
+    fflush(dectpcapfile);
+
+    return 1;
+}
+
+int Dumpfile_Dectpcap::chain_handler(kis_packet *in_pack) {
+    if (dectpcapfile == NULL)
+        return 0;
+
+    if (in_pack->error)
+        return 0;
+    dect_datachunk *dc = (dect_datachunk *)
+            in_pack->fetch(dect_comp_datachunk);
+
+    // We only want kind "2"
+    if (!dc || dc->kind != 2) {
+        return 0;
+    }
+    
+    fwrite(dc->pdata.data, 53, 1, dectpcapfile);
+    dumped_frames++;
+
+    return 1;
+}
 
 // Packetsource - where packets come from.  Reads the device and writes into the chain
 class PacketSource_Dect : public KisPacketSource {
@@ -317,16 +426,17 @@ public:
                     printf("%.2x:", dc->sdata.RFPI[i]);
                 }
                 printf("\n");
+                dc->kind = 0;
                 newpack->insert(dect_comp_datachunk, dc);
                 globalreg->packetchain->ProcessPacket(newpack);
             }
         } else if (mode == 2) {
-            // XXX Have this is a while loop?
             if ((rbytes = read(serial_fd, &(dc->pdata), sizeof(dc->pdata))) != sizeof(dc->pdata)) {
                     return 0;
             } else {
-                printf("%d %d %d %s\n", dc->pdata.rssi, dc->pdata.channel,
-                                        dc->pdata.slot, dc->pdata.data);
+                dc->kind = 2;
+                newpack->insert(dect_comp_datachunk, dc);
+                globalreg->packetchain->ProcessPacket(newpack);
             }
         } else {
             fprintf(stderr, "Bad mode selected\n");
@@ -400,9 +510,9 @@ public:
 			in_pack->fetch(dect_comp_datachunk);
 
         int currentmode = mode;
-		// If this packet doesn't have dect info, we can't do anything, move 
+		// If this packet doesn't have dect info or if it's call data, move 
 		// along.
-		if (dectinfo == NULL) {
+		if (dectinfo == NULL || dectinfo->kind == 2) {
 			return 0;
 		}
         if (switched) {
@@ -698,6 +808,8 @@ int dect_register(GlobalRegistry *globalreg) {
     }
     dc->dtracker = dtracker;
     dc->psd = psd;
+
+    new Dumpfile_Dectpcap(globalreg);
 
     globalreg->kisnetserver->RegisterClientCommand("DECT",
                                                     dect_cc_callback,
