@@ -58,6 +58,8 @@ struct rfpi_list
 #define MODE_CALLSCAN 0x00000008
 #define MODE_JAM      0x00000010
 
+#define DECT_BAND_EMEA 0x01
+#define DECT_BAND_US   0x02
 
 struct cli_info
 {
@@ -67,6 +69,10 @@ struct cli_info
 	int                   hop;
 	int                   hop_ch_time; /* in sec */
 	uint32_t              last_hop;
+
+	uint8_t               band;      /* DECT_BAND_EMEA, DECT_BAND_US       */
+	uint8_t               hop_start; /* 0 for DECT/EMEA, 10 for US/DECT6.0 */
+	uint8_t               hop_end;   /* 9 for DECT/EMEA, 14 for US/DECT6.0 */
 
 	uint32_t              mode;
 
@@ -89,6 +95,26 @@ struct cli_info
 	struct sniffed_packet packet;
 	pcap_t                * pcap;
 	pcap_dumper_t         * pcap_d;
+};
+
+uint32_t ch2etsi[15] =
+{
+	9,  /* "normal" EMEA DECT, 10 channels     */
+	8,  /* with a weired (historic?) counting  */
+	7,  /* 1881.792 MHz - 1897.344 MHz         */
+	6,  /* 1728 kHz channel spacing            */
+	5,
+	4,
+	3,
+	2,
+	1,
+	0,
+
+	23, /* DECT 6.0, th US variant, 5 channels */
+	24, /* 1921.536 MHz - 1928.448 MHz         */
+	25, /* 1728 kHz channel spacing            */
+	26,
+	27
 };
 
 

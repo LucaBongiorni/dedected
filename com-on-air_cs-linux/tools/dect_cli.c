@@ -54,6 +54,7 @@ void print_help(void)
 	LOG("   chan <ch>     - set current channel [0-9], currently %d\n", cli.channel);
 //	LOG("   slot <sl>     - set current slot [0-23], currently %d\n", cli.slot);
 //	LOG("   jam           - jam current channel\n");
+	LOG("   band          - toggle between EMEA/DECT and US/DECT6.0 bands\n");
 	LOG("   ignore <rfpi> - toggle ignoring of an RFPI in autorec\n");
 	LOG("   dump          - dump stations and calls we have seen\n");
 	LOG("   hop           - toggle channel hopping, currently %s\n", cli.hop ? "ON":"OFF");
@@ -66,8 +67,8 @@ void print_help(void)
 void set_channel(uint32_t channel)
 {
 	if (cli.verbose)
-		LOG("### switching to channel %d\n", channel);
-	if (ioctl(cli.fd, COA_IOCTL_CHAN, &channel)){
+		LOG("### switching to channel %d\n", ch2etsi[channel]);
+	if (ioctl(cli.fd, COA_IOCTL_CHAN, &ch2etsi[channel])){
 		LOG("!!! couldn't ioctl()\n");
 		exit(1);
 	}
@@ -368,17 +369,17 @@ void do_chan(char * str_chan)
 	if ((errno == ERANGE && (channel == LONG_MAX || channel == LONG_MIN))
 			|| (errno != 0 && channel == 0))
 	{
-		LOG("!!! please enter a valid channel number [0-9]\n");
+		LOG("!!! please enter a valid channel number [0-14]\n");
 		return;
 	}
 	if (end == str_chan)
 	{
-		LOG("!!! please enter a valid channel number [0-9]\n");
+		LOG("!!! please enter a valid channel number [0-14]\n");
 		return;
 	}
-	if (channel > 9)
+	if (! ((channel >=  0) && (channel <= 14)) )
 	{
-		LOG("!!! please enter a valid channel number [0-9]\n");
+		LOG("!!! please enter a valid channel number [0-14]\n");
 		return;
 	}
 	cli.channel = channel;
@@ -414,6 +415,35 @@ void do_slot(char * str_slot)
 void do_jam(void)
 {
 	LOG("!!! not yet implemented :(\n");
+}
+
+void do_band(void)
+{
+	switch (cli.band)
+	{
+		case DECT_BAND_EMEA:
+			cli.band      = DECT_BAND_US;
+			cli.hop_start = 10;
+			cli.hop_end   = 14;
+			cli.channel   = cli.hop_start;
+			LOG("### using US/DECT6.0 band\n");
+			break;
+		case DECT_BAND_US:
+			cli.band      = DECT_BAND_EMEA | DECT_BAND_US;
+			cli.hop_start = 0;
+			cli.hop_end   = 14;
+			cli.channel   = cli.hop_start;
+			LOG("### using both EMEA/DECT and US/DECT6.0 band\n");
+			break;
+		case DECT_BAND_EMEA | DECT_BAND_US:
+			cli.band      = DECT_BAND_EMEA;
+			cli.hop_start = 0;
+			cli.hop_end   = 9;
+			cli.channel   = cli.hop_start;
+			LOG("### using EMEA/DECT band\n");
+			break;
+	}
+
 }
 
 void do_dump(void)
@@ -548,6 +578,8 @@ void process_cli_data()
 		{ do_slot(&buf[4]); done = 1; }
 	if ( !strncasecmp((char *)buf, "jam", 3) )
 		{ do_jam(); done = 1; }
+	if ( !strncasecmp((char *)buf, "band", 4) )
+		{ do_band(); done = 1; }
 	if ( !strncasecmp((char *)buf, "ignore", 6) )
 		{ do_ignore_str(&buf[6]); done = 1; }
 	if ( !strncasecmp((char *)buf, "dump", 4) )
@@ -613,7 +645,7 @@ void process_dect_data()
 		case MODE_FPSCAN:
 			while (7 == (ret = read(cli.fd, buf, 7))){
 				memcpy(cli.station.RFPI, &buf[2], 5);
-				cli.station.channel = buf[0];	
+				cli.station.channel = buf[0];
 				cli.station.RSSI = buf[1];
 				cli.station.type = TYPE_FP;
 				try_add_station(&cli.station);
@@ -721,6 +753,10 @@ void init_cli()
 	cli.autorec_timeout     = 10;
 	cli.autorec_last_bfield = 0;
 
+	cli.band                = DECT_BAND_EMEA;
+	cli.hop_start           = 0;
+	cli.hop_end             = 9;
+
 	signal(SIGHUP, signal_handler);
 	signal(SIGINT, signal_handler);
 	signal(SIGQUIT, signal_handler);
@@ -807,7 +843,10 @@ void mainloop(void)
 			if ( time(NULL) > cli.last_hop + cli.hop_ch_time )
 			{
 				cli.channel++;
-				cli.channel %= 10;
+
+				if (cli.channel > cli.hop_end)
+					cli.channel = cli.hop_start;
+
 				set_channel(cli.channel);
 			}
 		}
