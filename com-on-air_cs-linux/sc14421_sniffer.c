@@ -28,7 +28,7 @@ unsigned char scan_init1[] = {0x27,0x00,0xff,0x00,0x5f,0x04,0x00};
 unsigned char scan_init2[] = {0xc2,0x05,0x00,0x03,0x00,0x00};
 
 /* hf register type II card */
-unsigned char scan_II_init3[] = {0x54,0x80,0x09/* patch */,0xa0,0x00,0x00};
+unsigned char radio_II_chan[] = {0x54,0x80,0x09/* patch */,0xa0,0x00,0x00};
 /* hf register type III card */
 unsigned char scan_III_init3[] = {0x54,0x80,0x09/* patch */,0xa0,0x00,0x00};
 
@@ -42,8 +42,6 @@ unsigned char scan_init5[] = {0x27,0x00,0xff,0x00,0x5f,0x05,0x00};
 unsigned char sync_init1[] = {0x27,0x00,0xff,0x00,0x5f,0x04,0x00};
 unsigned char sync_init2[] = {0xc2,0x05,0x00,0x03,0x00,0x00};
 
-/* hf register type II card */
-unsigned char sync_II_init3[] = {0x54,0x80,0x09/* patch */,0xa0,0x00,0x00};
 /* hf register type III card */
 unsigned char sync_III_init3[] = {0x54,0x80,0x09/* patch */,0xa0,0x00,0x00};
 /* hf register */
@@ -141,6 +139,27 @@ void sniffer_init(struct coa_info *dev)
 	}
 }
 
+void set_channel(struct coa_info *dev, int ch)
+{
+	int channel;
+	if (ch<10)
+		channel = 10 - ch;
+	else
+		channel = ch;
+
+	switch(dev->radio_type)
+	{
+	case COA_RADIO_TYPE_II:
+		radio_II_chan[0] =
+			(radio_II_chan[0] & 0xC1) |
+			(channel << 1);
+		break;
+	default:
+		printk("ERROR: this radio type is currently not "
+			"supported. please update the driver\n");
+	}
+}
+
 void sniffer_init_sniff_scan(struct coa_info *dev)
 {
 	volatile uint16_t *sc14421_base = dev->sc14421_base;
@@ -158,18 +177,7 @@ void sniffer_init_sniff_scan(struct coa_info *dev)
 
 	SC14421_clear_interrupt(sc14421_base);
 
-	/* set channel */
-	switch(dev->radio_type)
-	{
-	case COA_RADIO_TYPE_II:
-		scan_II_init3[0] =
-			(scan_II_init3[0] & 0xC1) |
-			((10 - dev->sniffer_config->channel) << 1);
-		break;
-	default:
-		printk("ERROR: this radio type is currently not "
-			"supported. please update the driver\n");
-	}
+	set_channel(dev, dev->sniffer_config->channel);
 
 	if (dev->sniffer_config->snifftype == SNIFF_SCANPP)
 	{
@@ -201,8 +209,8 @@ void sniffer_init_sniff_scan(struct coa_info *dev)
 		);
 	to_dip(
 		sc14421_base + 0x4A,
-		scan_II_init3,
-		ARRAY_SIZE(scan_II_init3)
+		radio_II_chan,
+		ARRAY_SIZE(radio_II_chan)
 		);
 	to_dip(
 		sc14421_base + 0x58,
@@ -252,19 +260,7 @@ void sniffer_init_sniff_sync(struct coa_info *dev)
 		sync_init2,
 		ARRAY_SIZE(sync_init2));
 
-	/* set channel */
-	switch(dev->radio_type)
-	{
-	case COA_RADIO_TYPE_II:
-		sync_II_init3[0] =
-			(scan_II_init3[0] & 0xC1) |
-			( (10 - dev->sniffer_config->channel) << 1);
-		break;
-	default:
-		printk("ERROR: this radio type is currently not "
-			"supported. please update the driver\n");
-		;
-	}
+	set_channel(dev, dev->sniffer_config->channel);
 
 	sync_init5[0] |= 0x01;
 
@@ -275,8 +271,8 @@ void sniffer_init_sniff_sync(struct coa_info *dev)
 		);
 	to_dip(
 		sc14421_base + 0x4A,
-		sync_II_init3,
-		ARRAY_SIZE(sync_II_init3)
+		radio_II_chan,
+		ARRAY_SIZE(radio_II_chan)
 		);
 	to_dip(
 		sc14421_base + 0x58,
@@ -732,15 +728,7 @@ void sniffer_sync_patchloop(struct coa_info *dev, struct dect_slot_info *slottab
 			if (slottable[slot].active)
 			{
 
-				/* set channel */
-				switch(dev->radio_type)
-				{
-				case COA_RADIO_TYPE_II:
-					sync_II_init3[0] = (sync_II_init3[0] & 0xC1) | ((10-slottable[slot].channel) << 1);
-					break;
-				default:
-					printk("ERROR: this radio type is currently not supported. please update the driver\n");
-				}
+				set_channel(dev, slottable[slot].channel);
 
 				if (slot > 11)
 					sync_init5[0] &= 0xFE;
@@ -756,7 +744,7 @@ void sniffer_sync_patchloop(struct coa_info *dev, struct dect_slot_info *slottab
 
 				SC14421_switch_to_bank(sc14421_base, sync_banktable[slot]);
 
-				to_dip(sc14421_base + 0x4A + memofs, sync_II_init3, ARRAY_SIZE(sync_II_init3));
+				to_dip(sc14421_base + 0x4A + memofs, radio_II_chan, ARRAY_SIZE(radio_II_chan));
 				to_dip(sc14421_base + 0x58 + memofs, sync_init5, ARRAY_SIZE(sync_init5));
 				to_dip(sc14421_base + 0x50 + memofs, sync_init4, ARRAY_SIZE(sync_init4));
 

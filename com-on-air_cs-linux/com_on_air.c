@@ -158,7 +158,9 @@ int coa_ioctl(
 			return -EINVAL;
 		}
 
-		if (channel > 10)
+		if (! ( ((channel >=  0) && (channel <=  9)) ||
+			((channel >= 23) && (channel <= 27)) ) )
+
 			return -EINVAL;
 
 		switch (dev->operation_mode & COA_MODEMASK)
