@@ -461,7 +461,7 @@ static int com_on_air_probe (struct pcmcia_device *link)
 	req.Attributes = WIN_DATA_WIDTH_16 | WIN_ENABLE;
 	req.Base = 0;
 	req.Size = 0x1000;
-	req.AccessSpeed = 0;
+	req.AccessSpeed = 500;
 
 	ret = pcmcia_request_window(&link, &req, &link->win);
 	if (ret != 0)
