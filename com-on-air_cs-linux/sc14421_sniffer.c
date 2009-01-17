@@ -617,6 +617,7 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 						struct sniffed_packet packet;
 
 						packet.rssi = SC14421_READ(memofs);
+						/* FIXME DECT6.0 channels */
 						packet.channel = config->slottable[a].channel;
 						packet.slot = a;
 						memcpy(packet.data, pppacket, 5);
