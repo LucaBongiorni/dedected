@@ -523,6 +523,7 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 						packet.channel =
 							config->slottable[a].channel;
 						packet.slot = a;
+						packet.framenumber = config->framenumber;
 						memcpy(
 							packet.data,
 							fppacket,
@@ -620,6 +621,7 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 						/* FIXME DECT6.0 channels */
 						packet.channel = config->slottable[a].channel;
 						packet.slot = a;
+						packet.framenumber = config->framenumber;
 						memcpy(packet.data, pppacket, 5);
 						from_dip(&packet.data[5], sc14421_base+memofs+6, 48);
 						if (config->slottable[a].type == DECT_SLOTTYPE_SCAN)
@@ -764,8 +766,13 @@ void sniffer_sync_patchloop(struct coa_info *dev, struct dect_slot_info *slottab
 		}
 		else if (slottable[slot].active && (slottable[slot].type == DECT_SLOTTYPE_CARRIER))
 		{
+			if ( (slot/2) % 2)
+				memofs = 0x80;
+			else
+				memofs = 0x00;
+
 			SC14421_switch_to_bank(sc14421_base, sync_banktable[slot]);
-			SC14421_WRITE(0x5e, config->framenumber%8);
+			SC14421_WRITE(0x5e + memofs, config->framenumber%8);
 		}
 	}
 }
