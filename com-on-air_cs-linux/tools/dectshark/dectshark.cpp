@@ -21,6 +21,7 @@
 
 #define DEV "/dev/coa"
 
+
 void *pcap_threadmain(void *threadid);
 void *show_threadmain(void *threadid);
 
@@ -104,6 +105,7 @@ void *pcap_threadmain(void *threadid)
 			memcpy(found.RFPI,buf+2,5);
 			found.channel=buf[0];
 			found.type=DECT_FOUND_FP;
+			found.rssi=buf[1];
 			founds.AddDect(found);
 		}
 		

@@ -34,6 +34,8 @@ void found_dects::AddDect(dect_found found)
 				else
 					list[i].pppackets++;
 
+				list[i].rssi=found.rssi;
+
 				pthread_mutex_unlock(&mutex);
 				return;
 			}
@@ -45,6 +47,7 @@ void found_dects::AddDect(dect_found found)
 	
 	memcpy(list[listlen-1].RFPI,found.RFPI,5);
 	list[listlen-1].channel=found.channel;
+	list[listlen-1].rssi=found.rssi;
 
 	pthread_mutex_unlock(&mutex);
 

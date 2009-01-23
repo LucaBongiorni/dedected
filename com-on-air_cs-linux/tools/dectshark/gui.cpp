@@ -155,7 +155,7 @@ void print_gui::InitCurses()
 	mvwprintw(mainwin,1,1,"RFPI");
 	mvwprintw(mainwin,1,13,"Ch");
 	mvwprintw(mainwin,1,31,"FP-Pkt");
-	mvwprintw(mainwin,1,51,"PP-Pkt");
+	mvwprintw(mainwin,1,51,"RSSI");
 	wnoutrefresh(mainwin);
 
 	box(statuswin,0,0);
@@ -199,7 +199,7 @@ void print_gui::PrintFounds(int start,int num,int selected)
 		if(entry.valid)
 		{
 			mvwprintw(mainwin,y,1,"%.2x%.2x%.2x%.2x%.2x  ",entry.RFPI[0],entry.RFPI[1],entry.RFPI[2],entry.RFPI[3],entry.RFPI[4]);
-			mvwprintw(mainwin,y,13,"%.2i          %12u        %12u",entry.channel,entry.fppackets,entry.pppackets);
+			mvwprintw(mainwin,y,13,"%.2i          %12u        %12u",entry.channel,entry.fppackets,entry.rssi);
 			y++;
 		}
 	}

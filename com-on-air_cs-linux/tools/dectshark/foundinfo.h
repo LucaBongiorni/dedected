@@ -16,6 +16,7 @@ struct dect_found
 	unsigned int	type;
 	unsigned char	RFPI[5];
 	char		channel;	
+	unsigned char	rssi;
 };
 
 
@@ -25,6 +26,7 @@ struct dect_listentry
 	char		channel;
 	unsigned int	fppackets;
 	unsigned int	pppackets;
+	unsigned char	rssi;
 	bool		valid;
 };
 
