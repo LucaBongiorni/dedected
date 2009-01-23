@@ -22,6 +22,7 @@
 #include <plugintracker.h>
 #include <globalregistry.h>
 #include <dumpfile.h>
+#include <pcap.h>
 
 #define COA_IOCTL_MODE                  0xD000
 #define COA_IOCTL_CHAN                  0xD004
@@ -133,6 +134,8 @@ public:
     virtual int Flush();
 private:
     FILE *dectpcapfile;
+    pcap_t *pcap;
+    pcap_dumper_t *pcap_d;
 };
 
 // Dumpfile stuff
@@ -176,7 +179,33 @@ Dumpfile_Dectpcap::Dumpfile_Dectpcap(GlobalRegistry *in_globalreg) :
         return;
     }
 
-    printf("Pcap open\n");
+    char ftime[256];
+    char dfname[512];
+    time_t rawtime;
+    struct tm *timeinfo;
+    char RFPI[5] = { 0x00, 0xab, 0x00, 0xab, 0x99 };
+
+    time (&rawtime);
+    timeinfo = localtime(&rawtime);
+
+    strftime(ftime, sizeof(ftime), "%Y-%m-%d_%H_%M_%S", timeinfo);
+
+    sprintf(dfname, "dump_%s_RFPI_%.2x_%.2x_%.2x_%.2x_%.2x.pcap",
+            ftime,
+            RFPI[0],
+            RFPI[1],
+            RFPI[2],
+            RFPI[3],
+            RFPI[4]);
+    printf("### dumping to %s\n", dfname);
+    pcap = pcap_open_dead(DLT_EN10MB, 73);
+    if (!pcap) {
+        fprintf(stderr, "couldn't pcap_open_dead(\"%s\")\n", dfname);
+    }
+    pcap_d = pcap_dump_open(pcap, dfname);
+    if (!pcap_d) {
+        fprintf(stderr, "couldn't pcap_dump_open(\"%s\")\n", dfname);
+    }
 
     globalreg->packetchain->RegisterHandler(&dumpfiledectpcap_chain_hook, this,
                                             CHAINPOS_LOGGING, -100);
@@ -223,8 +252,33 @@ int Dumpfile_Dectpcap::chain_handler(kis_packet *in_pack) {
     if (!dc || dc->kind != 2) {
         return 0;
     }
-    
+#if 0 
     fwrite(dc->pdata.data, 53, 1, dectpcapfile);
+#endif
+    
+    // XXX Dump .wav soon
+    struct pcap_pkthdr pcap_hdr;
+    pcap_hdr.caplen = 73;
+    pcap_hdr.len = 73;
+    int ret = gettimeofday(&pcap_hdr.ts, NULL);
+    if (ret) {
+        fprintf(stderr, "couldn't gettimeofday(): %s\n", strerror(errno));
+        return 0;
+    }
+    uint8_t pcap_packet[100];
+    memset(pcap_packet, 0, 100);
+    pcap_packet[12] = 0x23;
+    pcap_packet[13] = 0x23;
+    pcap_packet[14] = 0x00;        /* decttype (receive) */
+    pcap_packet[15] = dc->pdata.channel;
+    pcap_packet[16] = 0;
+    pcap_packet[17] = dc->pdata.slot;
+    pcap_packet[18] = 0;
+    pcap_packet[19] = dc->pdata.rssi;
+    memcpy(&pcap_packet[20], dc->pdata.data, 53);
+
+    pcap_dump((u_char*)pcap_d, &pcap_hdr, pcap_packet);
+
     dumped_frames++;
 
     return 1;
