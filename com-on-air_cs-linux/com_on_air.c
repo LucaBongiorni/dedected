@@ -586,6 +586,7 @@ static int com_on_air_probe (struct pcmcia_device *link)
 	switch (ret)
 	{
 		case 0:
+		case 3:
 			dev->radio_type = COA_RADIO_TYPE_II;
 			break;
 		case 1:
@@ -680,12 +681,12 @@ static struct pcmcia_device_id com_on_air_ids[] =
 			           0x11fe69e9,       0x253670b2),
 	PCMCIA_DEVICE_PROD_ID12  ("DECTDataDevice", "PCMCIA",
 			           0x11fe69e9,       0x281f1c5d),
-#if 1
 	PCMCIA_DEVICE_PROD_ID1234("DOSCH-AMAND",    "MMAP PCMCIA",
 			          "MXM500",         "V1.00",
 				   0x4bc552e7,       0x0df519bb,
 				   0x09e43c7c,       0x3488c81a),
-#endif
+	PCMCIA_DEVICE_PROD_ID12  ("DECTVoIPDevice", "PCMCIA DA099",
+				   0xeabb0be4,       0xd7b915fe),
 
 #if 0
 	There are more devices out there, I only own the above three.
