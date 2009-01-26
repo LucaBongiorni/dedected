@@ -129,6 +129,28 @@ int coa_ioctl(
 			sniffer_init(dev);
 			printk(COA_DEVICE_NAME": sniffer initialized\n");
 			break;
+		case COA_MODE_EEPROM:
+		{
+			/* copy EEPROM to fifo */
+#ifndef pcmcia_read_cis_mem /* not in any of my kernel headers :( */
+			int pcmcia_read_cis_mem(struct pcmcia_socket *s, int attr, u_int addr,
+					u_int len, void *ptr);
+#endif
+
+			uint8_t id = get_card_id();
+			uint8_t * eeprom = kmalloc(EEPROM_SIZE, GFP_KERNEL);
+			if (!eeprom) return -ENOMEM;
+			kfifo_put(dev->rx_fifo, &id, 1);
+			pcmcia_read_cis_mem(
+					dev->p_dev->socket,
+					1,
+					0,
+					EEPROM_SIZE,
+					eeprom);
+			kfifo_put(dev->rx_fifo, eeprom, EEPROM_SIZE);
+			kfree(eeprom);
+			break;
+		}
 		case COA_MODE_JAM:
 			printk("FIXME: implement COA_MODE_JAM\n");
 			break;

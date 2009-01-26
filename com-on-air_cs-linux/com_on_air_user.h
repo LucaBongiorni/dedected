@@ -23,6 +23,7 @@
 #define COA_MODE_PP     		0x0200
 #define COA_MODE_SNIFF  		0x0300
 #define COA_MODE_JAM    		0x0400
+#define COA_MODE_EEPROM 		0x0500
 
 
 #define COA_SUBMODE_SNIFF_SCANFP	0x0001
@@ -41,5 +42,7 @@
 #define COA_IOCTL_RSSI			0xD006
 #define COA_IOCTL_FIRMWARE		0xD007 /* request_firmware() */
 #define COA_IOCTL_SETRFPI		0xD008
+
+#define EEPROM_SIZE			2048
 
 #endif

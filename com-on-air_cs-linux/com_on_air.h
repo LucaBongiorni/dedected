@@ -59,5 +59,4 @@ int get_card_id(void);
 #define COA_RADIO_TYPE_III	1
 #define COA_RADIO_FREEPAD	2
 
-
 #endif
