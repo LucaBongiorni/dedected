@@ -12,7 +12,7 @@ CXX	= g++
 CC	= gcc
 LD	= g++
 LDFLAGS	= -shared -rdynamic 
-LIBS	= -lstdc++ 
+LIBS	= -lstdc++
 CFLAGS 	= -I/usr/include -I$(KIS_INC_DIR) -g -fPIC
 
 PLUGIN_NAME = dect_srv

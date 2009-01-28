@@ -24,6 +24,8 @@
 #include <dumpfile.h>
 #include <pcap.h>
 
+#include "audioDecode.h"
+
 #define COA_IOCTL_MODE                  0xD000
 #define COA_IOCTL_CHAN                  0xD004
 #define COA_IOCTL_SETRFPI               0xD008
@@ -121,6 +123,7 @@ class dect_datachunk : public packet_component {
 public:
     dect_data_scan_t sdata;
     pp_packet_t pdata;
+    uint8_t pp_RFPI[5];
     int kind;
 };
 
@@ -183,21 +186,14 @@ Dumpfile_Dectpcap::Dumpfile_Dectpcap(GlobalRegistry *in_globalreg) :
     char dfname[512];
     time_t rawtime;
     struct tm *timeinfo;
-    char RFPI[5] = { 0x00, 0xab, 0x00, 0xab, 0x99 };
 
     time (&rawtime);
     timeinfo = localtime(&rawtime);
 
     strftime(ftime, sizeof(ftime), "%Y-%m-%d_%H_%M_%S", timeinfo);
 
-    sprintf(dfname, "dump_%s_RFPI_%.2x_%.2x_%.2x_%.2x_%.2x.pcap",
-            ftime,
-            RFPI[0],
-            RFPI[1],
-            RFPI[2],
-            RFPI[3],
-            RFPI[4]);
-    printf("### dumping to %s\n", dfname);
+    sprintf(dfname, "dect_dump_%s.pcap", ftime);
+    printf("Dumping to %s\n", dfname);
     pcap = pcap_open_dead(DLT_EN10MB, 73);
     if (!pcap) {
         fprintf(stderr, "couldn't pcap_open_dead(\"%s\")\n", dfname);
@@ -430,6 +426,7 @@ public:
             return;
         }
         mode = 2;
+        memcpy(pp_RFPI, RFPI, 5);
         // Don't hop channels while synced
         setLock(true, channel);
     }
@@ -489,6 +486,7 @@ public:
                     return 0;
             } else {
                 dc->kind = 2;
+                memcpy(&(dc->pp_RFPI), pp_RFPI, 5);
                 newpack->insert(dect_comp_datachunk, dc);
                 globalreg->packetchain->ProcessPacket(newpack);
             }
@@ -512,6 +510,7 @@ protected:
 	string serialdevice;
 	int serial_fd;
     bool locked;
+    uint8_t pp_RFPI[5];
     PacketSource_Dect *external;
 };
 
