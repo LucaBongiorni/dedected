@@ -24,7 +24,7 @@
 #include <dumpfile.h>
 #include <pcap.h>
 
-#include "audioDecode.h"
+//#include "audioDecode.h"
 
 #define COA_IOCTL_MODE                  0xD000
 #define COA_IOCTL_CHAN                  0xD004
