@@ -109,6 +109,8 @@ void print_gui::work()
 				case 'o':
 					//SetOverviewMode();
 					break;
+				case 'h':
+					cfg.sethop(!cfg.hop());
 			}
 		}
 
@@ -155,7 +157,11 @@ void print_gui::InitCurses()
 	mvwprintw(mainwin,1,1,"RFPI");
 	mvwprintw(mainwin,1,13,"Ch");
 	mvwprintw(mainwin,1,31,"FP-Pkt");
+<<<<<<< .mine
+	mvwprintw(mainwin,1,53,"RSSI");
+=======
 	mvwprintw(mainwin,1,51,"RSSI");
+>>>>>>> .r49
 	wnoutrefresh(mainwin);
 
 	box(statuswin,0,0);

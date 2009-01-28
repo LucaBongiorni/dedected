@@ -18,12 +18,16 @@
 
 #include "foundinfo.h"
 #include "gui.h"
+#include "config.h"
+
 
 #define DEV "/dev/coa"
 
 
 void *pcap_threadmain(void *threadid);
 void *show_threadmain(void *threadid);
+
+config cfg;
 
 
 found_dects founds;
@@ -114,9 +118,12 @@ void *pcap_threadmain(void *threadid)
 	
 		if(channeltime == 5)
 		{
-			chn++;
-			chn %= 10;
-			set_channel(dev,chn);
+			if(cfg.hop())
+			{
+				chn++;
+				chn %= 10;
+				set_channel(dev,chn);
+			}
 			channeltime = 0;
 		}
 	}

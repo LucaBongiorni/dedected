@@ -4,6 +4,7 @@
 #include <sys/select.h>
 
 #include "foundinfo.h"
+#include "config.h"
 
 #if !defined(GUI_H)
 #define GUI_H 
@@ -12,6 +13,8 @@
 #define SH 25
 
 extern found_dects founds;
+extern config cfg;
+
 
 class print_gui
 {
