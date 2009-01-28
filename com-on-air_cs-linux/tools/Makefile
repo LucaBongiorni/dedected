@@ -4,6 +4,6 @@ PCAP_PROGS=pcapstein dect_cli
 all:$(PROGS) $(PCAP_PROGS)
 
 $(PCAP_PROGS): $(foreach p,$(PCAP_PROGS), $p.c)
-	$(CC) $(CFLAGS) -lpcap $@.c -o $@
+	$(CC) $(CFLAGS) $@.c -o $@ -lpcap
 clean:
 	rm -f $(PROGS) $(PCAP_PROGS)
