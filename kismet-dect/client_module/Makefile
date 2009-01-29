@@ -28,7 +28,7 @@ clean:
 	@-rm -f *.so
 
 install: $(LIBOUT)
-	install $^ $(KIS_DEST_DIR)/lib/kismet_client
+	install -D $^ $(KIS_DEST_DIR)/lib/kismet_client/$^
 
 .c.o:
 	$(CC) $(CFLAGS) -c $*.c -o $@ 
