@@ -70,7 +70,13 @@ CONFIG:
 
 Make sure to add the following source to your kismet.conf: 
 
+Device:
+
     ncsource=dect:device=/dev/coa
+
+Logtype:
+
+    logtypes=pcapdump,gpsxml,netxml,nettxt,alert,dectpcap
 
 NOTES:
 =====
@@ -83,10 +89,12 @@ Functionality that works as of now:
 - FP scan
 - Sorting FP scan results by RSSI, seen count, and channel
 - Locking channels for FP scan
+- PP (call) scan
+- PP sync (call) scan (alpha, please test)
 
 Functionality that is being worked on currently:
-- PP (call) scan
-- PP sync (call) scan
+
+- Dump .wav files
 
 AUTHORS:
 =======
