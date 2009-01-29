@@ -19,6 +19,7 @@
 
 #define KCLI_DECT_CHANNEL_FIELDS "rfpi,rssi,channel,first_seen,last_seen,count_seen"
 
+#define SORT_BY_RFPI        0
 #define SORT_BY_RSSI        1
 #define SORT_BY_CHANNEL     2
 #define SORT_BY_COUNTSEEN   5
@@ -137,6 +138,8 @@ public:
                                "F       - Do async FP scan (default)\n"
                                "A       - Do async PP scan\n"
                                "M       - Show current mode\n"
+                               "i       - Sort by RFPI (ascending)\n"
+                               "I       - Sort by RFPI (descending)\n"
                                "r       - Sort by RSSI (ascending)\n"
                                "R       - Sort by RSSI (descending)\n"
                                "c       - Sort by Channel (ascending)\n"
@@ -215,6 +218,14 @@ public:
             globalreg->panel_interface->AddPanel(ma);
             return 0;
         }
+        if (in_key == 'i') {
+            sort_by = SORT_BY_RFPI;
+            descending = false;
+        }
+        if (in_key == 'I') {
+            sort_by = SORT_BY_RFPI;
+            descending = true;
+        }
         if (in_key == 'r') {
             sort_by = SORT_BY_RSSI;
             descending = false;
@@ -252,10 +263,15 @@ private:
 
 bool less_by_RSSI(const vector<string> &v1, const vector<string> &v2)
 {
-    if (atoi(v1[sort_by].c_str()) < atoi(v2[sort_by].c_str())) {
-        return true;
+    if(sort_by==SORT_BY_RFPI) {
+        if (v1[sort_by].compare(v2[sort_by]) < 0) {
+            return true;
+        }
+    } else {
+        if (atoi(v1[sort_by].c_str()) < atoi(v2[sort_by].c_str())) {
+            return true;
+        }
     }
-
     return false; 
 }
 
