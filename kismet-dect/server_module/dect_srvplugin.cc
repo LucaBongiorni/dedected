@@ -123,8 +123,8 @@ class dect_datachunk : public packet_component {
 public:
     dect_data_scan_t sdata;
     pp_packet_t pdata;
-    uint8_t pp_RFPI[5];
     int kind;
+    bool sync;
 };
 
 class Dumpfile_Dectpcap : public Dumpfile {
@@ -248,11 +248,8 @@ int Dumpfile_Dectpcap::chain_handler(kis_packet *in_pack) {
     if (!dc || dc->kind != 2) {
         return 0;
     }
-#if 0 
-    fwrite(dc->pdata.data, 53, 1, dectpcapfile);
-#endif
     
-    // XXX Dump .wav soon
+    // XXX Dump .wav?
     struct pcap_pkthdr pcap_hdr;
     pcap_hdr.caplen = 73;
     pcap_hdr.len = 73;
@@ -290,13 +287,13 @@ public:
 
 	PacketSource_Dect(GlobalRegistry *in_globalreg) 
         : KisPacketSource(in_globalreg),
-          locked(false) {
+          locked(false), sync(false), globalreg(in_globalreg) {
 	}
 
 	PacketSource_Dect(GlobalRegistry *in_globalreg, string in_interface,
 					  vector<opt_pair> *in_opts) : 
 		KisPacketSource(in_globalreg, in_interface, in_opts),
-        locked(false) {
+        locked(false), sync(false), globalreg(in_globalreg) {
 
 		serial_fd = -1;
 
@@ -389,6 +386,10 @@ public:
         }
         mode = COA_SUBMODE_SNIFF_SCANFP;
         switched = 1;
+        if (sync) {
+            printf("Sync off.\n");
+            sync = false;
+        }
         // Remove lock, if there is any, and start scanning at channel 0
         setLock(false, 0);
     }
@@ -405,6 +406,10 @@ public:
         }
         mode = COA_SUBMODE_SNIFF_SCANFP;
         switched = 1;
+        if (sync) {
+            printf("Sync off.\n");
+            sync = false;
+        }
         // Remove lock, if there is any, and start scanning at channel 0
         setLock(false, 0);
     }
@@ -426,7 +431,9 @@ public:
             return;
         }
         mode = 2;
-        memcpy(pp_RFPI, RFPI, 5);
+        if (sync) {
+            sync = false;
+        }
         // Don't hop channels while synced
         setLock(true, channel);
     }
@@ -470,6 +477,7 @@ public:
         if (mode == 0 || mode == 1) {
             if ((rbytes = read(serial_fd, &(dc->sdata), 7)) != 7) {
                 // Fail
+                fprintf(stderr, "Bad read. Expected: 7 Got: %d\n", rbytes);
                 return 0;
             } else {
                 printf("RFPI: ");
@@ -483,10 +491,15 @@ public:
             }
         } else if (mode == 2) {
             if ((rbytes = read(serial_fd, &(dc->pdata), sizeof(dc->pdata))) != sizeof(dc->pdata)) {
-                    return 0;
+                fprintf(stderr, "Bad read. Expected: %d Got: %d\n", sizeof(dc->pdata), rbytes);
+                return 0;
             } else {
-                dc->kind = 2;
-                memcpy(&(dc->pp_RFPI), pp_RFPI, 5);
+                if (!sync) {
+                    printf("Got sync.\n");
+                    sync = true;
+                }
+                dc->sync = sync;
+                //dc->kind = 2;
                 newpack->insert(dect_comp_datachunk, dc);
                 globalreg->packetchain->ProcessPacket(newpack);
             }
@@ -510,8 +523,9 @@ protected:
 	string serialdevice;
 	int serial_fd;
     bool locked;
-    uint8_t pp_RFPI[5];
+    bool sync;
     PacketSource_Dect *external;
+    GlobalRegistry *globalreg;
 };
 
 class DectTracker {

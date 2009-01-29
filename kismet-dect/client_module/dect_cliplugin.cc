@@ -149,7 +149,7 @@ public:
                                "<enter> - In FP mode: Show details of currently selected station\n"
                                "          In PP mode: Sync with selected station and record call\n";
             Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
-            ma->Position(2, 2, 19, 55);
+            ma->Position(2, 2, 21, 70);
             ma->ConfigureAlert(help_title, help_text);
             globalreg->panel_interface->AddPanel(ma);
             return 0;
@@ -263,7 +263,7 @@ private:
 
 bool less_by_RSSI(const vector<string> &v1, const vector<string> &v2)
 {
-    if(sort_by==SORT_BY_RFPI) {
+    if (sort_by == SORT_BY_RFPI) {
         if (v1[sort_by].compare(v2[sort_by]) < 0) {
             return true;
         }
@@ -355,12 +355,6 @@ void DectDetailsProtoDECT(CLIPROTO_CB_PARMS)
     } else {
         ddata->dtable->Hide();
         ddata->ctable->Clear();
-        /*
-        i = ddata->info_vec.begin();
-        for (int j = 0; i < ddata->info_vec.end(); ++i, ++j) {
-            ddata->ctable->AddRow(j, (*i));
-        }
-        */
         ddata->ctable->Show();
         ddata->ctable->DrawComponent();
     }
