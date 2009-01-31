@@ -148,7 +148,7 @@ int dumpfiledectpcap_chain_hook(CHAINCALL_PARMS) {
 }
 
 Dumpfile_Dectpcap::Dumpfile_Dectpcap() {
-    fprintf(stderr, "FATAL OOPS: Dumpfile_Dectpcap called with no globalreg\n");
+    _MSG("FATAL OOPS: Dumpfile_Dectpcap called with no globalreg", MSGFLAG_ERROR);
     exit(1);
 }
 
@@ -163,8 +163,8 @@ Dumpfile_Dectpcap::Dumpfile_Dectpcap(GlobalRegistry *in_globalreg) :
     type = "dectpcap";
 
     if (globalreg->packetchain == NULL) {
-        fprintf(stderr, "FATAL OOPS:  Packetchain missing before "
-                "Dumpfile_Dectpcap\n");
+        _MSG("FATAL OOPS:  Packetchain missing before Dumpfile_Dectpcap",
+             MSGFLAG_ERROR);
         exit(1);
     }
 
@@ -193,14 +193,14 @@ Dumpfile_Dectpcap::Dumpfile_Dectpcap(GlobalRegistry *in_globalreg) :
     strftime(ftime, sizeof(ftime), "%Y-%m-%d_%H_%M_%S", timeinfo);
 
     sprintf(dfname, "dect_dump_%s.pcap", ftime);
-    printf("Dumping to %s\n", dfname);
+    _MSG("Dumping to " + string(dfname), MSGFLAG_INFO);
     pcap = pcap_open_dead(DLT_EN10MB, 73);
     if (!pcap) {
-        fprintf(stderr, "couldn't pcap_open_dead(\"%s\")\n", dfname);
+        _MSG("couldn't pcap_open_dead(" + string(dfname) + ")", MSGFLAG_ERROR);
     }
     pcap_d = pcap_dump_open(pcap, dfname);
     if (!pcap_d) {
-        fprintf(stderr, "couldn't pcap_dump_open(\"%s\")\n", dfname);
+        _MSG("couldn't pcap_dump_open(" + string(dfname) + ")", MSGFLAG_ERROR);
     }
 
     globalreg->packetchain->RegisterHandler(&dumpfiledectpcap_chain_hook, this,
@@ -255,7 +255,8 @@ int Dumpfile_Dectpcap::chain_handler(kis_packet *in_pack) {
     pcap_hdr.len = 73;
     int ret = gettimeofday(&pcap_hdr.ts, NULL);
     if (ret) {
-        fprintf(stderr, "couldn't gettimeofday(): %s\n", strerror(errno));
+        _MSG("couldn't gettimeofday(): " + string(strerror(errno)), 
+             MSGFLAG_ERROR);
         return 0;
     }
     uint8_t pcap_packet[100];
@@ -281,7 +282,7 @@ int Dumpfile_Dectpcap::chain_handler(kis_packet *in_pack) {
 class PacketSource_Dect : public KisPacketSource {
 public:
 	PacketSource_Dect() {
-		fprintf(stderr, "FATAL OOPS: KisDectSource()\n");
+		_MSG("FATAL OOPS: KisDectSource()", MSGFLAG_ERROR);
 		exit(1);
 	}
 
@@ -365,9 +366,11 @@ public:
         if (locked) {
             return 0;
         }
-        printf("switching to channel %d\n", in_ch);
+        stringstream c;
+        c << in_ch;
+        _MSG("switching to channel " + c.str(), MSGFLAG_INFO);
         if (ioctl(serial_fd, COA_IOCTL_CHAN, &in_ch)){
-            printf("couldn't ioctl()\n");
+            _MSG("couldn't ioctl()", MSGFLAG_ERROR);
             return 0;
         }
 
@@ -381,13 +384,13 @@ public:
         /* start sniffer mode */
         int val = COA_MODE_SNIFF|COA_SUBMODE_SNIFF_SCANFP;
         if (ioctl(serial_fd, COA_IOCTL_MODE, &val)) {
-            fprintf(stderr, "Couldn't ioctl to COA_MODE_SNIFF\n");
+            _MSG("Couldn't ioctl to COA_MODE_SNIFF", MSGFLAG_ERROR);
             return;
         }
         mode = COA_SUBMODE_SNIFF_SCANFP;
         switched = 1;
         if (sync) {
-            printf("Sync off.\n");
+            _MSG("Sync off.", MSGFLAG_INFO);
             sync = false;
         }
         // Remove lock, if there is any, and start scanning at channel 0
@@ -401,13 +404,13 @@ public:
         /* start sniffer mode */
         int val = COA_MODE_SNIFF | COA_SUBMODE_SNIFF_SCANPP;
         if (ioctl(serial_fd, COA_IOCTL_MODE, &val)) {
-            fprintf(stderr, "Couldn't ioctl to COA_MODE_SNIFF\n");
+            _MSG("Couldn't ioctl to COA_MODE_SNIFF", MSGFLAG_ERROR);
             return;
         }
         mode = COA_SUBMODE_SNIFF_SCANFP;
         switched = 1;
         if (sync) {
-            printf("Sync off.\n");
+            _MSG("Sync off.", MSGFLAG_ERROR);
             sync = false;
         }
         // Remove lock, if there is any, and start scanning at channel 0
@@ -422,12 +425,12 @@ public:
         uint16_t val;
         val = COA_MODE_SNIFF | COA_SUBMODE_SNIFF_SYNC;
         if (ioctl(serial_fd, COA_IOCTL_MODE, &val)){
-            fprintf(stderr, "Couldn't ioctl to COA_MODE_SNIFF\n");
+            _MSG("Couldn't ioctl to COA_MODE_SNIFF", MSGFLAG_ERROR);
             return;
         }
         /* set rfpi to sync with */
         if(ioctl(serial_fd, COA_IOCTL_SETRFPI, RFPI)){
-            fprintf(stderr, "Couldn't ioctl SETRFPI\n");
+            _MSG("Couldn't ioctl SETRFPI", MSGFLAG_ERROR);
             return;
         }
         mode = 2;
@@ -447,10 +450,9 @@ public:
         short val;
 
         if((serial_fd = open(serialdevice.c_str(), O_RDONLY)) == -1) {
-            fprintf(stderr, "Could not open %s\n", serialdevice.c_str());
+            _MSG("Could not open " + serialdevice, MSGFLAG_ERROR);
             return 0;
         }
-
         startScanFp();
 
 		return 1;
@@ -477,25 +479,36 @@ public:
         if (mode == 0 || mode == 1) {
             if ((rbytes = read(serial_fd, &(dc->sdata), 7)) != 7) {
                 // Fail
-                fprintf(stderr, "Bad read. Expected: 7 Got: %d\n", rbytes);
+                stringstream s; 
+                s << rbytes;
+                _MSG("Bad read. Expected: 7 Got: " + s.str(), MSGFLAG_ERROR);
                 return 0;
             } else {
-                printf("RFPI: ");
-                for (int i=0; i < 5; i++) {
-                    printf("%.2x:", dc->sdata.RFPI[i]);
-                }
-                printf("\n");
+                char station[32];
+                sprintf(station, "%.2x:%.2x:%.2x:%.2x:%.2x",
+                        dc->sdata.RFPI[0],
+                        dc->sdata.RFPI[1],
+                        dc->sdata.RFPI[2],
+                        dc->sdata.RFPI[3],
+                        dc->sdata.RFPI[4]);
+                _MSG("RFPI: " + string(station), MSGFLAG_INFO);
                 dc->kind = 0;
                 newpack->insert(dect_comp_datachunk, dc);
                 globalreg->packetchain->ProcessPacket(newpack);
             }
         } else if (mode == 2) {
-            if ((rbytes = read(serial_fd, &(dc->pdata), sizeof(dc->pdata))) != sizeof(dc->pdata)) {
-                fprintf(stderr, "Bad read. Expected: %d Got: %d\n", sizeof(dc->pdata), rbytes);
+            if ((rbytes = read(serial_fd, 
+                               &(dc->pdata), 
+                              sizeof(dc->pdata))) != sizeof(dc->pdata)) {
+                stringstream s, s2;
+                s << (sizeof(dc->pdata));
+                s2 << rbytes;
+                _MSG("Bad read. Expected: " + s.str() + " Got: " + s2.str(), 
+                     MSGFLAG_ERROR);
                 return 0;
             } else {
                 if (!sync) {
-                    printf("Got sync.\n");
+                    _MSG("Got sync.", MSGFLAG_INFO);
                     sync = true;
                 }
                 dc->sync = sync;
@@ -504,7 +517,7 @@ public:
                 globalreg->packetchain->ProcessPacket(newpack);
             }
         } else {
-            fprintf(stderr, "Bad mode selected\n");
+            _MSG("Bad mode selected", MSGFLAG_ERROR);
             return 0;
         }
 
@@ -530,7 +543,7 @@ protected:
 
 class DectTracker {
 public:
-	DectTracker() { fprintf(stderr, "FATAL OOPS: DectTracker()\n"); }
+	DectTracker() { _MSG("FATAL OOPS: DectTracker()", MSGFLAG_ERROR); }
 	DectTracker(GlobalRegistry *in_globalreg) {
 		globalreg = in_globalreg;
 
@@ -606,15 +619,18 @@ public:
                 x->second->last_seen = time(NULL);
                 x->second->count_seen++;
                 if (x->second->sdata.channel != td->sdata.channel) {
-                    printf("Station %.2x:%.2x:%.2x:%.2x:%.2x\n",
+                    char station[32];
+                    sprintf(station, "Station %.2x:%.2x:%.2x:%.2x:%.2x\n",
                                               td->sdata.RFPI[0],
                                               td->sdata.RFPI[1],
                                               td->sdata.RFPI[2],
                                               td->sdata.RFPI[3],
                                               td->sdata.RFPI[4]);
-                    printf("Changed channels from %d to %d\n", 
-                                              td->sdata.channel,
-                                              x->second->sdata.channel);
+                    stringstream s, c;
+                    s << td->sdata.channel;
+                    c << x->second->sdata.channel;
+                    _MSG(string(station) + " changed channels from " + s.str() 
+                         + " to " + c.str(), MSGFLAG_INFO);
                     x->second->sdata.channel = td->sdata.channel;
                 }
             }
@@ -658,7 +674,7 @@ int dect_cc_callback(CLIENT_PARMS)
 
     DectCcc *dc = (DectCcc *)auxptr;
     if (!dc) {
-        fprintf(stderr, "Bad arg.\n");
+        _MSG("Bad arg.", MSGFLAG_ERROR);
         return 0;
     }
 
@@ -666,14 +682,14 @@ int dect_cc_callback(CLIENT_PARMS)
     PacketSource_Dect *ex_psd = psd->GetExternal();
     DectTracker *dtracker = dc->dtracker;
     if (!psd || !ex_psd || !dtracker) {
-        fprintf(stderr, "Bad args.\n");
+        _MSG("Bad args.", MSGFLAG_ERROR);
         return 0;
     }
     memset(rfpi, 0, sizeof(rfpi));
     memset(rfpi_s, 0, sizeof(rfpi_s));
 
     if (parsedcmdline->size() < 3) {
-        fprintf(stderr, "Bad client command.\n");
+        _MSG("Bad client command.", MSGFLAG_ERROR);
         return 0;
     }
     cmd = atoi((*parsedcmdline)[0].word.c_str());
@@ -681,7 +697,7 @@ int dect_cc_callback(CLIENT_PARMS)
     arg = atoi((*parsedcmdline)[2].word.c_str());
     if (cmd < DECT_CMD_START || cmd > DECT_CMD_END ||
         subcmd < DECT_SUBCMD_START || subcmd > DECT_SUBCMD_END) {
-        fprintf(stderr, "Bad DECT client command: %s.\n", cmdline.c_str());
+        _MSG("Bad DECT client command: " + cmdline, MSGFLAG_ERROR);
         return 0;
     }
     if (parsedcmdline->size() == 4) {
@@ -695,53 +711,54 @@ int dect_cc_callback(CLIENT_PARMS)
         rfpi[3] = (uint8_t)rfpi3;
         rfpi[4] = (uint8_t)rfpi4;
     }
-    printf("CMD: %d SUBCMD: %d ARG: %d\n", cmd, subcmd, arg);
 
     switch (cmd) {
         case DECT_CMD_CHANHOP:
             switch (subcmd) {
                 case DECT_SUBCMD_CHANHOP_ENABLE:
-                    printf("DECT_CMD_CHANHOP ENABLE\n");
+                    _MSG("DECT_CMD_CHANHOP ENABLE", MSGFLAG_INFO);
                     psd->setLock(false, arg);
                     break;
                 case DECT_SUBCMD_CHANHOP_DISABLE:
-                    printf("DECT_CMD_CHANHOP DISABLE\n");
+                    _MSG("DECT_CMD_CHANHOP DISABLE", MSGFLAG_INFO);
                     psd->setLock(true, arg);
                     break;
                 default:
-                    fprintf(stderr, "Bad DECT_CMD_CHANHOP subcommand.\n");
+                    _MSG("Bad DECT_CMD_CHANHOP subcommand.", MSGFLAG_ERROR);
                     break;
             }
             break;
         case DECT_CMD_SCAN:
             switch(subcmd) {
                 case DECT_SUBCMD_SCAN_FP:
-                    printf("DECT_CMD_SCAN FP\n");
+                    _MSG("DECT_CMD_SCAN FP", MSGFLAG_INFO);
                     ex_psd->startScanFp();
                     dtracker->emptyMap();
                     break;
                 case DECT_SUBCMD_SCAN_PP:
-                    printf("DECT_CMD_SCAN PP\n");
+                    _MSG("DECT_CMD_SCAN PP", MSGFLAG_INFO);
                     ex_psd->startScanPp();
                     dtracker->emptyMap();
                     break;
                 case DECT_SUBCMD_SCAN_CALLS:
-                    printf("DECT_CMD_SCAN CALLS\n");
-                    printf("Station %.2x:%.2x:%.2x:%.2x:%.2x\n",
+                    char station[32];
+                    _MSG("DECT_CMD_SCAN CALLS", MSGFLAG_INFO);
+                    sprintf(station, "Station %.2x:%.2x:%.2x:%.2x:%.2x",
                                               rfpi[0],
                                               rfpi[1],
                                               rfpi[2],
                                               rfpi[3],
                                               rfpi[4]);
+                    _MSG(string(station), MSGFLAG_INFO);
                     ex_psd->startScanCalls(rfpi, arg);
                     break;
                 default:
-                    fprintf(stderr, "Bad DECT_CMD_SCAN subcommand.\n");
+                    _MSG("Bad DECT_CMD_SCAN subcommand.", MSGFLAG_ERROR);
                     break;
             }
             break;
         default:
-            fprintf(stderr, "Bad DECT client command.\n");
+            _MSG("Bad DECT client command.", MSGFLAG_ERROR);
             return 0;
     }
 
