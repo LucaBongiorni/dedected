@@ -865,7 +865,7 @@ int dect_register(GlobalRegistry *globalreg) {
 		globalreg->packetchain->RegisterPacketComponent("DECTDATA");
 	
 	// Add the channels
-	globalreg->sourcetracker->AddChannelList("DECT:1,2,3,4,5,6,7,8,9");
+	globalreg->sourcetracker->AddChannelList("DECT:0,1,2,3,4,5,6,7,8,9");
 
     // Hopefully this won't break since we don't know about memory management
     // of packetsources
