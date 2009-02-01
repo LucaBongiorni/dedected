@@ -159,10 +159,6 @@ Dumpfile_Dectpcap::Dumpfile_Dectpcap() {
 
 Dumpfile_Dectpcap::Dumpfile_Dectpcap(GlobalRegistry *in_globalreg) : 
     Dumpfile(in_globalreg) {
-    char ftime[256];
-    char dfname[512];
-    time_t rawtime;
-    struct tm *timeinfo;
     char errstr[STATUS_MAX];
     globalreg = in_globalreg;
 
@@ -190,21 +186,14 @@ Dumpfile_Dectpcap::Dumpfile_Dectpcap(GlobalRegistry *in_globalreg) :
         globalreg->fatal_condition = 1;
         return;
     }
-
-    time (&rawtime);
-    timeinfo = localtime(&rawtime);
-
-    strftime(ftime, sizeof(ftime), "%Y-%m-%d_%H_%M_%S", timeinfo);
-
-    sprintf(dfname, "dect_dump_%s.pcap", ftime);
-    _MSG("Dumping to " + string(dfname), MSGFLAG_INFO);
+    _MSG("Dumping to " + fname, MSGFLAG_INFO);
     pcap = pcap_open_dead(DLT_EN10MB, 73);
     if (!pcap) {
-        _MSG("couldn't pcap_open_dead(" + string(dfname) + ")", MSGFLAG_ERROR);
+        _MSG("couldn't pcap_open_dead(" + fname + ")", MSGFLAG_ERROR);
     }
-    pcap_d = pcap_dump_open(pcap, dfname);
+    pcap_d = pcap_dump_open(pcap, fname.c_str());
     if (!pcap_d) {
-        _MSG("couldn't pcap_dump_open(" + string(dfname) + ")", MSGFLAG_ERROR);
+        _MSG("couldn't pcap_dump_open(" + fname + ")", MSGFLAG_ERROR);
     }
 
     globalreg->packetchain->RegisterHandler(&dumpfiledectpcap_chain_hook, this,
@@ -697,6 +686,9 @@ int dect_cc_callback(CLIENT_PARMS)
         _MSG("Bad client command.", MSGFLAG_ERROR);
         return 0;
     }
+    _MSG("Got CMD " + (*parsedcmdline)[0].word 
+         + ", SUBCMD " + (*parsedcmdline)[1].word
+         + ", ARG " + (*parsedcmdline)[2].word, MSGFLAG_INFO);
     cmd = atoi((*parsedcmdline)[0].word.c_str());
     subcmd = atoi((*parsedcmdline)[1].word.c_str());
     arg = atoi((*parsedcmdline)[2].word.c_str());
