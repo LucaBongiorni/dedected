@@ -26,6 +26,10 @@
 
 //#include "audioDecode.h"
 
+#define MODE_ASYNC_FP_SCAN  0
+#define MODE_ASYNC_PP_SCAN  1
+#define MODE_SYNC_CALL_SCAN 2
+
 #define COA_IOCTL_MODE                  0xD000
 #define COA_IOCTL_CHAN                  0xD004
 #define COA_IOCTL_SETRFPI               0xD008
@@ -56,7 +60,7 @@
 // Globals
 int dect_comp_datachunk;
 
-static int mode = DECT_SUBCMD_SCAN_FP;
+static int mode = MODE_ASYNC_FP_SCAN;
 static int switched = 0;
 
 /* This is the 7 bytes we read while scanning */
@@ -148,13 +152,17 @@ int dumpfiledectpcap_chain_hook(CHAINCALL_PARMS) {
 }
 
 Dumpfile_Dectpcap::Dumpfile_Dectpcap() {
-    _MSG("FATAL OOPS: Dumpfile_Dectpcap called with no globalreg", MSGFLAG_ERROR);
+    _MSG("FATAL OOPS: Dumpfile_Dectpcap called with no globalreg", 
+         MSGFLAG_ERROR);
     exit(1);
 }
 
 Dumpfile_Dectpcap::Dumpfile_Dectpcap(GlobalRegistry *in_globalreg) : 
     Dumpfile(in_globalreg) {
-
+    char ftime[256];
+    char dfname[512];
+    time_t rawtime;
+    struct tm *timeinfo;
     char errstr[STATUS_MAX];
     globalreg = in_globalreg;
 
@@ -176,16 +184,12 @@ Dumpfile_Dectpcap::Dumpfile_Dectpcap(GlobalRegistry *in_globalreg) :
 
     dectpcapfile = fopen(fname.c_str(), "w");
     if (dectpcapfile == NULL) {
-        snprintf(errstr, STATUS_MAX, "Failed to open dectpcap dump file '%s': %s",
+        snprintf(errstr, STATUS_MAX, 
+                 "Failed to open dectpcap dump file '%s': %s",
                  fname.c_str(), strerror(errno));
         globalreg->fatal_condition = 1;
         return;
     }
-
-    char ftime[256];
-    char dfname[512];
-    time_t rawtime;
-    struct tm *timeinfo;
 
     time (&rawtime);
     timeinfo = localtime(&rawtime);
@@ -244,8 +248,8 @@ int Dumpfile_Dectpcap::chain_handler(kis_packet *in_pack) {
     dect_datachunk *dc = (dect_datachunk *)
             in_pack->fetch(dect_comp_datachunk);
 
-    // We only want kind "2"
-    if (!dc || dc->kind != 2) {
+    // We only want kind MODE_SYNC_CALL_SCAN
+    if (!dc || dc->kind != MODE_SYNC_CALL_SCAN) {
         return 0;
     }
     
@@ -318,7 +322,8 @@ public:
 	virtual PacketSource_Dect *CreateSource(GlobalRegistry *in_globalreg,
 											string interface,
 											vector<opt_pair> *in_opts) {
-        PacketSource_Dect *ref = new PacketSource_Dect(in_globalreg, interface, in_opts);
+        PacketSource_Dect *ref = new PacketSource_Dect(in_globalreg, 
+                                                       interface, in_opts);
         // XXX Hackalert
         SetExternal(ref);
 		return ref;
@@ -387,7 +392,7 @@ public:
             _MSG("Couldn't ioctl to COA_MODE_SNIFF", MSGFLAG_ERROR);
             return;
         }
-        mode = COA_SUBMODE_SNIFF_SCANFP;
+        mode = MODE_ASYNC_FP_SCAN;
         switched = 1;
         if (sync) {
             _MSG("Sync off.", MSGFLAG_INFO);
@@ -407,10 +412,10 @@ public:
             _MSG("Couldn't ioctl to COA_MODE_SNIFF", MSGFLAG_ERROR);
             return;
         }
-        mode = COA_SUBMODE_SNIFF_SCANFP;
+        mode = MODE_ASYNC_PP_SCAN;
         switched = 1;
         if (sync) {
-            _MSG("Sync off.", MSGFLAG_ERROR);
+            _MSG("Sync off.", MSGFLAG_INFO);
             sync = false;
         }
         // Remove lock, if there is any, and start scanning at channel 0
@@ -433,7 +438,7 @@ public:
             _MSG("Couldn't ioctl SETRFPI", MSGFLAG_ERROR);
             return;
         }
-        mode = 2;
+        mode = MODE_SYNC_CALL_SCAN;
         if (sync) {
             sync = false;
         }
@@ -472,11 +477,8 @@ public:
 		kis_packet *newpack = globalreg->packetchain->GeneratePacket();
 		dect_datachunk *dc = new dect_datachunk;
 
-        // Don't remove this, or it's gonna lock your box
-        usleep(10000);
-
         // Async FP/PP scan read 7 bytes each
-        if (mode == 0 || mode == 1) {
+        if (mode == MODE_ASYNC_FP_SCAN || mode == MODE_ASYNC_PP_SCAN) {
             if ((rbytes = read(serial_fd, &(dc->sdata), 7)) != 7) {
                 // Fail
                 stringstream s; 
@@ -492,11 +494,11 @@ public:
                         dc->sdata.RFPI[3],
                         dc->sdata.RFPI[4]);
                 _MSG("RFPI: " + string(station), MSGFLAG_INFO);
-                dc->kind = 0;
+                dc->kind = mode;
                 newpack->insert(dect_comp_datachunk, dc);
                 globalreg->packetchain->ProcessPacket(newpack);
             }
-        } else if (mode == 2) {
+        } else if (mode == MODE_SYNC_CALL_SCAN) {
             if ((rbytes = read(serial_fd, 
                                &(dc->pdata), 
                               sizeof(dc->pdata))) != sizeof(dc->pdata)) {
@@ -512,7 +514,7 @@ public:
                     sync = true;
                 }
                 dc->sync = sync;
-                //dc->kind = 2;
+                dc->kind = MODE_SYNC_CALL_SCAN;
                 newpack->insert(dect_comp_datachunk, dc);
                 globalreg->packetchain->ProcessPacket(newpack);
             }
@@ -527,6 +529,9 @@ public:
     void setLock(bool lock, int arg) 
     {
         if (arg != -1) {
+            stringstream chan;
+            chan << arg;
+            _MSG("Locking to " + chan.str(), MSGFLAG_INFO);
             SetChannel(arg);
         }
         locked = lock;
@@ -592,7 +597,7 @@ public:
         int currentmode = mode;
 		// If this packet doesn't have dect info or if it's call data, move 
 		// along.
-		if (dectinfo == NULL || dectinfo->kind == 2) {
+		if (dectinfo == NULL || dectinfo->kind == MODE_SYNC_CALL_SCAN) {
 			return 0;
 		}
         if (switched) {
@@ -751,6 +756,7 @@ int dect_cc_callback(CLIENT_PARMS)
                                               rfpi[4]);
                     _MSG(string(station), MSGFLAG_INFO);
                     ex_psd->startScanCalls(rfpi, arg);
+                    dtracker->emptyMap();
                     break;
                 default:
                     _MSG("Bad DECT_CMD_SCAN subcommand.", MSGFLAG_ERROR);
@@ -867,7 +873,7 @@ int dect_register(GlobalRegistry *globalreg) {
 	// Add the channels
 	globalreg->sourcetracker->AddChannelList("DECT:0,1,2,3,4,5,6,7,8,9");
 
-    // Hopefully this won't break since we don't know about memory management
+    // Hopefully this won't break since we don't knw about memory management
     // of packetsources
     PacketSource_Dect *psd = new PacketSource_Dect(globalreg);
     if (!psd) {

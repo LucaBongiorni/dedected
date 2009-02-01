@@ -39,6 +39,7 @@ struct dect_data {
     DecTable *ctable;
     vector<vector <string> > info_vec_fp; 
     vector<vector <string> > info_vec_pp;
+    vector<string> sync_station;
     int addref;
     int numrows;
     int mode;
@@ -53,16 +54,6 @@ public:
         this->ddata = ddata;
     }
     ~DecTable() {}
-
-    void setModePPTable(DecTable *ppt) 
-    {
-        this->pptable = ppt;
-    }
-
-    void setModeFPTable(DecTable *fpt)
-    {
-        this->fptable = fpt;
-    }
 
     int KeyPress(int in_key)
     {
@@ -146,8 +137,7 @@ public:
                                "C       - Sort by Channel (descending)\n"
                                "s       - Sort by view count (ascending)\n"
                                "S       - Sort by view count (descending)\n"
-                               "<enter> - In FP mode: Show details of currently selected station\n"
-                               "          In PP mode: Sync with selected station and record call\n";
+                               "<enter> - Sync with selected station and dump calls\n";
             Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
             ma->Position(2, 2, 21, 70);
             ma->ConfigureAlert(help_title, help_text);
@@ -256,8 +246,6 @@ public:
 
 private:
     GlobalRegistry *globalreg;
-    DecTable *pptable;
-    DecTable *fptable;
     dect_data *ddata;
 };
 
@@ -290,7 +278,6 @@ void DectDetailsProtoDECT(CLIPROTO_CB_PARMS)
         inf.push_back(buf);
     }
     // Niceify dates
-    /*
     string f, l;
     time_t first, last;
     char first_s[30], last_s[30];
@@ -300,9 +287,7 @@ void DectDetailsProtoDECT(CLIPROTO_CB_PARMS)
     ctime_r(&last, last_s);
     inf[3] = first_s;
     inf[4] = last_s;
-    */
     
-    // RFPI is primary key
     if (mode == MODE_ASYNC_FP_SCAN) {
         vector<vector <string> >::iterator i = ddata->info_vec_fp.begin();
         for (int j = 0; i < ddata->info_vec_fp.end(); ++i, ++j) {
@@ -336,27 +321,24 @@ void DectDetailsProtoDECT(CLIPROTO_CB_PARMS)
             reverse(ddata->info_vec_pp.begin(), ddata->info_vec_pp.end());
         }
     }
-    if (mode == MODE_ASYNC_FP_SCAN || mode == MODE_ASYNC_PP_SCAN) {
-        ddata->ctable->Hide();
-        ddata->dtable->Clear();
-        if (mode == MODE_ASYNC_FP_SCAN) {
+    if (mode == MODE_ASYNC_FP_SCAN) {
+            ddata->dtable->Clear();
+            ddata->ctable->Hide();
             vector<vector <string> >::iterator i = ddata->info_vec_fp.begin();
             for (int j = 0; i < ddata->info_vec_fp.end(); ++i, ++j) {
                 ddata->dtable->AddRow(j, (*i));
             }
-        } else if (mode == MODE_ASYNC_PP_SCAN) {
+            ddata->dtable->Show();
+            ddata->dtable->DrawComponent();
+    } else if (mode == MODE_ASYNC_PP_SCAN) {
+            ddata->ctable->Clear();
+            ddata->dtable->Hide();
             vector<vector <string> >::iterator i = ddata->info_vec_pp.begin();
             for (int j = 0; i < ddata->info_vec_pp.end(); ++i, ++j) {
-                ddata->dtable->AddRow(j, (*i));
+                ddata->ctable->AddRow(j, (*i));
             }
-        }
-        ddata->dtable->Show();
-        ddata->dtable->DrawComponent();
-    } else {
-        ddata->dtable->Hide();
-        ddata->ctable->Clear();
-        ddata->ctable->Show();
-        ddata->ctable->DrawComponent();
+            ddata->ctable->Show();
+            ddata->ctable->DrawComponent();
     }
 }
 
@@ -370,7 +352,8 @@ void DectCliConfigured(CLICONF_CB_PARMS)
 
     if (kcli->RegisterProtoHandler("DECT", KCLI_DECT_CHANNEL_FIELDS,
                                    DectDetailsProtoDECT, pdata) < 0) {
-        _MSG("Could not register DECT protocol with remote server", MSGFLAG_ERROR);
+        _MSG("Could not register DECT protocol with remote server", 
+             MSGFLAG_ERROR);
     }
 }
 
@@ -402,58 +385,115 @@ int DectListerButtonCB(COMPONENT_CALLBACK_PARMS)
     GlobalRegistry *greg = globalreg;
 
     if(!ddata || !greg) {
-        printf("Fooo!\n");
         return 0;
     }
 
     if (mode == MODE_ASYNC_FP_SCAN) {
         vector<string> data = ddata->dtable->GetSelectedData();    
+        if (data.size() < 1) {
+            // We got a button event even though the table was empty.
+            string cmd("DECT 1 0 0");
+            _MSG(cmd, MSGFLAG_INFO);
+            if (globalreg &&
+                globalreg->panel_interface &&
+                globalreg->panel_interface->FetchFirstNetclient()) {
+                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand(cmd);
+            }
+            return 1;
+        }
         vector<vector<string> >::iterator i = ddata->info_vec_fp.begin();
         for (int j = 0; i < ddata->info_vec_fp.end(); ++i, ++j) {
             if ((*i)[0] == data[0]) {
-                time_t first, last;
-                char first_s[30], last_s[30];
-                first = atoi((*i)[3].c_str());
-                last = atoi((*i)[4].c_str());
-                ctime_r(&first, first_s);
-                ctime_r(&last, last_s);
-                string in_title = "Station details";
-                string in_text =  "Station:    " + data[0] + "\n" + 
-                        "RSSI:       " + (*i)[1] + "\n" +
-                        "Channel:    " + (*i)[2] + "\n" +
-                        "First seen: " + first_s +
-                        "Last seen:  " + last_s +
-                        "Count seen: " + (*i)[5] + "\n";
-                // XXX: This could be another panel as well
-                Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
-                ma->Position((LINES / 2) - 8, (COLS / 2) - 25, 12, 40);
-                ma->ConfigureAlert(in_title, in_text);
-                globalreg->panel_interface->AddPanel(ma);
-                return 1;
-            }
-        }
-    } else if (mode == MODE_ASYNC_PP_SCAN) {
-        vector<string> data = ddata->dtable->GetSelectedData();    
-        vector<vector<string> >::iterator i = ddata->info_vec_pp.begin();
-        for (int j = 0; i < ddata->info_vec_pp.end(); ++i, ++j) {
-            if ((*i)[0] == data[0]) {
+                ddata->sync_station = (*i);
+                ddata->ctable->Hide();
+                ddata->dtable->Clear();
+                ddata->dtable->AddRow(0, (*i));
+                ddata->dtable->Show();
+                ddata->dtable->DrawComponent();
                 string cmd("DECT 1 2 " + data[2] + " " + data[0]);
-                printf("%s\n", cmd.c_str());
+                _MSG(cmd, MSGFLAG_INFO);
                 if (globalreg &&
                     globalreg->panel_interface &&
                     globalreg->panel_interface->FetchFirstNetclient()) {
                     globalreg->panel_interface->FetchFirstNetclient()->InjectCommand(cmd);
                 }
                 Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
-                ma->Position((LINES / 2) - 8, (COLS / 2) - 25, 12, 50);
-                ma->ConfigureAlert("", "Syncing to chosen station " + data[0]);
+                ma->Position((LINES / 2) - 8, (COLS / 2) - 25, 10, 50);
+                ma->ConfigureAlert("", "Syncing to chosen station " + data[0]
+                                   + "\n\nUse key 'F' to get back to FP scan"
+                                   + "\nUse key 'A' to get back to PP scan");
                 globalreg->panel_interface->AddPanel(ma);
+                mode = MODE_SYNC_CALL_SCAN;
             }
         }
-    } else {
+    } else  if (mode == MODE_ASYNC_PP_SCAN) { 
+        vector<string> data = ddata->ctable->GetSelectedData();    
+        if (data.size() < 1) {
+            // We got a button event even though the table was empty.
+            string cmd("DECT 1 1 0");
+            _MSG(cmd, MSGFLAG_INFO);
+            if (globalreg &&
+                globalreg->panel_interface &&
+                globalreg->panel_interface->FetchFirstNetclient()) {
+                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand(cmd);
+            }
+            return 1;
+        }
+        vector<vector<string> >::iterator i = ddata->info_vec_pp.begin();
+        for (int j = 0; i < ddata->info_vec_pp.end(); ++i, ++j) {
+            if ((*i)[0] == data[0]) {
+                ddata->sync_station = (*i);
+                ddata->ctable->Hide();
+                ddata->dtable->Clear();
+                ddata->dtable->AddRow(0, (*i));
+                ddata->dtable->Show();
+                ddata->dtable->DrawComponent();
+                string cmd("DECT 1 2 " + data[2] + " " + data[0]);
+                _MSG(cmd, MSGFLAG_INFO);
+                if (globalreg &&
+                    globalreg->panel_interface &&
+                    globalreg->panel_interface->FetchFirstNetclient()) {
+                    globalreg->panel_interface->FetchFirstNetclient()->InjectCommand(cmd);
+                }
+                Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
+                ma->Position((LINES / 2) - 8, (COLS / 2) - 25, 10, 50);
+                ma->ConfigureAlert("", "Syncing to chosen station " + data[0]
+                                   + "\n\nUse key 'F' to get back to FP scan"
+                                   + "\nUse key 'A' to get back to PP scan");
+                globalreg->panel_interface->AddPanel(ma);
+                mode = MODE_SYNC_CALL_SCAN;
+            }
+        }
+    } else if (mode == MODE_SYNC_CALL_SCAN) {
+        vector<string> data = ddata->dtable->GetSelectedData();    
+        if (data.size() < 1) {
+            // We got a button event even though the table was empty.
+            string cmd("DECT 1 0 0");
+            _MSG(cmd, MSGFLAG_INFO);
+            if (globalreg &&
+                globalreg->panel_interface &&
+                globalreg->panel_interface->FetchFirstNetclient()) {
+                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand(cmd);
+            }
+            return 1;
+        }
         Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
-        ma->Position((LINES / 2) - 5, (COLS / 2) - 20, 12, 40);
-        ma->ConfigureAlert("Warning", "No Mode selected: Use keys 'A' or 'F'");
+        ma->Position((LINES / 2) - 5, (COLS / 2) - 25, 10, 50);
+        if (ddata->sync_station.size() < 1) {
+            _MSG("No synced station recored in sync mode", MSGFLAG_ERROR);
+            return 1;
+        }
+        if (data[0] == ddata->sync_station[0]) {
+            ma->ConfigureAlert("", "Already synced to station " + data[0]
+                                   + "\n\nUse key 'F' to get back to FP scan"
+                                   + "\nUse key 'A' to get back to PP scan");
+        } else {
+            ma->ConfigureAlert("", "Not syncing to station " + data[0]
+                                   + ", already synced to "
+                                   + ddata->sync_station[0]
+                                   + "\n\nUse key 'F' to get back to FP scan"
+                                   + "\nUse key 'A' to get back to PP scan");
+        }
         globalreg->panel_interface->AddPanel(ma);
     }
 
@@ -497,14 +537,14 @@ int panel_plugin_init(GlobalRegistry *globalreg, KisPanelPluginData *pdata) {
     ti.push_back(t3);
 
     Kis_Scrollable_Table::title_data t4;
-    t4.width = 16;
+    t4.width = 20;
     t4.draw_width = 8;
     t4.title = "First";
     t4.alignment = 8;
     ti.push_back(t4);
 
     Kis_Scrollable_Table::title_data t5;
-    t5.width = 16;
+    t5.width = 20;
     t5.draw_width = 8;
     t5.title = "Last";
     t5.alignment = 8;
@@ -522,8 +562,13 @@ int panel_plugin_init(GlobalRegistry *globalreg, KisPanelPluginData *pdata) {
     pdata->mainpanel->AddComponentVec(ddata->dtable, (KIS_PANEL_COMP_DRAW | 
                                                       KIS_PANEL_COMP_TAB | 
 													  KIS_PANEL_COMP_EVT));
+    pdata->mainpanel->AddComponentVec(ddata->ctable, (KIS_PANEL_COMP_DRAW | 
+                                                      KIS_PANEL_COMP_TAB | 
+													  KIS_PANEL_COMP_EVT));
     pdata->mainpanel->FetchNetBox()->Pack_After_Named("KIS_MAIN_NETLIST",
                                                       ddata->dtable, 1, 0);
+    pdata->mainpanel->FetchNetBox()->Pack_After_Named("KIS_MAIN_NETLIST",
+                                                      ddata->ctable, 1, 0);
 
     ddata->dtable->Activate(1);
     ddata->ctable->Activate(1);
@@ -531,6 +576,8 @@ int panel_plugin_init(GlobalRegistry *globalreg, KisPanelPluginData *pdata) {
     ddata->dtable->DrawComponent();
     // Callback shows details on the station list
     ddata->dtable->SetCallback(COMPONENT_CBTYPE_ACTIVATED, 
+                               DectListerButtonCB, ddata);
+    ddata->ctable->SetCallback(COMPONENT_CBTYPE_ACTIVATED, 
                                DectListerButtonCB, ddata);
     ddata->addref =
        pdata->kpinterface->Add_NetCli_AddCli_CB(DectCliAdd, (void *) pdata);
