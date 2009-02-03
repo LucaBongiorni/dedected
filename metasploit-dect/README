@@ -1,0 +1,22 @@
+To install:
+
+COA Mixin:
+
+1. Copy coa.rb [msf directory]/lib/msf/core/exploit/ 
+2. Edit [msf directory]/lib/msf/core/exploit.rb and add require ''
+
+Example Scanner Module:
+
+1. Create [msf directory]/modules/auxiliary/scanner/coa/ directory
+2. Copy scanner.rb to the above directory
+
+Notes/Bugs: 
+
+1. This module relies on the COM-ON-AIR Linux driver and as such won't 
+work with Windows systems.
+
+2. The example module uses an infinite loop while scanning, I haven't 
+found an elegant way to break out of this w/out using ctrl-c. Thus this 
+leaves the file descriptor to the device open. Restarting the module 
+won't work you will need to restart Metasploit. I will figure out a fix 
+for this at some point in an update.
