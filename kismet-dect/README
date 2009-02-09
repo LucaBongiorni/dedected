@@ -86,11 +86,13 @@ you can send an email to <kismet-dect@detected.org> and hope it gets resolved
 soon. Or even better, send a patch!
 
 Functionality that works as of now:
-- FP scan
-- Sorting FP scan results by RSSI, seen count, and channel
-- Locking channels for FP scan
-- PP (call) scan
-- PP sync (call) scan (alpha, please test)
+
+ * FP scan
+ * Sorting FP scan results by RFPI, RSSI, seen count, and channel
+ * Locking channels for FP scan
+ * PP (call) scan
+ * Dumping pcap in for call (PP scan) or station (FP scan) (alpha, please test)
+
 
 HOTKEYS:
 =======
