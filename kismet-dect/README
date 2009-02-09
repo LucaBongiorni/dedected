@@ -1,10 +1,6 @@
                             KISMET DECT MODULES
                             ===================
 
-------------------------------------------------------------------------------
-WARNING: THIS IS PRE-ALPHA CODE AND THEREFORE HIGHLY UNSTABLE/EXPERIMENTAL!
-------------------------------------------------------------------------------
-
 PREREQUISITES:
 =============
 
@@ -128,6 +124,15 @@ Q: I don't seem to be able to use the hotkeys or scroll through the station
    list. What's wrong?
 A: Maybe you choose the wrong window? Try <tab>ing you way to the DECT plugin
    and then try again.
+
+BUGS:
+====
+
+Please report any bugs you see to our ticket system at:
+
+    https://dedected.org/trac/newticket 
+
+Or send an email to team@dedected.org or dedected@lists.gnumonks.org. Thanks.
 
 AUTHORS:
 =======
