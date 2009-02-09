@@ -74,12 +74,8 @@ Logtype:
 
     logtypes=dectpcap
 
-NOTES:
-=====
-
-The code is currently quite rough and contains bugs. If you find a serious bug,
-you can send an email to <kismet-dect@detected.org> and hope it gets resolved 
-soon. Or even better, send a patch!
+FEATURES:
+========
 
 Functionality that works as of now:
 
@@ -89,6 +85,10 @@ Functionality that works as of now:
  * PP (call) scan
  * Dumping pcap in for call (PP scan) or station (FP scan) (alpha, please test)
 
+Stuff being worked on:
+
+ * GPS support
+ * Dump .wav files
 
 HOTKEYS:
 =======
@@ -125,14 +125,15 @@ Q: I don't seem to be able to use the hotkeys or scroll through the station
 A: Maybe you choose the wrong window? Try <tab>ing you way to the DECT plugin
    and then try again.
 
-BUGS:
-====
+BUGS/FEATURE REQUESTS:
+=====================
 
-Please report any bugs you see to our ticket system at:
+The code is currently quite rough and may contain bugs. If you find a serious bug or
+if you would like to request some feature, please use our ticket system at:
 
-    https://dedected.org/trac/newticket 
+    https://dedected.org/trac/newticket
 
-Or send an email to team@dedected.org or dedected@lists.gnumonks.org. Thanks.
+Or send an email to kismet-dect@detected.org or dedected@lists.gnumonks.org. Thanks.
 
 AUTHORS:
 =======
