@@ -177,7 +177,6 @@ Dumpfile_Dectpcap::Dumpfile_Dectpcap(GlobalRegistry *in_globalreg) :
         globalreg->fatal_condition) {
         return;
     }
-
     dectpcapfile = fopen(fname.c_str(), "w");
     if (dectpcapfile == NULL) {
         snprintf(errstr, STATUS_MAX, 
@@ -242,7 +241,6 @@ int Dumpfile_Dectpcap::chain_handler(kis_packet *in_pack) {
         return 0;
     }
     
-    // XXX Dump .wav?
     struct pcap_pkthdr pcap_hdr;
     pcap_hdr.caplen = 73;
     pcap_hdr.len = 73;

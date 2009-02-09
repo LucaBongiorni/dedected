@@ -137,6 +137,7 @@ public:
                                "C       - Sort by Channel (descending)\n"
                                "s       - Sort by view count (ascending)\n"
                                "S       - Sort by view count (descending)\n"
+                               "Q       - Quit\n"
                                "<enter> - Sync with selected station and dump calls\n";
             Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
             ma->Position(2, 2, 21, 70);
@@ -239,6 +240,10 @@ public:
         if (in_key == 'S') {
             sort_by = SORT_BY_COUNTSEEN;
             descending = true;
+        }
+        if (in_key == 'Q') {
+            globalreg->fatal_condition = 1;
+            _MSG("Quitting..", MSGFLAG_INFO);
         }
 
         return 0;
