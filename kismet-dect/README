@@ -76,7 +76,7 @@ Device:
 
 Logtype:
 
-    logtypes=pcapdump,gpsxml,netxml,nettxt,alert,dectpcap
+    logtypes=dectpcap
 
 NOTES:
 =====
@@ -92,9 +92,40 @@ Functionality that works as of now:
 - PP (call) scan
 - PP sync (call) scan (alpha, please test)
 
-Functionality that is being worked on currently:
+HOTKEYS:
+=======
 
-- Dump .wav files
+Currently, after loading the DECT plugin into the client, you need to use 
+certain hotkeys to tell it what to do. Here is a list of keys and what they do:
+
+   ---------+---------------------------------------------
+    KEY     | ACTION
+   ---------+---------------------------------------------
+    h       | Display this help
+    L       | Lock channel hopping to current channel
+    U       | Unlock channel hopping
+    F       | Do async FP scan (default)
+    A       | Do async PP scan
+    M       | Show current mode
+    i       | Sort by RFPI (ascending)
+    I       | Sort by RFPI (descending)
+    r       | Sort by RSSI (ascending)
+    R       | Sort by RSSI (descending)
+    c       | Sort by Channel (ascending)
+    C       | Sort by Channel (descending)
+    s       | Sort by view count (ascending)
+    S       | Sort by view count (descending)
+    Q       | Quit
+    <enter> | Sync with selected station and dump calls
+   -------------------------------------------------------
+
+Q&A:
+===
+
+Q: I don't seem to be able to use the hotkeys or scroll through the station
+   list. What's wrong?
+A: Maybe you choose the wrong window? Try <tab>ing you way to the DECT plugin
+   and then try again.
 
 AUTHORS:
 =======
