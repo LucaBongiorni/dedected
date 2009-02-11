@@ -82,6 +82,14 @@ int dect_compare_RFPI(unsigned char *packet, unsigned char* RFPI)
 	return 0;
 }
 
+int dect_has_b_field(unsigned char *packet)
+{
+	if ((packet[5] & DECT_A_BA) != DECT_A_BA)
+		return 1;
+
+	return 0;
+}
+
 int dect_get_slot(unsigned char *packet)
 {
 	int slot = -1;
@@ -133,7 +141,7 @@ int dect_update_slottable(struct dect_slot_info *slottable, int slot, unsigned c
 {
 	if (slottable[slot].type == DECT_SLOTTYPE_SCAN)
 	{
-		printk("received packet on scanslot %u on carrier %u\n", slot, slottable[slot].channel);
+		//printk("received packet on scanslot %u on carrier %u\n", slot, slottable[slot].channel);
 		slottable[slot].type = DECT_SLOTTYPE_CARRIER;
 		if (slottable[slot].channel == 0)
 			slottable[slot].channel = 9;
@@ -170,10 +178,8 @@ int dect_update_slottable(struct dect_slot_info *slottable, int slot, unsigned c
 		switch(packet[5] & DECT_A_TA)
 		{
 		case DECT_P_TYPE:
-			if ( ( (packet[6] & DECT_P_HEAD) ==
-					DECT_P_HEAD_ZEROLP) ||
-				( (packet[6] & DECT_P_HEAD) ==
-				 	DECT_P_HEAD_SHORTLP) )
+			if ( ( (packet[6] & DECT_P_HEAD) == DECT_P_HEAD_ZEROLP) || 
+				( (packet[6] & DECT_P_HEAD) == DECT_P_HEAD_SHORTLP) )
 			{
 				switch((packet[9] & DECT_P_INFOTYPE))
 				{
@@ -192,7 +198,7 @@ int dect_update_slottable(struct dect_slot_info *slottable, int slot, unsigned c
 						slottable[newslot+12].errcnt = 0;
 						slottable[newslot+12].update = 1;
 
-						/*printk("\n\nstation switching to slot %u channel %u\n\n",newslot, packet[10] & DECT_P_IT_BEARERPOS_CN); */
+						//printk("\n\nstation switching to slot %u channel %u\n\n",newslot, packet[10] & DECT_P_IT_BEARERPOS_CN); 
 						return 1;
 					}
 
@@ -208,7 +214,7 @@ int dect_update_slottable(struct dect_slot_info *slottable, int slot, unsigned c
 							
 							if (x && (!slottable[i].active))
 							{
-								printk("scanning on slot %u\n", i);
+								//printk("scanning on slot %u\n", i);
 								slottable[i].active = 1;
 								slottable[i].channel = 0;		/* channel unknown at this position */
 								slottable[i].type = DECT_SLOTTYPE_SCAN;
@@ -219,7 +225,7 @@ int dect_update_slottable(struct dect_slot_info *slottable, int slot, unsigned c
 
 							if (x && (!slottable[i+12].active))
 							{
-								printk("scanning on slot %u\n", i + 12);
+								//printk("scanning on slot %u\n", i + 12);
 								slottable[i+12].active = 1;
 								slottable[i+12].channel = 0;	/* channel unknown at this position */
 								slottable[i+12].type = DECT_SLOTTYPE_SCAN;
@@ -273,6 +279,9 @@ int dect_update_slottable(struct dect_slot_info *slottable, int slot, unsigned c
 
 int dect_receive_error(struct dect_slot_info *slottable, int slot)
 {
+
+	//printk("slot:%u,errcnt:%u,type:%u,channel:%u\n",slot,slottable[slot].errcnt,slottable[slot].type,slottable[slot].channel);
+
 	slottable[slot].errcnt++;
 
 	if (slottable[slot].type != DECT_SLOTTYPE_SCAN)
@@ -282,7 +291,7 @@ int dect_receive_error(struct dect_slot_info *slottable, int slot)
 			slottable[slot].active = 0;
 			slottable[slot].update = 1;
 
-			printk("slot %u on channel %u died\n", slot, slottable[slot].channel);
+			//printk("slot %u on channel %u died\n", slot, slottable[slot].channel);
 
 			return 1;
 		}		
@@ -309,7 +318,7 @@ int dect_update_scanchannels(struct dect_slot_info *slottable)
 
 				ret = 1;
 
-				/*printk("slot %u will now scan on carrier %u\n", i, slottable[i].channel); */
+				//printk("slot %u will now scan on carrier %u\n", i, slottable[i].channel); 
 			}
 		}
 	}

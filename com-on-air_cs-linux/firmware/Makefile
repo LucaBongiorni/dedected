@@ -4,8 +4,10 @@ FW=sc14421_firmware
 
 FW1=sc14421_II_sniff_scan
 FW2=sc14421_II_sniff_sync
+FW3=sc14421_III_sniff_scan
+FW4=sc14421_III_sniff_sync
 
-ALL_FW=$(FW1) $(FW2)
+ALL_FW=$(FW1) $(FW2) $(FW3) $(FW4)
 
 BIN2C=./bin2c
 
@@ -33,8 +35,11 @@ $(foreach f,$(ALL_FW),$f.c): $(foreach f,$(ALL_FW),$f.bin) $(BIN2C)
 $(foreach f,$(ALL_FW),$f.decl):
 	@echo "extern unsigned char $(@:.decl=)_fw[509];" > $@
 
+mrproper:
+	rm -f ../$(FW).h ../$(FW).c
+	$(MAKE) clean
 clean:
-	rm -f ../$(FW).h ../$(FW).c $(BIN2C)
+	rm -f $(BIN2C)
 	rm -f $(foreach f,$(ALL_FW),$f.c)
 	rm -f $(foreach f,$(ALL_FW),$f.p)
 	rm -f $(foreach f,$(ALL_FW),$f.decl)

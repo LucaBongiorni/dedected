@@ -32,6 +32,7 @@ struct dect_slot_info
 
 int dect_is_RFPI_Packet(unsigned char *packet);
 int dect_compare_RFPI(unsigned char *packet, unsigned char* RFPI);
+int dect_has_b_field(unsigned char *packet);
 int dect_get_slot(unsigned char *packet);
 int dect_is_multiframe_number(unsigned char *packet);
 int dect_is_fp_packet(unsigned char *packet);

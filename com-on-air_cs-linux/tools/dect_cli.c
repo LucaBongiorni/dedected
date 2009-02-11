@@ -382,6 +382,10 @@ void do_chan(char * str_chan)
 		LOG("!!! please enter a valid channel number [0-14]\n");
 		return;
 	}
+
+	if(channel<10)
+		channel = 9 - channel;
+
 	cli.channel = channel;
 	set_channel(cli.channel);
 }
