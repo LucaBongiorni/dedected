@@ -477,7 +477,7 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 					{
 						struct sniffed_packet packet;
 						packet.rssi = SC14421_READ(memofs);
-						packet.bfok = ((SC14421_READ(1+memofs) & 0x03) == 0x03);
+						//packet.bfok = ((SC14421_READ(1+memofs) & 0x03) == 0x03);
 						packet.channel = config->slottable[a].channel;
 						packet.slot = a;
 						memcpy(packet.data,fppacket,5);
@@ -577,7 +577,7 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 						struct sniffed_packet packet;
 
 						packet.rssi = SC14421_READ(memofs);
-						packet.bfok = ((SC14421_READ(1+memofs) & 0x03) == 0x03);
+						//packet.bfok = ((SC14421_READ(1+memofs) & 0x03) == 0x03);
 						packet.channel = config->slottable[a].channel;
 						packet.slot = a;
 						memcpy(packet.data, pppacket, 5);
