@@ -292,11 +292,12 @@ int parse_rfpi(const char * str_rfpi, uint8_t * rfpi)
 			return -1;
 		rfpi[i] = (highnibble << 4) | lownibble;
 
+		read += 2;
+
 		if (i == 4)
 			break;
 		i++;
 		str_rfpi += 2;
-		read += 2;
 
 		// Accept space or colon as byte separator. None at all is ok too.
 		if (*str_rfpi == ' ' || *str_rfpi == ':')
