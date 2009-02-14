@@ -33,6 +33,7 @@ struct dect_station
 	uint32_t              first_seen;
 	uint32_t              last_seen;
 	uint32_t              count_seen;
+	char*                 name;
 };
 
 struct sniffed_packet
@@ -53,6 +54,13 @@ struct rfpi_list
 	uint8_t RFPI[5];
 };
 
+struct station_name
+{
+	struct station_name * next;
+	struct station_name * prev;
+	uint8_t RFPI[5];
+	char* name;
+};
 
 #define MODE_STOP     0x00000001
 #define MODE_FPSCAN   0x00000002
@@ -89,6 +97,8 @@ struct cli_info
 	/* fpscan (async) list of stations */
 	struct dect_station   station;
 	struct dect_station   * station_list;
+
+	struct station_name * station_names;
 
 	/* ignored RFPIs */
 	struct rfpi_list * ignored_rfpis;

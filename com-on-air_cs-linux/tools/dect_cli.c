@@ -46,21 +46,22 @@ int rfpi_is_ignored(const uint8_t * RFPI);
 void print_help(void)
 {
 	LOG("\n");
-	LOG("   help          - this help\n");
-	LOG("   fpscan        - async scan for basestations, dump RFPIs\n");
-	LOG("   callscan      - async scan for active calls, dump RFPIs\n");
-	LOG("   autorec       - sync on any calls in callscan, autodump in pcap\n");
-	LOG("   ppscan <rfpi> - sync scan for active calls\n");
-	LOG("   chan <ch>     - set current channel [0-9], currently %d\n", cli.channel);
-//	LOG("   slot <sl>     - set current slot [0-23], currently %d\n", cli.slot);
-//	LOG("   jam           - jam current channel\n");
-	LOG("   band          - toggle between EMEA/DECT and US/DECT6.0 bands\n");
-	LOG("   ignore <rfpi> - toggle ignoring of an RFPI in autorec\n");
-	LOG("   dump          - dump stations and calls we have seen\n");
-	LOG("   hop           - toggle channel hopping, currently %s\n", cli.hop ? "ON":"OFF");
-	LOG("   verb          - toggle verbosity, currently %s\n", cli.verbose ? "ON":"OFF");
-	LOG("   stop          - stop it - whatever we were doing\n");
-	LOG("   quit          - well :)\n");
+	LOG("   help               - this help\n");
+	LOG("   fpscan             - async scan for basestations, dump RFPIs\n");
+	LOG("   callscan           - async scan for active calls, dump RFPIs\n");
+	LOG("   autorec            - sync on any calls in callscan, autodump in pcap\n");
+	LOG("   ppscan <rfpi>      - sync scan for active calls\n");
+	LOG("   chan <ch>          - set current channel [0-9], currently %d\n", cli.channel);
+//	LOG("   slot <sl>          - set current slot [0-23], currently %d\n", cli.slot);
+//	LOG("   jam                - jam current channel\n");
+	LOG("   band               - toggle between EMEA/DECT and US/DECT6.0 bands\n");
+	LOG("   ignore <rfpi>      - toggle ignoring of an RFPI in autorec\n");
+	LOG("   dump               - dump stations and calls we have seen\n");
+	LOG("   name <rfpi> <name> - name stations we have seen\n");
+	LOG("   hop                - toggle channel hopping, currently %s\n", cli.hop ? "ON":"OFF");
+	LOG("   verb               - toggle verbosity, currently %s\n", cli.verbose ? "ON":"OFF");
+	LOG("   stop               - stop it - whatever we were doing\n");
+	LOG("   quit               - well :)\n");
 	LOG("\n");
 }
 
@@ -118,7 +119,7 @@ void add_station(struct dect_station * station)
 	LOG("### found new %s", station->type == TYPE_FP ? "station":"call on");
 	for (i=0; i<5; i++)
 		LOG(" %.2x", station->RFPI[i]);
-	LOG(" on channel %d RSSI %d\n", station->channel, station->RSSI);
+	LOG(" on channel %d RSSI %d", station->channel, station->RSSI);
 
 	struct dect_station * p = cli.station_list;
 	if (p)
@@ -146,6 +147,33 @@ void add_station(struct dect_station * station)
 	p->first_seen = time(NULL);
 	p->last_seen = p->first_seen;
 	p->count_seen = 1;
+	p->name = NULL;
+
+	struct station_name * sn = cli.station_names;
+
+	while(sn)
+	{
+		if(!memcmp(p->RFPI, sn->RFPI, 5))
+		{
+			p->name = sn->name;
+			LOG(" name \"%s\"",p->name);
+			if(sn->prev)
+				sn->prev->next = sn->next;
+			else
+				cli.station_names = sn->next;
+			if(sn->next)
+				sn->next->prev = sn->prev;
+			if(sn->prev == NULL && sn->next == NULL)
+			{
+				free(sn);
+				cli.station_names = NULL;
+			}else
+				free(sn);
+			break;
+		}
+		sn = sn->next;
+	}
+	LOG("\n");
 }
 
 void try_add_station(struct dect_station * station)
@@ -242,10 +270,14 @@ int hexvalue(int hexdigit)
 int parse_rfpi(const char * str_rfpi, uint8_t * rfpi)
 {
 	int i = 0;
+	int read = 0;
 
 	// Skip initial whitespace:
 	while (isspace(*str_rfpi))
+	{
 		str_rfpi++;
+		read++;
+	}
 
 	for (;;)
 	{
@@ -259,18 +291,22 @@ int parse_rfpi(const char * str_rfpi, uint8_t * rfpi)
 		if (lownibble == -1)
 			return -1;
 		rfpi[i] = (highnibble << 4) | lownibble;
-		
+
 		if (i == 4)
 			break;
 		i++;
 		str_rfpi += 2;
+		read += 2;
 
 		// Accept space or colon as byte separator. None at all is ok too.
 		if (*str_rfpi == ' ' || *str_rfpi == ':')
+		{
 			str_rfpi++;
+			read++;
+		}
 	}
 
-	return 0;
+	return read;
 }
 
 void do_ppscan_str(char * str_rfpi)
@@ -283,6 +319,53 @@ void do_ppscan_str(char * str_rfpi)
 		return;
 	}
 	do_ppscan(RFPI);
+}
+
+void do_add_name(char * str_rfpi_name)
+{
+	uint8_t RFPI[5];
+	int read;
+	struct dect_station * p = cli.station_list;
+
+	if ((read = parse_rfpi(str_rfpi_name, RFPI)) == -1)
+	{
+		LOG("!!! please enter a valid RFPI (e.g. 00 01 02 03 04)\n");
+		return;
+	}
+	str_rfpi_name += read;
+
+	while (isspace(*str_rfpi_name))
+		str_rfpi_name++;
+
+	LOG("### named %.2x %.2x %.2x %.2x %.2x as %s\n",
+		RFPI[0],
+		RFPI[1],
+		RFPI[2],
+		RFPI[3],
+		RFPI[4],
+		str_rfpi_name);
+
+	while(p)
+	{
+		if (!memcmp(p->RFPI, RFPI, 5))
+		{
+			if(p->name != NULL)
+			{
+				LOG("### renaming station %s\n", p->name);
+				free(p->name);
+			}
+			p->name = malloc(strlen(str_rfpi_name) + 1);
+			strcpy(p->name, str_rfpi_name);
+			return;
+		}
+		p = p->next;
+	}
+	LOG("!!! station %.2x %.2x %.2x %.2x %.2x not found yet\n",
+		RFPI[0],
+		RFPI[1],
+		RFPI[2],
+		RFPI[3],
+		RFPI[4]);
 }
 
 // Returns true if 'RFPI' occurs in 'list'.
@@ -474,6 +557,8 @@ void do_dump(void)
 			LOG(" count %4.u ", p->count_seen);
 			LOG(" first %u ", p->first_seen);
 			LOG(" last %u ", p->last_seen);
+			if (p->name)
+				LOG(" name \"%s\"", p->name);
 			LOG("\n");
 		}
 	} while ((p = p->next));
@@ -551,10 +636,48 @@ void do_stop(void)
 	cli.autorec = 0;
 }
 
+void do_save_station_names()
+{
+	struct dect_station * sl = cli.station_list;
+	struct station_name * sn = cli.station_names;
+
+	FILE * fd = fopen("stations.rc", "w");
+
+	while(sn)
+	{
+		fprintf(fd, "%.2x %.2x %.2x %.2x %.2x %s\n",
+			sn->RFPI[0],
+			sn->RFPI[1],
+			sn->RFPI[2],
+			sn->RFPI[3],
+			sn->RFPI[4],
+			sn->name);
+		free(sn->name);
+		sn = sn->next;
+	}
+	while(sl)
+	{
+		if (sl->name != NULL)
+		{
+			fprintf(fd, "%.2x %.2x %.2x %.2x %.2x %s\n",
+				sl->RFPI[0],
+				sl->RFPI[1],
+				sl->RFPI[2],
+				sl->RFPI[3],
+				sl->RFPI[4],
+				sl->name);
+			free(sl->name);
+		}
+		sl = sl->next;
+	}
+	fclose(fd);
+}
+
 void do_quit(void)
 {
 	do_stop();
 	do_dump();
+	do_save_station_names();
 	exit(0);
 }
 
@@ -588,6 +711,8 @@ void process_cli_data()
 		{ do_ignore_str(&buf[6]); done = 1; }
 	if ( !strncasecmp((char *)buf, "dump", 4) )
 		{ do_dump(); done = 1; }
+	if ( !strncasecmp((char *)buf, "name", 4) )
+		{ do_add_name(&buf[4]); done = 1; }
 	if ( !strncasecmp((char *)buf, "hop", 3) )
 		{ do_hop(); done = 1; }
 	if ( !strncasecmp((char *)buf, "verb", 4) )
@@ -731,13 +856,64 @@ void init_dect()
 	cli.pcap = NULL;
 }
 
+void init_station_names(void)
+{
+	uint8_t RFPI[5];
+	int read;
+	char str_buf[80];
+	FILE * fd = fopen("stations.rc", "r");
+
+	if (!fd)
+		return;
+	
+	while(fgets(str_buf, 80, fd))
+	{
+		if ((read = parse_rfpi(str_buf, &RFPI)) == -1)
+			continue;
+
+		char * start = str_buf+read;
+		while (isspace(*start))
+			start++;
+
+		char * name = start;
+		while(*start && *start != '\n')
+			start++;
+		*start = '\0';
+
+		struct station_name * p = cli.station_names;
+		if (p)
+		{
+			while(p->next)
+				p = p->next;
+			p->next = malloc(sizeof(*p));
+			p->next->prev = p;
+			p = p->next;
+			p->next = NULL;
+		}else{
+			cli.station_names = malloc(sizeof(*cli.station_names));
+			p = cli.station_names;
+			p->next = NULL;
+			p->prev = NULL;
+		}
+		if (!p)
+		{
+			LOG("!!! out of memory\n");
+			exit(1);
+		}
+		memcpy(p->RFPI, RFPI, 5);
+		p->name = malloc(sizeof(char)*(strlen(name)+1));
+		strcpy(p->name, name);
+	}
+	fclose(fd);
+}
+
 void signal_handler(int s)
 {
 	LOG("### got signal %d, will dump & quit\n", s);
 	do_quit();
 }
 
-void init_cli()
+void init_cli(void)
 {
 	cli.channel      = 0;
 	cli.slot         = 0;
@@ -776,6 +952,7 @@ void init(void)
 {
 	init_dect();
 	init_cli();
+	init_station_names();
 }
 
 int max_int(int a, int b)
