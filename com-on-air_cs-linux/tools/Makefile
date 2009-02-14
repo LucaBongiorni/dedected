@@ -1,5 +1,5 @@
 CFLAGS=-Wall -O2 -I..
-PROGS=coa_syncsniff pcap2cchan dump_eeprom
+PROGS=coa_syncsniff pcap2cchan dump_eeprom dump_dip
 PCAP_PROGS=pcapstein dect_cli
 all:$(PROGS) $(PCAP_PROGS)
 

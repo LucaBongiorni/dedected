@@ -1,0 +1,136 @@
+//----
+// DIP codes, partially explained
+//----
+
+BR label    : branch to label
+JMP label   : jump to subroutine label
+JMP1 label  : jump to subroutine label if true (whatever)
+RTN         : return from subroutine
+WNT  x      : wait x slots
+WT  x       : wait x dect-clocks
+U_INT0      : raise interrupt 0
+U_INT1      : raise interrupt 1
+U_INT2      : raise interrupt 2
+U_INT3      : raise interrupt 3
+U_PSC
+U_VINT
+P_EN        : enable portbits
+P_LDH x     : set selected portbits to high
+P_LDL x     : set selected portbits to low
+P_LD x      : load portbit ???
+P_SC
+M_WR        : start transfer over microwire-output
+M_RST       : stop transfer over microwire-output
+M_INI0
+M_INI1
+MEN1N       : set microwire enable 1 low
+MEN1        : set microwire enable 1 high
+MEN2N       : set microwire enable 2 low
+MEN2        : set microwire enable 2 high
+MEN3N       : set microwire enable 3 low
+MEN3        : set microwire enable 3 high
+RFEN        : enable clk output
+RFDIS       : disable clk output
+D_ON        : enable xor with DSC
+D_OFF       : disable xor with DSC
+D_LDK       : Load DSC Key
+D_PREP      : DSC Prepare
+D_WRS       : writes internal DSC state
+D_LDS       : load DSC state
+D_RST       : DSC Reset
+BK_C        : set upper address nibble
+LD_PTR
+BK_A
+A_RST
+A_LDR
+A_LDW
+A_MUTE      : ADPCM mute
+A_MTOFF     : ADPCM mute off
+BK_A1
+A_RST1
+A_LDR1
+A_LDW1
+A_MUTE1     : ADPCM1 mute
+A_MTOFF1    : ADPCM1 mute off
+B_RST       : reset rx stuff
+B_XOFF      : disable B field CRC
+B_XON       : enable B field CRC 
+SLOTZERO    : wait until in slot zero (partly understood)
+
+
+//----
+// missing / unknown mnemonics
+//----
+
+WNTM1
+WNTP1
+
+B_ST2
+B_XT
+B_BTFU
+UNLCK
+B_SR
+B_XR
+EN_SL_ADJ
+B_BRFU
+B_RINV
+B_RON
+
+
+B_ST
+B_AT
+B_RC
+B_BT
+B_BTFP
+B_AT2
+B_WRS
+B_AR
+B_BR
+B_BRFP
+B_AR2
+
+WSC
+
+RCK_INT
+RCK_EXT
+B_WB_OFF
+B_WB_ON
+CLK1
+CLK3
+U_CK8
+U_CK4
+U_CK2
+U_CK1
+
+A_RCV0
+A_RCV36
+A_RCV30
+A_RCV24
+A_RCV18
+A_RCV12
+A_RCV6
+A_RCV33
+A_RCV27
+A_RCV21
+A_RCV15
+A_RCV9
+A_RCV3
+
+M_RD
+
+M_WRS
+
+A_STOFF
+A_ALAW
+A_DT
+A_NORM
+A_LIN
+A_STON
+A_DT1
+
+A_STRN
+C_ON
+C_OFF
+
+C_LD
+
