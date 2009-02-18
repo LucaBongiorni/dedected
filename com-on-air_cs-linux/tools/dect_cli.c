@@ -43,6 +43,19 @@ char errbuf[PCAP_ERRBUF_SIZE];
 
 int rfpi_is_ignored(const uint8_t * RFPI);
 
+char * get_cli_mode(void)
+{
+	switch(cli.mode){
+		case MODE_STOP:     return "stopped";  break;
+		case MODE_FPSCAN:   return "fpscan";   break;
+		case MODE_PPSCAN:   return "ppscan";   break;
+		case MODE_CALLSCAN: return "callscan"; break;
+		case MODE_JAM:      return "jam";      break;
+		default:
+				    return "unknown";
+	}
+}
+
 void print_help(void)
 {
 	LOG("\n");
@@ -60,6 +73,7 @@ void print_help(void)
 	LOG("   name <rfpi> <name> - name stations we have seen\n");
 	LOG("   hop                - toggle channel hopping, currently %s\n", cli.hop ? "ON":"OFF");
 	LOG("   verb               - toggle verbosity, currently %s\n", cli.verbose ? "ON":"OFF");
+	LOG("   mode               - report current mode, currently %s\n", get_cli_mode());
 	LOG("   stop               - stop it - whatever we were doing\n");
 	LOG("   quit               - well :)\n");
 	LOG("\n");
@@ -68,7 +82,7 @@ void print_help(void)
 void set_channel(uint32_t channel)
 {
 	if (cli.verbose)
-		LOG("### switching to channel %d\n", ch2etsi[channel]);
+		LOG("### mode: %s, switching to channel %d\n", get_cli_mode(), ch2etsi[channel]);
 	if (ioctl(cli.fd, COA_IOCTL_CHAN, &ch2etsi[channel])){
 		LOG("!!! couldn't ioctl()\n");
 		exit(1);
@@ -610,6 +624,14 @@ void do_verb(void)
 	LOG("### verbosity turned %s\n", cli.verbose ? "ON":"OFF");
 }
 
+void do_mode(void)
+{
+	LOG("### current mode: %s, verbosity %s, channel hopping %s\n",
+		get_cli_mode(),
+		cli.verbose ? "ON":"OFF",
+		cli.hop ? "ON":"OFF");
+}
+
 void do_autorec(void)
 {
 	cli.autorec = cli.autorec ? 0:1;
@@ -718,6 +740,8 @@ void process_cli_data()
 		{ do_hop(); done = 1; }
 	if ( !strncasecmp((char *)buf, "verb", 4) )
 		{ do_verb(); done = 1; }
+	if ( !strncasecmp((char *)buf, "mode", 4) )
+		{ do_mode(); done = 1; }
 	if ( !strncasecmp((char *)buf, "stop", 4) )
 		{ do_stop(); done = 1; }
 	if ( !strncasecmp((char *)buf, "quit", 4) )
