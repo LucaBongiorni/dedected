@@ -45,7 +45,7 @@ void to_dip(volatile uint16_t *dst, unsigned char *src, int length)
 #if defined(__LITTLE_ENDIAN)
 		*(dst++) = *(src++);
 #elif defined(__BIG_ENDIAN)
-		*(dst++) =s wab16(*(src++));
+		*(dst++) =swab16(*(src++));
 #else
 #error "endianness not defined"
 #endif
