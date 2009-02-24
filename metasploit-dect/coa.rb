@@ -6,7 +6,14 @@ DECT_BAND_EMEA = 		0x01
 DECT_BAND_US = 			0x02
 DECT_BAND_BOTH =		0x03
 
+COA_MODE_IDLE  =                0x0000
+COA_MODE_FP    =                0x0100
+COA_MODE_PP    =                0x0200
 COA_MODE_SNIFF = 		0x0300
+COA_MODE_JAM   =                0x0400
+COA_MODE_EEPROM =               0x0500
+
+
 COA_SUBMODE_SNIFF_SCANFP = 	0x0001
 COA_SUBMODE_SNIFF_SCANPP = 	0x0002
 COA_SUBMODE_SNIFF_SYNC = 	0x0003
@@ -21,9 +28,7 @@ COA_IOCTL_RSSI =		0xD006
 COA_IOCTL_FIRMWARE =		0xD007
 COA_IOCTL_SETRFPI =		0xD008
 
-station = {
-		
-	  }
+
 
 	def initialize(info = {})
 		super
@@ -58,11 +63,14 @@ station = {
 	end
 
 	def pp_scan_mode(rfpi)
-		self.dect_device.ioctl(COA_IOCTL_MODE, [COA_MODE_SNIFF | COA_SUBMODE_SNIFF_SYNC].pack('s'))
+		self.dect_device.ioctl(COA_IOCTL_MODE, [COA_MODE_SNIFF | COA_SUBMODE_SNIFF_SYNC].pack('S'))
+		puts rfpi
+		self.set_rfpi(rfpi.to_i)
 	end
 
 	def call_scan_mode
 		self.dect_device.ioctl(COA_IOCTL_MODE, [COA_MODE_SNIFF | COA_SUBMODE_SNIFF_SCANPP].pack('s'))
+		set_band(datastore['BAND'])
 	end
 
 	def stop
@@ -73,9 +81,8 @@ station = {
 		self.rfpi
 	end
 
-	def set_rfpi(r)
-		self.rfpi = r
-		self.dect_device.ioctl(COA_IOCTL_SETRFPI, [self.rfpi].pack('s'))
+	def set_rfpi(rfpi)
+		self.dect_device.ioctl(COA_IOCTL_SETRFPI, [rfpi].pack('s'))
 	end
 
 	def channel
@@ -151,6 +158,7 @@ station = {
 		station = {
 		'channel' => data[0],
 		'rssi' => data[1],
+		'rfpi_raw' => data[2,5],
 		'rfpi' => parse_rfpi(data[2,5])
 		}
 	end
@@ -159,10 +167,15 @@ station = {
 		 call = {
                 'channel' => data[0],
                 'rssi' => data[1],
+		'rfpi_raw' => data[2,5],
                 'rfpi' => parse_rfpi(data[2,5])               
 		}
 	end
 	
+	def record(filename)
+		fd = File.open(filename, 'rw')
+		fd.close
+	end
 
 	attr_accessor :dect_device, :channel, :band
 end

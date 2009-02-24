@@ -3,20 +3,19 @@ To install:
 COA Mixin:
 
 1. Copy coa.rb [msf directory]/lib/msf/core/exploit/ 
-2. Edit [msf directory]/lib/msf/core/exploit.rb and add require ''
+2. Edit [msf directory]/lib/msf/core/exploit.rb and add require 'msf/core/exploit/coa'
 
-Example Scanner Module:
+Example Scanner Modules:
 
 1. Create [msf directory]/modules/auxiliary/scanner/coa/ directory
-2. Copy scanner.rb to the above directory
+2. Copy call_scanner.rb and station_scanner.rb to the above directory
 
 Notes/Bugs: 
 
 1. This module relies on the COM-ON-AIR Linux driver and as such won't 
 work with Windows systems.
 
-2. The example module uses an infinite loop while scanning, I haven't 
-found an elegant way to break out of this w/out using ctrl-c. Thus this 
-leaves the file descriptor to the device open. Restarting the module 
-won't work you will need to restart Metasploit. I will figure out a fix 
-for this at some point in an update.
+2. Call recording is still a work in progress, currently the call module 
+just identifies and logs the time of active calls.
+
+-- Your patches are welcome :)
