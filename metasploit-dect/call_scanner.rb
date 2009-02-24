@@ -10,8 +10,7 @@ class Metasploit3 < Msf::Auxiliary
                         'Name'          => 'DECT Call Scanner',
                         'Version'       => '$revision$',
                         'Description'   => %q{
-                                This module scans for active DECT 
-calls, it does not do recording yet.
+                                This module scans for active DECT calls, it does not do recording yet.
                         },
                         'Author'        =>
                                 ['DK <privilegedmode@gmail.com>'],
@@ -25,8 +24,7 @@ calls, it does not do recording yet.
                 register_options(
                         [
 
-				OptString.new('VERBOSE',[false,'Be 
-verbose.',true])
+				OptString.new('VERBOSE',[false,'Be verbose.',true])
                         ],
                         self.class
                 )
