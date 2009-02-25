@@ -26,7 +26,7 @@ void print_gui::work()
 			{
 				case 'q':
 					cfg.stop();
-					goto end;
+					exit(0);
 					break;	
 			}
 		}
@@ -47,13 +47,11 @@ void print_gui::work()
 				case SNIFFMODE_SCAN:
 					break;
 				case SNIFFMODE_SYNC:
-					gui=new syncmode_gui(SW,SH);
+					gui=new syncmode_gui(COLS>=80?COLS:80,LINES>=25?LINES:25);
 					break;
 			}
 		}
 	}
-
-end:	return;
 
 }
 
@@ -71,7 +69,9 @@ void print_gui::initcurses()
 	init_pair(5,COLOR_YELLOW,COLOR_GREEN);
 	init_pair(6,COLOR_RED,COLOR_GREEN);
 
-	gui=new scanmode_gui(SW,SH);
+	
+
+	gui=new scanmode_gui(COLS>=80?COLS:80,LINES>=25?LINES:25);
 }
 
 void print_gui::refreshscreen()

@@ -24,3 +24,13 @@
 #include "config.h"
 
 extern config cfg;
+
+
+
+void printnil(char *,...);
+
+#if 0
+#define LOG printf
+#else
+#define LOG printnil
+#endif

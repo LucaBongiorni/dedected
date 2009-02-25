@@ -6,9 +6,6 @@
 #include "scanmode_gui.h"
 #include "syncmode_gui.h"
 
-#define SW 80
-#define SH 25
-
 
 class print_gui
 {
