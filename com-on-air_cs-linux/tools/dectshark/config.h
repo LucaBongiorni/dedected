@@ -3,7 +3,7 @@
 
 #define DEV "/dev/coa"
 
-//TODO: make threadsafe
+//TODO: make it threadsafe
 
 #define SNIFFMODE_SCAN	0
 #define SNIFFMODE_SYNC	1

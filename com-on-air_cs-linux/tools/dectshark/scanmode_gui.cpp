@@ -122,7 +122,7 @@ void scanmode_gui::refreshscreen()
 
 void scanmode_gui::printfounds()
 {
-	int i,y;
+	unsigned int i,y;
 
 	y=2;
 	for(i=startpos;i<(startpos+scrh-3);i++)

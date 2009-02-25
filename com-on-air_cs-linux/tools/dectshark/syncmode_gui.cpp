@@ -175,7 +175,7 @@ void syncmode_gui::refreshscreen()
 
 void syncmode_gui::printfounds()
 {
-	int i;
+	unsigned int i;
 
 	slotinfo_str slotinfo;
 
