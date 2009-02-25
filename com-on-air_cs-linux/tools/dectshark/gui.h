@@ -1,19 +1,13 @@
-#include <ncurses.h>
-#include <unistd.h>
-#include <pthread.h>
-#include <sys/select.h>
-
-#include "foundinfo.h"
-#include "config.h"
-
 #if !defined(GUI_H)
 #define GUI_H 
 
+#include "dectshark.h"
+#include "mode_gui.h"
+#include "scanmode_gui.h"
+#include "syncmode_gui.h"
+
 #define SW 80
 #define SH 25
-
-extern found_dects founds;
-extern config cfg;
 
 
 class print_gui
@@ -24,29 +18,16 @@ public:
 
 	void work();
 
-	void up();
-	void down();
-
-	int getselected();
-
-
-	void setchannel(int channel);
 protected:
-	void InitCurses();
-	void RefreshScreen();
-	void PrintFounds(int start,int num,int selected);
-	void PrintStatus(unsigned int PP,unsigned int FP,int channel);
+	void initcurses();
+	void refreshscreen();
+
 	int kbhit_wait(int time);
 
 	pthread_mutex_t mutex;
 
-	int selected,startpos,displaypos;
+	mode_gui *gui;
 
-	WINDOW *mainwin;
-	WINDOW *statuswin;
-	WINDOW *msgwin;
-
-	int channel;
 };
 
 #endif

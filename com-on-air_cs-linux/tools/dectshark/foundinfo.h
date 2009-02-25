@@ -1,9 +1,7 @@
-#include <pthread.h>
-#include <malloc.h>
-#include <string.h>
-
 #if !defined(FOUNDINFO_H)
 #define FOUNDINFO_H 
+
+#include "dectshark.h"
 
 
 #define DECT_FOUND_FP			0
@@ -41,12 +39,12 @@ public:
 	void			AddDect(dect_found found);
 	void			ClearList();
 	dect_listentry		GetListEntry(unsigned int entry);
-	int			GetListLength();
+	unsigned int		GetListLength();
 
 
 protected:
 
-	int listlen;
+	unsigned int listlen;
 	dect_listentry *list;
 
 	pthread_mutex_t mutex;

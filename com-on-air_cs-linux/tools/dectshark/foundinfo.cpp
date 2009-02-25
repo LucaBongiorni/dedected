@@ -88,7 +88,7 @@ dect_listentry found_dects::GetListEntry(unsigned int entry)
 	}
 }
 
-int	found_dects::GetListLength()
+unsigned int found_dects::GetListLength()
 {
 	int tlen;
 
