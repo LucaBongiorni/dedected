@@ -27,24 +27,25 @@ Start:
 		P_LD	0x00
 		RCK_INT
 		RFEN
+		MEN1N
 ;-------------------------------------------------------------	
 
 		BK_C	0x20
 TryAgain:
-		JMP	RFInit
-		JMP	RFDKnow1
+		JMP	RFInit1
+;		JMP	RFInit2
+;		JMP	RFInit3
+		JMP	RFDKnow
 		MEN2N
 		WT	250
 		P_SC	0x60
 		P_LDH	PB_RX_ON|PB_DCTHRESHOLD
 		UNLCK
-		WT	64
 		B_XOFF
 		B_SR
-		WNT	20
+		WNT	2
 		JMP1	SFieldFound
 		B_RST
-		WT	22
 		BR	TryAgain
 ;-------------------------------------------------------------
 
@@ -57,7 +58,7 @@ SFieldFound:
 ;-------------------------------------------------------------
 
 RecvSlot:
-		JMP	RFDKnow1
+		JMP	RFDKnow
 		JMP	RecvPP
 		WT	1
 		B_BRFU	0x0E
@@ -68,8 +69,6 @@ RecvSlot:
 		B_WRS	0x00
 		WT	7
 		B_RST
-		MEN1N
-		WNT	1
 		RTN
 ;-------------------------------------------------------------
 
@@ -92,32 +91,29 @@ RecvPP:
 		RTN
 ;-------------------------------------------------------------
 
-RFInit:
+RFInit1:
 		RFEN
-		WT		1
-		WT		1
-		M_WR	0x4A
+		M_WR		0x4A
 		WT		9
 		M_RST
-		JMP		label_C0
-		M_WR	0x4B
+		MEN1
+;		RTN
+;RFInit2:
+		MEN1N
+		M_WR		0x4B
 		WT		17
 		M_RST
-		JMP		label_C0
-		M_WR	0x4D
+		MEN1
+;		RTN
+;RFInit3:
+		MEN1N
+		M_WR		0x4D
 		WT		25
 		M_RST
 		RTN
 ;-------------------------------------------------------------
 
-RFDKnow1:
-		JMP		label_C0
-		BR		RFDKnow3
-;-------------------------------------------------------------
-
-RFDKnow2:
-		JMP		label_C3
-RFDKnow3:
+RFDKnow:
 		B_RST
 		B_RC		0x58
 		WT		8
@@ -126,15 +122,3 @@ RFDKnow3:
 		WT		208
 		RTN
 ;-------------------------------------------------------------
-
-label_C0:
-		MEN1
-		MEN1N
-		RTN
-;-------------------------------------------------------------
-
-label_C3:
-		MEN1
-		RTN
-;-------------------------------------------------------------
-
