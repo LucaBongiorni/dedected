@@ -28,8 +28,27 @@ unsigned char dip_ctrl[] = {0xc2,0x05,0x00,0x03,0x00,0x00};
 
 /* rf register type II card */
 unsigned char radio_II_chan[]  = {0x54,0x80,0x09/* patch */,0xa0,0x00,0x00};
+
 /* rf register type III card */
-unsigned char radio_III_chan[] = {0x32,0x20,0x28,0x01,0xc1,0x1b};
+/* LMX3161 Single Chip Radio Transceiver, National Semiconductors */
+unsigned char radio_III_chan[] = {0x32, 0x20,0x28, 0x01,0xc1,0x1b};
+/*                           LSB |    |          | 
+ *                               |C1=0|   C1=0   |    C1=1
+ *                               |C2=1|   C2=0   |    C2=1 (X)
+ *                               |R=12| 0x28:A=10| F1  =0 presc 32/33
+ *                               |    | 0x20:B=32| F2  =1 VCO pos
+ *                               |    |          | F3  =1 high charge pump current
+ *                               |    |          | F4  =0 charge pump not TRI-STATE
+ *                               |    |          | F6  =0 RX on
+ *                               |    |          | F7  =1 TX off
+ *                               |    |          | F8  =0 pin 20 low
+ *                               |    |          | F9  =0 pin 22 low
+ *                               |    |          | F10 =0 pin 23 low
+ *                               |    |          | F11-F12: power down SW controlled
+ *                               |    |          | F13 =1 high demod out gain
+ *                               |    |          | F14-F18: +1V DC offset               
+ *                           MSB |    |          | 
+ */
 
 /* dip register */
 unsigned char dip_register[] = {0x15,0xa0,0xff,0x00/* &0x3f */,0x5f,0x04,0x00};
