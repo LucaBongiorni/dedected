@@ -31,7 +31,7 @@ unsigned char radio_II_chan[]  = {0x54,0x80,0x09/* patch */,0xa0,0x00,0x00};
 
 /* rf register type III card */
 /* LMX3161 Single Chip Radio Transceiver, National Semiconductors */
-unsigned char radio_III_chan[] = {0x32, 0x20,0x28, 0x01,0xc1,0x1b};
+unsigned char radio_III_chan[] = {0x32, 0x20,0x28, 0x0d,0x41,0x1b};
 /*                           LSB |    |          | 
  *                               |C1=0|   C1=0   |    C1=1
  *                               |C2=1|   C2=0   |    C2=1 (X)
@@ -46,7 +46,7 @@ unsigned char radio_III_chan[] = {0x32, 0x20,0x28, 0x01,0xc1,0x1b};
  *                               |    |          | F10 =0 pin 23 low
  *                               |    |          | F11-F12: power down SW controlled
  *                               |    |          | F13 =1 high demod out gain
- *                               |    |          | F14-F18: +1V DC offset               
+ *                               |    |          | F14-F18: -1.625V DC offset               
  *                           MSB |    |          | 
  */
 
