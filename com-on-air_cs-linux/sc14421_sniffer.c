@@ -494,9 +494,10 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 
 					if ( (SC14421_READ(1+memofs) & 0xc0) == 0xc0) /* Checksum ok */
 					{
+						unsigned char bfok = ((SC14421_READ(1+memofs) & 0x03) == 0x03)<<7; /* BField Checksum ok */
+
 						struct sniffed_packet packet;
 						packet.rssi = SC14421_READ(memofs);
-						//packet.bfok = ((SC14421_READ(1+memofs) & 0x03) == 0x03);
 						packet.channel = config->slottable[a].channel;
 						packet.slot = a;
 						memcpy(packet.data,fppacket,5);
@@ -523,9 +524,9 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 						/* if (dev->open) */
 						{
 							if(config->framenumber)
-								packet.framenumber = config->framenumber-1;
+								packet.frameflags = (config->framenumber-1)|bfok;
 							else
-								packet.framenumber = 7;
+								packet.frameflags = 7|bfok;
 
 							packet.timestamp = dev->irq_timestamp;
 							ret = kfifo_put(dev->rx_fifo, (unsigned char*) &packet, sizeof(struct sniffed_packet));
@@ -593,10 +594,10 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 
 					if ( (SC14421_READ(1+memofs) & 0xc0) == 0xc0)		/* Checksum ok */
 					{
-						struct sniffed_packet packet;
+						unsigned char bfok = ((SC14421_READ(1+memofs) & 0x03) == 0x03)<<7; /* BField Checksum ok */
 
+						struct sniffed_packet packet;
 						packet.rssi = SC14421_READ(memofs);
-						//packet.bfok = ((SC14421_READ(1+memofs) & 0x03) == 0x03);
 						packet.channel = config->slottable[a].channel;
 						packet.slot = a;
 						memcpy(packet.data, pppacket, 5);
@@ -610,9 +611,9 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 						/* if (dev->open) */
 						{
 							if(config->framenumber)
-								packet.framenumber = config->framenumber-1;
+								packet.frameflags = (config->framenumber-1)|bfok;
 							else
-								packet.framenumber = 7;
+								packet.frameflags = 7|bfok;
 
 							packet.timestamp = dev->irq_timestamp;
 							ret = kfifo_put(

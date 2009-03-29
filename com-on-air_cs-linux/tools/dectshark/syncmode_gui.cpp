@@ -2,6 +2,7 @@
 
 
 packetparser pparser;
+packetsaver  psaver;
 
 
 
@@ -258,6 +259,7 @@ void *syncthread(void *threadid)
 	if (ioctl(dev, COA_IOCTL_CHAN, &channel))
 		printf("couldn't set channel\n");
 
+	psaver.openfilerfpi(RFPI);
 
 	while (0xDEC + 'T')
 	{
@@ -298,6 +300,7 @@ void process_dect_data(int dev)
 
 	while ( sizeof(packet) == read(dev, &packet, sizeof(packet)))
 	{
+		psaver.savepacket(packet);
 		pparser.parsepacket(packet);
 	}
 }

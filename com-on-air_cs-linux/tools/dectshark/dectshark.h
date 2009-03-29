@@ -1,3 +1,6 @@
+#if !defined(DECTSHARK_GUI_H)
+#define DECTSHARK_GUI_H 
+
 #include <ncurses.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -18,6 +21,7 @@
 #include <sys/stat.h>
 #include <sys/select.h>
 #include <fcntl.h>
+#include <pcap.h>
 
 #include "com_on_air_user.h"
 
@@ -33,4 +37,18 @@ void printnil(char *,...);
 #define LOG printf
 #else
 #define LOG printnil
+#endif
+
+
+struct sniffed_packet
+{
+	unsigned char rssi;
+	unsigned char channel;
+	unsigned char slot;
+	unsigned char frameflags;
+	struct timespec   timestamp;
+	unsigned char data[53];
+};
+
+
 #endif

@@ -3,16 +3,6 @@
 
 #include "dectshark.h"
 
-struct sniffed_packet
-{
-	unsigned char rssi;
-	unsigned char channel;
-	unsigned char slot;
-	unsigned char framenumber;
-//	unsigned char bfok;
-	struct timespec   timestamp;
-	unsigned char data[53];
-};
 
 
 struct slotinfo_str
@@ -45,6 +35,7 @@ protected:
 	syncinfo_str syncinfo;
 
 	int bfieldactive(sniffed_packet packet);
+	int bfieldok(sniffed_packet packet);
 	void processrfpi(sniffed_packet packet);
 };
 

@@ -36,7 +36,12 @@ void packetparser::parsepacket(sniffed_packet packet)
 		syncinfo.slot[slot].afields++;
 
 		if(bfieldactive(packet))
+		{
 			syncinfo.slot[slot].bfields++;
+
+			if(!bfieldok(packet))
+				syncinfo.slot[slot].berrors++;
+		}
 
 		syncinfo.slot[slot].channel=packet.channel;
 		syncinfo.slot[slot].lastrssi=packet.rssi;
@@ -55,6 +60,14 @@ int packetparser::bfieldactive(sniffed_packet packet)
 {
 	if ((packet.data[5] & 0x0e) != 0x0e)
 		return 1;
+	return 0;
+}
+
+int packetparser::bfieldok(sniffed_packet packet)
+{
+	if(packet.frameflags&0xf0)
+		return 1;
+
 	return 0;
 }
 

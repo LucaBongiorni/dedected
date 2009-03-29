@@ -4,6 +4,7 @@
 #include "dectshark.h"
 #include "mode_gui.h"
 #include "packetparser.h"
+#include "packetsaver.h"
 
 void *syncthread(void *threadid);
 

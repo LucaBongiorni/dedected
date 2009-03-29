@@ -858,7 +858,7 @@ void process_dect_data()
 				pcap_packet[15] = cli.packet.channel;
 				pcap_packet[16] = 0x00;
 				pcap_packet[17] = cli.packet.slot;
-				pcap_packet[18] = cli.packet.framenumber;
+				pcap_packet[18] = cli.packet.frameflags&0x0f;
 				pcap_packet[19] = cli.packet.rssi;
 				memcpy(&pcap_packet[20], cli.packet.data, 53);
 
