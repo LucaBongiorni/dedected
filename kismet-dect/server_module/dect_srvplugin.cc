@@ -339,6 +339,10 @@ public:
 			_MSG("Packetsource::Dect expected option 'device' for serial dev",
 				 MSGFLAG_PRINTERROR);
 			return -1;
+		} else {
+			_MSG("Packetsource::Dect defaulting to DECT device /dev/coa", 
+				 MSGFLAG_INFO);
+			serialdevice = "/dev/coa";
 		}
 	}
 
