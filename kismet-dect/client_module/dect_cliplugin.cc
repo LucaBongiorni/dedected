@@ -139,10 +139,7 @@ public:
                                "S       - Sort by view count (descending)\n"
                                "Q       - Quit\n"
                                "<enter> - Sync with selected station and dump calls\n";
-            Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
-            ma->Position(2, 2, 21, 70);
-            ma->ConfigureAlert(help_title, help_text);
-            globalreg->panel_interface->AddPanel(ma);
+			globalreg->panel_interface->RaiseAlert("Help", help_text);
             return 0;
         }
         if (in_key == 'L') {
@@ -154,24 +151,24 @@ public:
             string cmd("DECT 0 0 0 " + s[2]);
             if (globalreg && 
                 globalreg->panel_interface && 
-                globalreg->panel_interface->FetchFirstNetclient()) {
-                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand(cmd.c_str());
+                globalreg->panel_interface->FetchNetClient()) {
+                globalreg->panel_interface->FetchNetClient()->InjectCommand(cmd.c_str());
             }
             return 0;
         }
         if (in_key == 'U') {
             if (globalreg && 
                 globalreg->panel_interface && 
-                globalreg->panel_interface->FetchFirstNetclient()) {
-                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 0 1 0");
+                globalreg->panel_interface->FetchNetClient()) {
+                globalreg->panel_interface->FetchNetClient()->InjectCommand("DECT 0 1 0");
             }
             return 0;
         }
         if (in_key == 'F') {
             if (globalreg && 
                 globalreg->panel_interface && 
-                globalreg->panel_interface->FetchFirstNetclient()) {
-                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 1 0 0");
+                globalreg->panel_interface->FetchNetClient()) {
+                globalreg->panel_interface->FetchNetClient()->InjectCommand("DECT 1 0 0");
             }
             mode = MODE_ASYNC_FP_SCAN;
             if (ddata) {
@@ -183,8 +180,8 @@ public:
         if (in_key == 'A') {
             if (globalreg && 
                 globalreg->panel_interface && 
-                globalreg->panel_interface->FetchFirstNetclient()) {
-               globalreg->panel_interface->FetchFirstNetclient()->InjectCommand("DECT 1 1 0");
+                globalreg->panel_interface->FetchNetClient()) {
+               globalreg->panel_interface->FetchNetClient()->InjectCommand("DECT 1 1 0");
             }
             mode = MODE_ASYNC_PP_SCAN;
             if (ddata) {
@@ -202,11 +199,8 @@ public:
                 current_mode = "Async PP Scan";
             }
             string mode_text = "Current mode is: " + current_mode;
-                               
-            Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
-            ma->Position(6, 10, 5, 45);
-            ma->ConfigureAlert(mode_title, mode_text);
-            globalreg->panel_interface->AddPanel(ma);
+
+			globalreg->panel_interface->RaiseAlert(mode_title, mode_text);
             return 0;
         }
         if (in_key == 'i') {
@@ -401,8 +395,8 @@ int DectListerButtonCB(COMPONENT_CALLBACK_PARMS)
             _MSG(cmd, MSGFLAG_INFO);
             if (globalreg &&
                 globalreg->panel_interface &&
-                globalreg->panel_interface->FetchFirstNetclient()) {
-                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand(cmd);
+                globalreg->panel_interface->FetchNetClient()) {
+                globalreg->panel_interface->FetchNetClient()->InjectCommand(cmd);
             }
             return 1;
         }
@@ -419,15 +413,14 @@ int DectListerButtonCB(COMPONENT_CALLBACK_PARMS)
                 _MSG(cmd, MSGFLAG_INFO);
                 if (globalreg &&
                     globalreg->panel_interface &&
-                    globalreg->panel_interface->FetchFirstNetclient()) {
-                    globalreg->panel_interface->FetchFirstNetclient()->InjectCommand(cmd);
+                    globalreg->panel_interface->FetchNetClient()) {
+                    globalreg->panel_interface->FetchNetClient()->InjectCommand(cmd);
                 }
-                Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
-                ma->Position((LINES / 2) - 8, (COLS / 2) - 25, 10, 50);
-                ma->ConfigureAlert("", "Syncing to chosen station " + data[0]
-                                   + "\n\nUse key 'F' to get back to FP scan"
-                                   + "\nUse key 'A' to get back to PP scan");
-                globalreg->panel_interface->AddPanel(ma);
+
+				globalreg->panel_interface->RaiseAlert("Syncing to station",
+								"Syncing to chosen station " + data[0]
+								+ "\n\nUse key 'F' to get back to FP scan"
+								+ "\nUse key 'A' to get back to PP scan");
                 mode = MODE_SYNC_CALL_SCAN;
             }
         }
@@ -439,8 +432,8 @@ int DectListerButtonCB(COMPONENT_CALLBACK_PARMS)
             _MSG(cmd, MSGFLAG_INFO);
             if (globalreg &&
                 globalreg->panel_interface &&
-                globalreg->panel_interface->FetchFirstNetclient()) {
-                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand(cmd);
+                globalreg->panel_interface->FetchNetClient()) {
+                globalreg->panel_interface->FetchNetClient()->InjectCommand(cmd);
             }
             return 1;
         }
@@ -457,15 +450,14 @@ int DectListerButtonCB(COMPONENT_CALLBACK_PARMS)
                 _MSG(cmd, MSGFLAG_INFO);
                 if (globalreg &&
                     globalreg->panel_interface &&
-                    globalreg->panel_interface->FetchFirstNetclient()) {
-                    globalreg->panel_interface->FetchFirstNetclient()->InjectCommand(cmd);
+                    globalreg->panel_interface->FetchNetClient()) {
+                    globalreg->panel_interface->FetchNetClient()->InjectCommand(cmd);
                 }
-                Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
-                ma->Position((LINES / 2) - 8, (COLS / 2) - 25, 10, 50);
-                ma->ConfigureAlert("", "Syncing to chosen station " + data[0]
+
+				globalreg->panel_interface->RaiseAlert("Syncing to station",
+                				   "Syncing to chosen station " + data[0]
                                    + "\n\nUse key 'F' to get back to FP scan"
                                    + "\nUse key 'A' to get back to PP scan");
-                globalreg->panel_interface->AddPanel(ma);
                 mode = MODE_SYNC_CALL_SCAN;
             }
         }
@@ -477,29 +469,28 @@ int DectListerButtonCB(COMPONENT_CALLBACK_PARMS)
             _MSG(cmd, MSGFLAG_INFO);
             if (globalreg &&
                 globalreg->panel_interface &&
-                globalreg->panel_interface->FetchFirstNetclient()) {
-                globalreg->panel_interface->FetchFirstNetclient()->InjectCommand(cmd);
+                globalreg->panel_interface->FetchNetClient()) {
+                globalreg->panel_interface->FetchNetClient()->InjectCommand(cmd);
             }
             return 1;
         }
-        Kis_ModalAlert_Panel *ma = new Kis_ModalAlert_Panel(globalreg, globalreg->panel_interface);
-        ma->Position((LINES / 2) - 5, (COLS / 2) - 25, 10, 50);
         if (ddata->sync_station.size() < 1) {
             _MSG("No synced station recored in sync mode", MSGFLAG_ERROR);
             return 1;
         }
         if (data[0] == ddata->sync_station[0]) {
-            ma->ConfigureAlert("", "Already synced to station " + data[0]
+			globalreg->panel_interface->RaiseAlert("Already synced", 
+            					   "Already synced to station " + data[0]
                                    + "\n\nUse key 'F' to get back to FP scan"
                                    + "\nUse key 'A' to get back to PP scan");
         } else {
-            ma->ConfigureAlert("", "Not syncing to station " + data[0]
+			globalreg->panel_interface->RaiseAlert("Already synced", 
+            					   "Not syncing to station " + data[0]
                                    + ", already synced to "
                                    + ddata->sync_station[0]
                                    + "\n\nUse key 'F' to get back to FP scan"
                                    + "\nUse key 'A' to get back to PP scan");
         }
-        globalreg->panel_interface->AddPanel(ma);
     }
 
     return 0;

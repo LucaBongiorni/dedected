@@ -3,7 +3,7 @@
 # Installation goes here
 KIS_DEST_DIR ?= /usr/local
 # You will need kismet newcore sources
-KIS_SRC_DIR ?= /usr/src/kismet-newcore
+KIS_SRC_DIR ?= /usr/src/kismet
 KIS_INC_DIR ?= $(KIS_SRC_DIR)
 
 HOME	= .
