@@ -157,7 +157,7 @@ int Tracker_Dect::chain_handler(kis_packet *in_pack) {
 		fp->channel = di->sdata.channel;
 		fp->rfpi = rfpi_mac;
 		tracked_fp[rfpi_mac] = fp;
-		_MSG("debug - dect, new tracked FP " + fpi_mac.Mac2String().substr(0, 14), MSGFLAG_INFO);
+		_MSG("debug - dect, new tracked FP " + rfpi_mac.Mac2String().substr(0, 14), MSGFLAG_INFO);
 	} else {
 		fp = dtfi->second;
 	}
