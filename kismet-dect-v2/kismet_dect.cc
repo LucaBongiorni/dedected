@@ -182,7 +182,7 @@ extern "C" {
 	int kis_plugin_info(plugin_usrdata *data) {
 		data->pl_name = "DECT";
 		data->pl_version = "2.0.0";
-		data->pl_description = "DECT phy plugin";
+		data->pl_description = "deDECTed com-on-air_cs plugin";
 		data->pl_unloadable = 0; // We can't be unloaded because we defined a source
 		data->plugin_register = dect_register;
 		data->plugin_unregister = dect_unregister;
