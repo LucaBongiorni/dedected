@@ -18,6 +18,8 @@
 #include <kis_panel_windows.h>
 #include <kis_panel_widgets.h>
 
+#include <version.h>
+
 #define KCLI_DECT_CHANNEL_FIELDS "rfpi,rssi,channel,first_seen,last_seen,count_seen"
 
 #define SORT_BY_RFPI        0
@@ -491,6 +493,15 @@ int panel_plugin_init(GlobalRegistry *globalreg, KisPanelPluginData *pdata) {
 	DectMenuCB(globalreg, -1, ddata);
 
 	return 1;
+}
+
+void kis_revision_info(panel_plugin_revision *prev) {
+	if (prev->version_api_revision >= 1) {
+		prev->version_api_revision = 1;
+		prev->major = string(VERSION_MAJOR);
+		prev->minor = string(VERSION_MINOR);
+		prev->tiny = string(VERSION_TINY);
+	}
 }
 
 }
