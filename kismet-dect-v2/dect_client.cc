@@ -70,7 +70,7 @@ bool less_by_RSSI(const vector<string> &v1, const vector<string> &v2)
     return false;
 }
 
-void DectDetailsProtoDECT(CLIPROTO_CB_PARMS) 
+void DectDetailsProtoDECTFP(CLIPROTO_CB_PARMS)
 {
     KisPanelPluginData *pdata = (KisPanelPluginData *)auxptr;
     dect_data *ddata = (dect_data *)pdata->pluginaux;
@@ -157,8 +157,8 @@ void DectCliConfigured(CLICONF_CB_PARMS)
     KisPanelPluginData *pdata = (KisPanelPluginData *) auxptr;
     dect_data *ddata = (dect_data *) pdata->pluginaux;
 
-    if (kcli->RegisterProtoHandler("DECT", KCLI_DECT_CHANNEL_FIELDS,
-                                   DectDetailsProtoDECT, pdata) < 0) {
+    if (kcli->RegisterProtoHandler("DECTFP", KCLI_DECT_CHANNEL_FIELDS,
+                                   DectDetailsProtoDECTFP, pdata) < 0) {
         _MSG("Could not register DECT protocol with remote server", 
              MSGFLAG_ERROR);
 
