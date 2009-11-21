@@ -17,8 +17,8 @@
 
 	DECT source v2
 	(c) 2008 by Mike Kershaw <dragorn (at) kismetwireless (dot) net,
-	            Jake Appelbaum <ioerror (at) appelbaum (dot) net,
-				Christian Fromme <kaner (at) strace (dot) org
+	Jacob Appelbaum <jacob (at) appelbaum (dot) net,
+	Christian Fromme <kaner (at) strace (dot) org
 */
 
 #include "config.h"
