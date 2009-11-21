@@ -36,7 +36,7 @@ static int mode = MODE_ASYNC_FP_SCAN;
 
 struct dect_data {
     Kis_Scrollable_Table *dtable;
-	Kis_Free_Text *modetxt;
+    Kis_Free_Text *modetxt;
 
     vector<vector <string> > info_vec_fp; 
     vector<vector <string> > info_vec_pp;
@@ -44,14 +44,14 @@ struct dect_data {
     int addref;
     int numrows;
 
-	int view;
+    int view;
 
-	int mn_dect, mi_show, mi_showd, mi_showc, mi_fpscan, mi_ppscan, 
-		mi_sort_rfpi, mi_sort_rfpi_desc, mi_sort_rssi, mi_sort_rssi_desc, 
-		mi_sort_channel, mi_sort_view, mi_sort_view_desc;
-	Kis_Menu *menu;
+    int mn_dect, mi_show, mi_showd, mi_showc, mi_fpscan, mi_ppscan, 
+        mi_sort_rfpi, mi_sort_rfpi_desc, mi_sort_rssi, mi_sort_rssi_desc, 
+        mi_sort_channel, mi_sort_view, mi_sort_view_desc;
+    Kis_Menu *menu;
 
-	KisPanelPluginData *pdata;
+    KisPanelPluginData *pdata;
 };
 
 bool less_by_RSSI(const vector<string> &v1, const vector<string> &v2)
@@ -65,7 +65,7 @@ bool less_by_RSSI(const vector<string> &v1, const vector<string> &v2)
             return true;
         }
     }
-    return false; 
+    return false;
 }
 
 void DectDetailsProtoDECT(CLIPROTO_CB_PARMS) 
@@ -93,7 +93,7 @@ void DectDetailsProtoDECT(CLIPROTO_CB_PARMS)
     ctime_r(&last, last_s);
     inf[3] = first_s;
     inf[4] = last_s;
-    
+
     if (mode == MODE_ASYNC_FP_SCAN) {
         vector<vector <string> >::iterator i = ddata->info_vec_fp.begin();
         for (int j = 0; i < ddata->info_vec_fp.end(); ++i, ++j) {
@@ -110,27 +110,27 @@ void DectDetailsProtoDECT(CLIPROTO_CB_PARMS)
         if (descending) {
             reverse(ddata->info_vec_fp.begin(), ddata->info_vec_fp.end());
         }
-	} else if (mode == MODE_ASYNC_PP_SCAN) {
-		vector<vector <string> >::iterator i = ddata->info_vec_pp.begin();
-		for (int j = 0; i < ddata->info_vec_pp.end(); ++i, ++j) {
-			if ((*i)[0] == inf[0]) {
-				match = true;
-				// Update
-				ddata->info_vec_pp[j] = inf;
-			}
-		}
-		if (!match) {
-			ddata->info_vec_pp.push_back(inf);
-		}
-		sort(ddata->info_vec_pp.begin(), ddata->info_vec_pp.end(), less_by_RSSI);   
-		if (descending) {
-			reverse(ddata->info_vec_pp.begin(), ddata->info_vec_pp.end());
-		}
-	}
+        } else if (mode == MODE_ASYNC_PP_SCAN) {
+                vector<vector <string> >::iterator i = ddata->info_vec_pp.begin();
+                for (int j = 0; i < ddata->info_vec_pp.end(); ++i, ++j) {
+                        if ((*i)[0] == inf[0]) {
+                                match = true;
+                                // Update
+                                ddata->info_vec_pp[j] = inf;
+                        }
+                }
+                if (!match) {
+                    ddata->info_vec_pp.push_back(inf);
+                }
+                sort(ddata->info_vec_pp.begin(), ddata->info_vec_pp.end(), less_by_RSSI);   
+                if (descending) {
+                    reverse(ddata->info_vec_pp.begin(), ddata->info_vec_pp.end());
+                }
+        }
 
-	ddata->dtable->Clear();
+        ddata->dtable->Clear();
 
-	if (mode == MODE_ASYNC_FP_SCAN) {
+        if (mode == MODE_ASYNC_FP_SCAN) {
 		vector<vector <string> >::iterator i = ddata->info_vec_fp.begin();
 		for (int j = 0; i < ddata->info_vec_fp.end(); ++i, ++j) {
 			ddata->dtable->AddRow(j, (*i));
@@ -140,9 +140,9 @@ void DectDetailsProtoDECT(CLIPROTO_CB_PARMS)
 		for (int j = 0; i < ddata->info_vec_pp.end(); ++i, ++j) {
 			ddata->dtable->AddRow(j, (*i));
 		}
-	}
+        }
 
-	ddata->dtable->DrawComponent();
+        ddata->dtable->DrawComponent();
 }
 
 void dect_prompt_nodect(KIS_PROMPT_CB_PARMS) {
