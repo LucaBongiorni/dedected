@@ -41,7 +41,7 @@ PacketSource_Dect::PacketSource_Dect(GlobalRegistry *in_globalreg, string in_int
 
 	serial_fd = -1;
 	sync = false;
-	scan_mode = MODE_ASYNC_FP_SCAN;
+	scan_mode = -1;
 
 	ParseOptions(in_opts);
 }
@@ -271,6 +271,8 @@ int PacketSource_Dect::Poll() {
 	if (callchunk) 
 		newpack->insert(_PCM(PACK_COMP_LINKFRAME), callchunk);
 	globalreg->packetchain->ProcessPacket(newpack);
+
+	// printf("debug - dect newpack\n");
 
 	return 1;
 }
