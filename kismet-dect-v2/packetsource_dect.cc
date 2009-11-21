@@ -225,7 +225,7 @@ int PacketSource_Dect::Poll() {
 	int rbytes = -1;
 	dect_packinfo *pi = new dect_packinfo;
 	kis_packet *newpack;
-	kis_datachunk *callchunk = NULL; 
+	kis_datachunk *dectchunk = NULL; 
 
 	pi->sync = sync;
 	pi->scanmode = scan_mode;
@@ -239,6 +239,15 @@ int PacketSource_Dect::Poll() {
 			delete(pi);
 			return 0;
 		}
+
+		// Make a scan chunk
+		dectchunk = new kis_datachunk;
+		dectchunk->length = sizeof(dect_data_scan_t);
+		dectchunk->data = new uint8_t[dectchunk->length];
+		memcpy(dectchunk->data, &(pi->sdata), dectchunk->length);
+		dectchunk->source_id = source_id;
+		dectchunk->dlt = KDLT_DECTSCAN;
+
 	} else if (scan_mode == MODE_SYNC_CALL_SCAN) {
 		if ((rbytes = read(serial_fd, &(pi->pdata), sizeof(pp_packet_t))) !=
 			 sizeof(pp_packet_t)) {
@@ -253,12 +262,12 @@ int PacketSource_Dect::Poll() {
 			}
 
 			// Make a data chunk
-			callchunk = new kis_datachunk;
-			callchunk->length = 53;
-			callchunk->data = new uint8_t[callchunk->length];
-			memcpy(callchunk->data, pi->pdata.data, callchunk->length);
-			callchunk->source_id = source_id;
-			callchunk->dlt = KDLT_DECT;
+			dectchunk = new kis_datachunk;
+			dectchunk->length = 53;
+			dectchunk->data = new uint8_t[dectchunk->length];
+			memcpy(dectchunk->data, pi->pdata.data, dectchunk->length);
+			dectchunk->source_id = source_id;
+			dectchunk->dlt = KDLT_DECTCALL;
 		}
 	} else {
 		// Unknown mode during poll
@@ -267,9 +276,14 @@ int PacketSource_Dect::Poll() {
 	}
 
 	newpack = globalreg->packetchain->GeneratePacket();
+
+	kis_ref_capsource *csrc_ref = new kis_ref_capsource;
+	csrc_ref->ref_source = this;
+	newpack->insert(_PCM(PACK_COMP_KISCAPSRC), csrc_ref);
+
 	newpack->insert(pack_comp_dect, pi);
-	if (callchunk) 
-		newpack->insert(_PCM(PACK_COMP_LINKFRAME), callchunk);
+	if (dectchunk) 
+		newpack->insert(_PCM(PACK_COMP_LINKFRAME), dectchunk);
 	globalreg->packetchain->ProcessPacket(newpack);
 
 	// printf("debug - dect newpack\n");

@@ -29,7 +29,8 @@
 #include <packet.h>
 
 // Internal DLT - -0xDEC
-#define KDLT_DECT		-3564
+#define KDLT_DECTCALL	-3564
+#define KDLT_DECTSCAN	-3565
 
 extern int pack_comp_dect;
 

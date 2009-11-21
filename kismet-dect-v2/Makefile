@@ -15,18 +15,27 @@ CFLAGS 	+= -I/usr/include -I$(KIS_INC_DIR) -g -fPIC
 SRVOBJS = packetsource_dect.o tracker_dect.o kismet_dect.o
 SRVOUT	= dedected.so
 
-all:	$(SRVOUT)
+CLIOBJS = dect_client.o
+CLIOUT	= dect_client.so
+
+all:	$(SRVOUT) $(CLIOUT)
 
 $(SRVOUT):	$(SRVOBJS)
 	$(LD) $(PLUGINLDFLAGS) $(SRVOBJS) -o $(SRVOUT) $(LIBS)
 
-install:	$(SRVOUT) 
+$(CLIOUT):	$(CLIOBJS)
+	$(LD) $(PLUGINLDFLAGS) $(CLIOBJS) -o $(CLIOUT) $(LIBS)
+
+install:	$(SRVOUT) $(CLIOUT)
 	mkdir -p $(DESTDIR)$(prefix)/lib/kismet/
 	install -o $(INSTUSR) -g $(INSTGRP) -m 644 $(SRVOUT) $(DESTDIR)$(prefix)/lib/kismet/$(SRVOUT)
+	mkdir -p $(DESTDIR)$(prefix)/lib/kismet_client/
+	install -o $(INSTUSR) -g $(INSTGRP) -m 644 $(CLIOUT) $(DESTDIR)$(prefix)/lib/kismet_client/$(CLIOUT)
 
-userinstall:	$(SRVOUT)
+userinstall:	$(SRVOUT) $(CLIOUT)
 	mkdir -p ${HOME}/.kismet/plugins/
 	install -v $(SRVOUT) ${HOME}/.kismet/plugins/$(SRVOUT)
+	install -v -D $(CLIOUT) ${HOME}/.kismet/client_plugins/$(CLIOUT)
 
 clean:
 	@-rm -f *.o

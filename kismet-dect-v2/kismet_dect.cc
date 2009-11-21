@@ -60,7 +60,19 @@ kis_datachunk *dumpfile_dect_filter(DUMPFILE_PCAP_FILTER_PARMS) {
 	if (link == NULL)
 		return NULL;
 
-	if (link->dlt == KDLT_DECT)
+	if (link->dlt == KDLT_DECTCALL)
+		return link;
+
+	return NULL;
+}
+
+kis_datachunk *dumpfile_dect_scanfilter(DUMPFILE_PCAP_FILTER_PARMS) {
+	kis_datachunk *link = (kis_datachunk *) in_pack->fetch(_PCM(PACK_COMP_LINKFRAME));
+
+	if (link == NULL)
+		return NULL;
+
+	if (link->dlt == KDLT_DECTSCAN)
 		return link;
 
 	return NULL;
@@ -164,6 +176,9 @@ int dect_register(GlobalRegistry *in_globalreg) {
 	pack_comp_dect =
 		globalreg->packetchain->RegisterPacketComponent("DECT");
 
+#if 0
+	// Call logging to be implemented elsewhere for per-call pcap files
+
 	// dumpfile that inherits from the global one, with a hack in the matcher to
 	// pick the dect packets out but log them as EN10MB
 	Dumpfile_Pcap *dectdump;
@@ -171,6 +186,13 @@ int dect_register(GlobalRegistry *in_globalreg) {
 		new Dumpfile_Pcap(globalreg, "pcapdect", DLT_EN10MB,
 						  globalreg->pcapdump, dumpfile_dect_filter, NULL);
 	dectdump->SetVolatile(1);
+#endif
+
+	// Scan logging file, EN10MB structured from dect_data_scan_t, volatile, 
+	// inheriting the PPI callbacks
+	Dumpfile_Pcap *dectscandump = 
+		new Dumpfile_Pcap(globalreg, "scandect", DLT_EN10MB,
+						  globalreg->pcapdump, dumpfile_dect_scanfilter, NULL);
 
 	Tracker_Dect *trackdect;
 	trackdect = new Tracker_Dect(globalreg);
