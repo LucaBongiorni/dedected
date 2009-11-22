@@ -34,12 +34,18 @@
 enum DECTFP_fields {
 	DECTFP_rfpi, DECTFP_firsttime, DECTFP_lasttime, DECTFP_lastrssi,
 	DECTFP_num, DECTFP_channel, 
+	DECTFP_gpsfixed, DECTFP_minlat, DECTFP_maxlat, DECTFP_minlon, DECTFP_maxlon,
+	DECTFP_minalt, DECTFP_maxalt, DECTFP_minspd, DECTFP_maxspd, DECTFP_agglat,
+	DECTFP_agglon, DECTFP_aggalt, DECTFP_aggpoints,
 	DECTFP_maxfield
 };
 
 const char *DECTFP_fields_text[] = {
-	"rfpi", "firsttime", "lasttime", "lastrssi",
-	"num", "channel",
+	"rfpi", "firsttime", "lasttime", "lastrssi", 
+	"num", "channel", 
+	"gpsfixed", "minlat", "maxlat", "minlon", "maxlon", 
+	"minalt", "maxalt", "minspd", "maxspd", "agglat",
+	"agglon", "aggalt", "aggpoints",
 	NULL
 };
 
@@ -82,6 +88,45 @@ int Protocol_DECTFP(PROTO_PARMS) {
 				break;
 			case DECTFP_channel:
 				osstr << fp->channel;
+				break;
+			case DECTFP_gpsfixed:
+				osstr << fp->gpsdata.gps_valid;
+				break;
+			case DECTFP_minlat:
+				osstr << fp->gpsdata.min_lat;
+				break;
+			case DECTFP_maxlat:
+				osstr << fp->gpsdata.max_lat;
+				break;
+			case DECTFP_minlon:
+				osstr << fp->gpsdata.min_lon;
+				break;
+			case DECTFP_maxlon:
+				osstr << fp->gpsdata.max_lon;
+				break;
+			case DECTFP_minalt:
+				osstr << fp->gpsdata.min_alt;
+				break;
+			case DECTFP_maxalt:
+				osstr << fp->gpsdata.max_alt;
+				break;
+			case DECTFP_minspd:
+				osstr << fp->gpsdata.min_spd;
+				break;
+			case DECTFP_maxspd:
+				osstr << fp->gpsdata.max_spd;
+				break;
+			case DECTFP_agglat:
+				osstr << fp->gpsdata.aggregate_lat;
+				break;
+			case DECTFP_agglon:
+				osstr << fp->gpsdata.aggregate_lon;
+				break;
+			case DECTFP_aggalt:
+				osstr << fp->gpsdata.aggregate_alt;
+				break;
+			case DECTFP_aggpoints:
+				osstr << fp->gpsdata.aggregate_points;
 				break;
 		}
 
@@ -150,6 +195,9 @@ int Tracker_Dect::chain_handler(kis_packet *in_pack) {
 
 	map<mac_addr, dect_tracked_fp *>::iterator dtfi = tracked_fp.find(rfpi_mac);
 
+	kis_gps_packinfo *gpsinfo = (kis_gps_packinfo *) 
+		in_pack->fetch(_PCM(PACK_COMP_GPS));
+
 	if (dtfi == tracked_fp.end()) {
 		fp = new dect_tracked_fp;
 
@@ -157,7 +205,7 @@ int Tracker_Dect::chain_handler(kis_packet *in_pack) {
 		fp->channel = di->sdata.channel;
 		fp->rfpi = rfpi_mac;
 		tracked_fp[rfpi_mac] = fp;
-		_MSG("debug - dect, new tracked FP " + rfpi_mac.Mac2String().substr(0, 14), MSGFLAG_INFO);
+		_MSG("debug - dect, new tracked FP " + rfpi_mac.Mac2String().substr(0, 14) + " chan " + IntToString(fp->channel) + " sdata " + IntToString(di->sdata.channel), MSGFLAG_INFO);
 	} else {
 		fp = dtfi->second;
 	}
@@ -172,6 +220,11 @@ int Tracker_Dect::chain_handler(kis_packet *in_pack) {
 	fp->last_time = globalreg->timestamp.tv_sec;
 	fp->num_seen++;
 	fp->last_rssi = di->sdata.RSSI;
+
+	if (gpsinfo != NULL) {
+		fp->gpsdata += gpsinfo;
+	}
+
 	fp->dirty = 1;
 
 	return 0;

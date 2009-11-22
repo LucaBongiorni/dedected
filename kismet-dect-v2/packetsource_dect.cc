@@ -181,8 +181,11 @@ int PacketSource_Dect::StartScanFp() {
 	if (scan_mode == MODE_ASYNC_FP_SCAN)
 		return 0;
 
+	if (sync) 
+		sync = false;
+
 	/* start sniffer mode */
-	int val = COA_MODE_SNIFF | COA_SUBMODE_SNIFF_SCANFP;
+	uint16_t val = COA_MODE_SNIFF | COA_SUBMODE_SNIFF_SCANFP;
 
 	if (ioctl(serial_fd, COA_IOCTL_MODE, &val)) {
 		_MSG("DECT packet source '" + name + "': Failed to set sniffer scan FP: " +
@@ -191,9 +194,6 @@ int PacketSource_Dect::StartScanFp() {
 	}
 
 	scan_mode = MODE_ASYNC_FP_SCAN;
-
-	if (sync) 
-		sync = false;
 
 	// Caller should turn on hopping
 	// globalreg->sourcetracker->SetSourceHopping(FetchUUID(), 1, 0);
@@ -239,6 +239,8 @@ int PacketSource_Dect::Poll() {
 			delete(pi);
 			return 0;
 		}
+
+		// printf("debug - scan %02x:%02x:%02x:%02x:%02x channel %d\n", pi->sdata.RFPI[0], pi->sdata.RFPI[1], pi->sdata.RFPI[2], pi->sdata.RFPI[3], pi->sdata.RFPI[4], pi->sdata.channel);
 
 		// Make a scan chunk
 		dectchunk = new kis_datachunk;
