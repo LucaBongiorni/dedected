@@ -37,6 +37,7 @@ enum DECTFP_fields {
 	DECTFP_gpsfixed, DECTFP_minlat, DECTFP_maxlat, DECTFP_minlon, DECTFP_maxlon,
 	DECTFP_minalt, DECTFP_maxalt, DECTFP_minspd, DECTFP_maxspd, DECTFP_agglat,
 	DECTFP_agglon, DECTFP_aggalt, DECTFP_aggpoints,
+	DECTFP_minrssi, DECTFP_maxrssi, DECTFP_peaklat, DECTFP_peaklon, DECTFP_peakalt,
 	DECTFP_maxfield
 };
 
@@ -46,6 +47,7 @@ const char *DECTFP_fields_text[] = {
 	"gpsfixed", "minlat", "maxlat", "minlon", "maxlon", 
 	"minalt", "maxalt", "minspd", "maxspd", "agglat",
 	"agglon", "aggalt", "aggpoints",
+	"minrssi", "maxrssi", "peaklat", "peaklon", "peakalt",
 	NULL
 };
 
@@ -127,6 +129,21 @@ int Protocol_DECTFP(PROTO_PARMS) {
 				break;
 			case DECTFP_aggpoints:
 				osstr << fp->gpsdata.aggregate_points;
+				break;
+			case DECTFP_minrssi:
+				osstr << fp->min_rssi;
+				break;
+			case DECTFP_maxrssi:
+				osstr << fp->max_rssi;
+				break;
+			case DECTFP_peaklat:
+				osstr << fp->peak_lat;
+				break;
+			case DECTFP_peaklon:
+				osstr << fp->peak_lon;
+				break;
+			case DECTFP_peakalt:
+				osstr << fp->peak_alt;
 				break;
 		}
 
@@ -221,9 +238,20 @@ int Tracker_Dect::chain_handler(kis_packet *in_pack) {
 	fp->num_seen++;
 	fp->last_rssi = di->sdata.RSSI;
 
-	if (gpsinfo != NULL) {
+	if (gpsinfo != NULL && gpsinfo->gps_fix) {
 		fp->gpsdata += gpsinfo;
+
+		if (fp->last_rssi > fp->max_rssi) {
+			fp->peak_lat = gpsinfo->lat;
+			fp->peak_lon = gpsinfo->lon;
+			fp->peak_alt = gpsinfo->alt;
+		}
 	}
+
+	if (fp->last_rssi < fp->min_rssi)
+		fp->min_rssi = fp->last_rssi;
+	if (fp->last_rssi > fp->max_rssi)
+		fp->max_rssi = fp->last_rssi;
 
 	fp->dirty = 1;
 

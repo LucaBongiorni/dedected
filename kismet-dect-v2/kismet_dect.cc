@@ -49,6 +49,7 @@
 
 #include "packetsource_dect.h"
 #include "tracker_dect.h"
+#include "dumpfile_decttxt.h"
 
 GlobalRegistry *globalreg = NULL;
 
@@ -193,9 +194,13 @@ int dect_register(GlobalRegistry *in_globalreg) {
 	Dumpfile_Pcap *dectscandump = 
 		new Dumpfile_Pcap(globalreg, "scandect", DLT_EN10MB,
 						  globalreg->pcapdump, dumpfile_dect_scanfilter, NULL);
+	dectscandump->SetVolatile(1);
 
 	Tracker_Dect *trackdect;
 	trackdect = new Tracker_Dect(globalreg);
+
+	Dumpfile_Decttxt *dumptxt = new Dumpfile_Decttxt(globalreg, trackdect);
+	dumptxt->SetVolatile(1);
 
 	return 1;
 }

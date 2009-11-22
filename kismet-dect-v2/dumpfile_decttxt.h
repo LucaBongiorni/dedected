@@ -21,62 +21,30 @@
 	Christian Fromme <kaner (at) strace (dot) org
 */
 
-#ifndef __TRACKER_DECT_H__
-#define __TRACKER_DECT_H__
+#ifndef __DUMPFILE_DECTTXT_H__
+#define __DUMPFILE_DECTTXT_H__
 
 #include "config.h"
 
 #include <packet.h>
 #include <gpscore.h>
+#include <configfile.h>
+#include <dumpfile.h>
 
 #include "packet_dect.h"
+#include "tracker_dect.h"
 
-// Dect basestation
-class dect_tracked_fp {
+class Dumpfile_Decttxt : public Dumpfile {
 public:
-	dect_tracked_fp() {
-		first_time = last_time = 0;
-		num_seen = 0;
-		channel = 0;
-		dirty = 0;
+	Dumpfile_Decttxt() { fprintf(stderr, "FATAL OOPS: Dumpfile_Decttxt()\n"); exit(1); }
+	Dumpfile_Decttxt(GlobalRegistry *in_globalreg, Tracker_Dect *in_tracker);
+	virtual ~Dumpfile_Decttxt();
 
-		min_rssi = 999;
-		max_rssi = -999;
-		last_rssi = 0;
-
-		peak_lat = peak_lon = peak_alt = 0;
-	}
-
-	mac_addr rfpi;
-	time_t first_time, last_time;
-	unsigned int num_seen;
-	unsigned int channel;
-	unsigned int dirty;
-
-	kis_gps_data gpsdata;
-
-	int min_rssi, max_rssi, last_rssi;
-	double peak_lat, peak_lon, peak_alt;
-};
-
-class Tracker_Dect {
-public:
-	Tracker_Dect() { fprintf(stderr, "FATAL OOPS: tracker_dect()\n"); exit(1); }
-	Tracker_Dect(GlobalRegistry *in_globalreg);
-
-	int chain_handler(kis_packet *in_pack);
-
-	void BlitFP(int in_fd);
+	virtual int Flush();
 
 protected:
-	GlobalRegistry *globalreg;
-
-	map<mac_addr, dect_tracked_fp *> tracked_fp;
-
-	int DECTFP_ref;
-	int timer_ref;
-
-	friend class Dumpfile_Decttxt;
+	FILE *txtfile;
+	Tracker_Dect *tracker;
 };
 
 #endif

@@ -12,7 +12,7 @@ PLUGINLDFLAGS += -shared -rdynamic
 LIBS	+= -lstdc++ 
 CFLAGS 	+= -I/usr/include -I$(KIS_INC_DIR) -g -fPIC
 
-SRVOBJS = packetsource_dect.o tracker_dect.o kismet_dect.o
+SRVOBJS = packetsource_dect.o tracker_dect.o dumpfile_decttxt.o kismet_dect.o
 SRVOUT	= dedected.so
 
 CLIOBJS = dect_client.o
