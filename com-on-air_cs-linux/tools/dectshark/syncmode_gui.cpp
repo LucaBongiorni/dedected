@@ -10,6 +10,8 @@ syncmode_gui::syncmode_gui(int x,int y)
 {
 	int i;
 
+	pthread_mutex_init(&mutex,NULL);
+
 	selx=sely=0;
 
 	scrw=x;

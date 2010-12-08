@@ -4,6 +4,8 @@ found_dects	founds;
 
 scanmode_gui::scanmode_gui(int x,int y)
 {
+	pthread_mutex_init(&mutex,NULL);
+
 	selected=startpos=displaypos=0;
 
 	scrw=x;
