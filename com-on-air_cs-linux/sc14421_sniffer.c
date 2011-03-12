@@ -332,11 +332,11 @@ void sniffer_sniff_scan_irq(struct coa_info *dev, int irq)
 				station[1] = rssi;
 				memcpy(&station[2], &fppacket[6], 5); /* RFPI */
 
-				ret = kfifo_put(dev->rx_fifo, station, 7);
+                                ret = kfifo_in_locked(&dev->rx_fifo, station, 7, &dev->rx_fifo_lock);
 				if (ret <= 0)
 				{
 					printk("com_on_air_cs: rx fifo full? "
-						"kfifo_put() = %d\n", ret);
+                                                "kfifo_in_locked() = %d\n", ret);
 				}
 			}
 		}
@@ -456,10 +456,10 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 					memcpy(packet.data, fppacket, 53);
 
 					packet.timestamp = dev->irq_timestamp;
-					ret = kfifo_put(dev->rx_fifo,(unsigned char*) &packet,sizeof(struct sniffed_packet));
+                                        ret = kfifo_in_locked(&dev->rx_fifo,(unsigned char*) &packet,sizeof(struct sniffed_packet), &dev->rx_fifo_lock);
 					if (ret <= 0)
 						printk("com_on_air_cs: rx fifo "
-							"full? kfifo_put() "
+                                                        "full? kfifo_in_locked() "
 							"= %d\n", ret);
 				}
 			}
@@ -529,10 +529,10 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 								packet.frameflags = 7|bfok;
 
 							packet.timestamp = dev->irq_timestamp;
-							ret = kfifo_put(dev->rx_fifo, (unsigned char*) &packet, sizeof(struct sniffed_packet));
+                                                        ret = kfifo_in_locked(&dev->rx_fifo, (unsigned char*) &packet, sizeof(struct sniffed_packet), &dev->rx_fifo_lock);
 							if (ret <= 0)
 							{
-								printk("com_on_air_cs: rx fifo full? kfifo_put() = %d\n", ret);
+                                                                printk("com_on_air_cs: rx fifo full? kfifo_in_locked() = %d\n", ret);
 							}
 						}
 
@@ -616,13 +616,14 @@ void sniffer_sniff_sync_irq(struct coa_info *dev, int irq)
 								packet.frameflags = 7|bfok;
 
 							packet.timestamp = dev->irq_timestamp;
-							ret = kfifo_put(
-								dev->rx_fifo,
+                                                        ret = kfifo_in_locked(
+                                                                &dev->rx_fifo,
 								(unsigned char*) &packet,
-								sizeof(struct sniffed_packet));
+                                                                sizeof(struct sniffed_packet),
+                                                                &dev->rx_fifo_lock);
 							if (ret <= 0)
 							{
-								printk("com_on_air_cs: rx fifo full? kfifo_put() = %d\n", ret);
+                                                                printk("com_on_air_cs: rx fifo full? kfifo_in_locked() = %d\n", ret);
 							}
 						}
 

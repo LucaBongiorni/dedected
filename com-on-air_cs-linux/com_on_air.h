@@ -16,8 +16,6 @@
 
 #include <linux/kernel.h>
 #include <linux/module.h>
-#include <pcmcia/cs_types.h>
-#include <pcmcia/cs.h>
 
 struct coa_info
 {
@@ -45,9 +43,9 @@ struct coa_info
         /* struct pp_cfg        *pp_config; */
         struct sniffer_cfg     *sniffer_config;
 
-	struct kfifo           *rx_fifo;
+        struct kfifo           rx_fifo;
 	spinlock_t             rx_fifo_lock;
-	struct kfifo           *tx_fifo;
+        struct kfifo           tx_fifo;
 	spinlock_t             tx_fifo_lock;
 };
 

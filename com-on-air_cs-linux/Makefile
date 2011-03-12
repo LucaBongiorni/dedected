@@ -1,6 +1,6 @@
 NODE:=/dev/coa
 
-PCMCIA_SLOT?=1
+PCMCIA_SLOT?=0
 
 -include pcmcia_slot.make
 

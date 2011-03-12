@@ -21,8 +21,6 @@
 #include <linux/kfifo.h>
 #include <linux/poll.h>
 
-#include <pcmcia/cs_types.h>
-#include <pcmcia/cs.h>
 #include <pcmcia/cistpl.h>
 #include <pcmcia/ciscode.h>
 #include <pcmcia/ds.h>
@@ -68,8 +66,7 @@ static int coa_open(struct inode *inode, struct file *filp)
 #define COA_IOCTL_TEST6 0xF006
 #define COA_IOCTL_TEST7 0xF007
 
-int coa_ioctl(
-		struct inode *inode,
+long coa_ioctl(
 		struct file *filp,
 		unsigned int cmd,
 		unsigned long arg)
@@ -77,7 +74,7 @@ int coa_ioctl(
 
 	unsigned long __user * argp = (unsigned long __user *) arg;
 
-	if (!dev->p_dev->dev_node)
+        if (!dev->p_dev->devname)
 		return -EIO;
 
 	switch (cmd)
@@ -98,8 +95,8 @@ int coa_ioctl(
 			SC14421_stop_dip(dev->sc14421_base);
 			dev->operation_mode = mode;
 
-			kfifo_reset(dev->rx_fifo);
-			kfifo_reset(dev->tx_fifo);
+                        kfifo_reset(&dev->rx_fifo);
+                        kfifo_reset(&dev->tx_fifo);
 
 			break;
 		case COA_MODE_FP:
@@ -110,8 +107,8 @@ int coa_ioctl(
 			break;
 		case COA_MODE_SNIFF:
 
-			kfifo_reset(dev->rx_fifo);
-			kfifo_reset(dev->tx_fifo);
+                        kfifo_reset(&dev->rx_fifo);
+                        kfifo_reset(&dev->tx_fifo);
 
 			/* activiate sniffer */
 
@@ -131,6 +128,8 @@ int coa_ioctl(
 			break;
 		case COA_MODE_EEPROM:
 		{
+                        printk("FIXME: pcmcia_read_cis_mem is not exported since 2.6.34, so we can't use it\n");
+#if 0
 			/* copy EEPROM to fifo */
 #ifndef pcmcia_read_cis_mem /* not in any of my kernel headers :( */
 			int pcmcia_read_cis_mem(struct pcmcia_socket *s, int attr, u_int addr,
@@ -140,15 +139,16 @@ int coa_ioctl(
 			uint8_t id = get_card_id();
 			uint8_t * eeprom = kmalloc(EEPROM_SIZE, GFP_KERNEL);
 			if (!eeprom) return -ENOMEM;
-			kfifo_put(dev->rx_fifo, &id, 1);
+                        kfifo_in_locked(&dev->rx_fifo, &id, 1, &dev->rx_fifo_lock);
 			pcmcia_read_cis_mem(
 					dev->p_dev->socket,
 					1,
 					0,
 					EEPROM_SIZE,
 					eeprom);
-			kfifo_put(dev->rx_fifo, eeprom, EEPROM_SIZE);
+                        kfifo_in_locked(&dev->rx_fifo, eeprom, EEPROM_SIZE, &dev->rx_fifo_lock);
 			kfree(eeprom);
+#endif
 			break;
 		}
 		case COA_MODE_JAM:
@@ -271,10 +271,10 @@ int coa_ioctl(
 				"the day's divinity.\n";
 		static char * ps = teststring;
 		int ret;
-		ret = kfifo_put(dev->rx_fifo, ps, 1);
+                ret = kfifo_in_locked(&dev->rx_fifo, ps, 1, &dev->rx_fifo_lock);
 		if (ret <= 0)
 			printk("com_on_air_cs: rx fifo full? "
-					"kfifo_put() = %d\n", ret);
+                                        "kfifo_in_locked() = %d\n", ret);
 		ps++;
 		if (!*ps)
 			ps = teststring;
@@ -322,12 +322,12 @@ static unsigned int coa_poll(struct file *file, poll_table * wait)
 {
 	unsigned int mask = 0;
 
-	if (!dev->p_dev->dev_node)
+        if (!dev->p_dev->devname)
 		return -EIO;
 
-	if (kfifo_len(dev->rx_fifo))
+        if (kfifo_len(&dev->rx_fifo))
 		mask |= POLLIN  | POLLRDNORM;
-	if (COA_FIFO_SIZE - kfifo_len(dev->tx_fifo))
+        if (COA_FIFO_SIZE - kfifo_len(&dev->tx_fifo))
 		mask |= POLLOUT | POLLWRNORM;
 	return mask;
 }
@@ -342,15 +342,15 @@ static ssize_t coa_read(
 	size_t not_copied;
 	unsigned char *data;
 
-	if (!dev->p_dev->dev_node)
+        if (!dev->p_dev->devname)
 		return -EIO;
 
-	to_copy = min((size_t)kfifo_len(dev->rx_fifo), count_want);
+        to_copy = min((size_t)kfifo_len(&dev->rx_fifo), count_want);
 	data = kmalloc(to_copy, GFP_KERNEL);
 	if (!data)
 		return -ENOMEM;
 
-	to_copy = kfifo_get(dev->rx_fifo, data, to_copy);
+        to_copy = kfifo_out_locked(&dev->rx_fifo, data, to_copy, &dev->rx_fifo_lock);
 	if (to_copy < 0) {
 		kfree(data);
 		return -EIO;
@@ -365,14 +365,14 @@ static ssize_t coa_read(
 
 static int coa_close(struct inode *inode, struct file *filp)
 {
-	if (!dev->p_dev->dev_node)
+        if (!dev->p_dev->devname)
 		return -EIO;
 	SC14421_stop_dip(dev->sc14421_base);
 
 	dev->open = 0;
 
-	kfifo_reset(dev->rx_fifo);
-	kfifo_reset(dev->tx_fifo);
+        kfifo_reset(&dev->rx_fifo);
+        kfifo_reset(&dev->tx_fifo);
 
 	return 0;
 }
@@ -382,7 +382,7 @@ static const struct file_operations coa_fops =
 {
 	.owner   = THIS_MODULE,
 	.open    = coa_open,
-	.ioctl   = coa_ioctl,
+        .unlocked_ioctl = coa_ioctl,
 	.poll    = coa_poll,
 	.read    = coa_read,
 	.release = coa_close,
@@ -430,25 +430,16 @@ com_on_air_irq_handler(int irq, void *dev_id)
 
 static int com_on_air_probe (struct pcmcia_device *link)
 {
-	win_req_t req;
 	int ret;
 
 	dev->p_dev = link;
 	link->priv = dev;
 
-	link->dev_node = kzalloc(sizeof(*link->dev_node), GFP_KERNEL);
-	if (!link->dev_node)
-		return -ENOMEM;
-
 	link->devname = kzalloc(strlen(COA_DEVICE_NAME), GFP_KERNEL);
-	if (!link->devname)
-	{
-		ret = -ENOMEM;
-		goto probe_out_4;
-	}
+        if (!link->devname) 
+                return -ENOMEM;
 
 	sprintf(link->devname, COA_DEVICE_NAME);
-	sprintf(link->dev_node->dev_name, COA_DEVICE_NAME);
 
 	printk("com_on_air_cs: >>>>>>>>>>>>>>>>>>>>>>>>\n");
 	printk("com_on_air_cs: card in slot        %s\n", link->devname);
@@ -466,28 +457,21 @@ static int com_on_air_probe (struct pcmcia_device *link)
 		printk("com_on_air_cs: prod_id[3]          %s\n",
 				link->prod_id[3]);
 
-	link->io.Attributes1   = IO_DATA_PATH_WIDTH_AUTO;
-	link->io.NumPorts1     = 16;
-	link->io.Attributes2   = 0;
+        link->resource[0]->flags |= IO_DATA_PATH_WIDTH_AUTO;
+        link->resource[0]->end    = 16;
+        link->resource[1]->flags |= 0;  // this is a NOP, right ?!?!
 
-	link->irq.Attributes   = IRQ_TYPE_DYNAMIC_SHARING | IRQ_HANDLE_PRESENT;
-	link->irq.IRQInfo1     = IRQ_LEVEL_ID;
-	link->irq.Handler      = com_on_air_irq_handler;
-	link->irq.Instance     = dev;
-
-	link->conf.Attributes  = CONF_ENABLE_IRQ;
-	link->conf.IntType     = INT_MEMORY_AND_IO;
-	link->conf.ConfigIndex = 1;
-	link->conf.Present     = PRESENT_OPTION;
-	link->conf.ConfigBase  = 0x1020;
+        link->config_flags     = CONF_ENABLE_IRQ;
+        link->config_index     = 1;
+        link->config_regs      = PRESENT_OPTION;
+        link->config_base      = 0x1020;
 
 
-	req.Attributes = WIN_DATA_WIDTH_16 | WIN_ENABLE;
-	req.Base = 0;
-	req.Size = 0x1000;
-	req.AccessSpeed = 500;
+        link->resource[2]->flags = WIN_DATA_WIDTH_16 | WIN_ENABLE;
+        link->resource[2]->start = 0;
+        link->resource[2]->end = 0x1000;
 
-	ret = pcmcia_request_window(&link, &req, &link->win);
+        ret = pcmcia_request_window(link, link->resource[2], 500);
 	if (ret != 0)
 	{
 		printk("couldn't pcmcia_request_window() = 0x%x\n", ret);
@@ -495,8 +479,8 @@ static int com_on_air_probe (struct pcmcia_device *link)
 	}
 
 	dev->links[0]   = link;
-	dev->memsize[0] = req.Size;
-	dev->membase[0] = ioremap_nocache(req.Base, req.Size);
+        dev->memsize[0] = resource_size(link->resource[2]);
+        dev->membase[0] = ioremap_nocache(link->resource[2]->start, resource_size(link->resource[2]));
 
 	if (!dev->membase[0])
 	{
@@ -506,36 +490,35 @@ static int com_on_air_probe (struct pcmcia_device *link)
 	}
 	printk("com_on_air_cs: ioremap()'d baseaddr %p\n", dev->membase[0]);
 
-	link->conf.Present      = PRESENT_OPTION;
 	link->socket->functions = 0;
 
 	dev->irq_count = 0;
 
-	ret = pcmcia_request_irq(link, &link->irq);
+        ret = pcmcia_request_irq(link, com_on_air_irq_handler);
 	if (ret != 0)
 	{
 		printk("\ncom_on_air_cs: unable to allocate IRQ %d, ret=%x\n",
-				link->irq.AssignedIRQ, ret);
+                                link->irq, ret);
 		dev->irq = -1;
 		goto probe_out_1;
 	} else {
 		printk("com_on_air_cs: registered IRQ %d\n",
-				link->irq.AssignedIRQ);
-		dev->irq = link->irq.AssignedIRQ;
+                                link->irq);
+                dev->irq = link->irq;
 	}
 	/* FIXME: there are devces which arrive here but can only allocate a
 	 *        shared interrupt!
 	 * */
 
-	ret = pcmcia_request_configuration(link, &link->conf);
+        ret = pcmcia_enable_device(link);
 	if (ret != 0)
 	{
-		printk("could not pcmcia_request_configuration()\n");
+                printk("could not enable pcmcia device\n");
 		goto probe_out_0;
 	}
 
 	printk("com_on_air_cs: %svalid client.\n",
-	       (link->conf.Attributes) ? "":"in");
+               (link->config_flags) ? "":"in");
 	printk("com_on_air_cs: type          0x%x\n",
 	       link->socket->state);
 
@@ -543,8 +526,6 @@ static int com_on_air_probe (struct pcmcia_device *link)
 	       link->func);
 
 
-	printk("com_on_air_cs: Attributes    %d\n",
-	       link->conf.Attributes);
 	/*
 	 * I found no really easy/sensible source for those on newer kernels -
 	 * and they dont seem to be that interesting anyway
@@ -557,49 +538,35 @@ static int com_on_air_probe (struct pcmcia_device *link)
 	       link->conf.Vpp2);
 	*/
 
-	printk("com_on_air_cs: IntType       %d\n",
-	       link->conf.IntType);
+        printk("com_on_air_cs: config_flags  %d\n",
+                        link->config_flags);
+        printk("com_on_air_cs: config_base  %d\n",
+                        link->config_base);
+        printk("com_on_air_cs: config_regs  %d\n",
+                        link->config_regs);
 
-	printk("com_on_air_cs: ConfigBase    0x%x\n",
-	       link->conf.ConfigBase);
-
-	printk("com_on_air_cs: Status %u, "
-	       "Pin %u, "
-	       "Copy %u, "
-	       "ExtStatus %u\n",
-	       link->conf.Status,
-	       link->conf.Pin,
-	       link->conf.Copy,
-	       link->conf.ExtStatus);
-
-	printk("com_on_air_cs: Present       %d\n",
-	       link->conf.Present);
-
-	printk("com_on_air_cs: AssignedIRQ   0x%x\n",
-	       link->irq.AssignedIRQ);
-
-	printk("com_on_air_cs: IRQAttributes 0x%x\n",
-	       link->irq.Attributes);
+        printk("com_on_air_cs: IRQ           0x%x\n",
+               link->irq);
 
 	printk("com_on_air_cs: BasePort1     0x%x\n",
-	       link->io.BasePort1);
+               link->resource[0]->start);
 	printk("com_on_air_cs: NumPorts1     0x%x\n",
-	       link->io.NumPorts1);
-	printk("com_on_air_cs: Attributes1   0x%x\n",
-	       link->io.Attributes1);
+               link->resource[0]->end);
+        printk("com_on_air_cs: Attributes1   0x%lx\n",
+               link->resource[0]->flags);
 
 	printk("com_on_air_cs: BasePort2     0x%x\n",
-	       link->io.BasePort2);
+               link->resource[1]->start);
 	printk("com_on_air_cs: NumPorts2     0x%x\n",
-	       link->io.NumPorts2);
-	printk("com_on_air_cs: Attributes2   0x%x\n",
-	       link->io.Attributes2);
+               link->resource[1]->end);
+        printk("com_on_air_cs: Attributes2   0x%lx\n",
+               link->resource[1]->flags);
 	printk("com_on_air_cs: IOAddrLines   0x%x\n",
-	       link->io.IOAddrLines);
+               link->io_lines);
 	printk("com_on_air_cs: has%s function_config\n",
 	       (link->function_config) ? "":" no");
 
-	set_device_configbase(link->conf.ConfigBase);
+        set_device_configbase(link->config_base);
 
 	dev->sc14421_base = ((volatile uint16_t*)(dev->membase[0]));
 
@@ -631,12 +598,10 @@ probe_out_0:
 probe_out_1:
 	iounmap(dev->membase[0]);
 probe_out_2:
-	pcmcia_release_window(link->win);
+        pcmcia_release_window(link, link->resource[2]);
 probe_out_3:
 	kfree(link->devname);
-probe_out_4:
-	kfree(link->dev_node);
-	link->dev_node = NULL;
+        link->devname = NULL;
 	return ret;
 }
 
@@ -648,37 +613,17 @@ static void com_on_air_remove(struct pcmcia_device *link)
 	printk("com_on_air_cs: COM-ON-AIR card ejected\n");
 	printk("com_on_air_cs: <<<<<<<<<<<<<<<<<<<<<<<\n");
 
-	if (dev->irq >= 0)
+	dev->sc14421_base=0;
+
+	if (dev->membase[0])
 	{
-		printk("com_on_air_cs: freeing interrupt %d\n",
-		        dev->irq);
-		free_irq(dev->irq, dev);
+		printk("com_on_air_cs: iounmap()ing membase[0]\n");
+		iounmap(dev->membase[0]);
 	}
 
-	for (j=0; j<2; j++)
-	{
-		if (dev->membase[j])
-		{
-			printk("com_on_air_cs: iounmap()ing membase[%d]\n", j);
-			iounmap(dev->membase[j]);
-		}
-		if (dev->links[j])
-			if (dev->links[j]->win)
-			{
-				printk("com_on_air_cs: releasing window %d\n",
-						j);
-				pcmcia_release_window(dev->links[j]->win);
-			}
-	}
 
 	printk("com_on_air_cs: pcmcia_disable_device()\n");
 	pcmcia_disable_device(link);
-	if (link->dev_node)
-	{
-		printk("com_on_air_cs: freeing dev_node\n");
-		kfree(link->dev_node);
-		link->dev_node = 0;
-	}
 	if (link->devname)
 	{
 		printk("com_on_air_cs: freeing devname\n");
@@ -769,10 +714,7 @@ int get_card_id(void)
 static struct pcmcia_driver coa_driver =
 {
 	.owner = THIS_MODULE,
-	.drv    =
-	{
-		.name = COA_DEVICE_NAME,
-	},
+        .name = COA_DEVICE_NAME,
 	.probe    = com_on_air_probe,
 	.remove   = com_on_air_remove,
 
@@ -806,18 +748,16 @@ static int __init init_com_on_air_cs(void)
 	}
 
 	spin_lock_init(&dev->rx_fifo_lock);
-	dev->rx_fifo = kfifo_alloc(COA_FIFO_SIZE, GFP_KERNEL,
-					&dev->rx_fifo_lock);
-	if (IS_ERR(dev->rx_fifo))
+        ret = kfifo_alloc(&dev->rx_fifo, COA_FIFO_SIZE, GFP_KERNEL);
+        if (ret < 0)
 	{
 		printk("couldn't kfifo_alloc(dev->rx_fifo)\n");
 		goto init_out_1;
 	}
 
 	spin_lock_init(&dev->tx_fifo_lock);
-	dev->tx_fifo = kfifo_alloc(COA_FIFO_SIZE, GFP_KERNEL,
-					&dev->tx_fifo_lock);
-	if (IS_ERR(dev->tx_fifo))
+        ret = kfifo_alloc(&dev->tx_fifo, COA_FIFO_SIZE, GFP_KERNEL);
+        if (ret < 0)
 	{
 		printk("couldn't kfifo_alloc(dev->tx_fifo)\n");
 		goto init_out_0;
@@ -826,7 +766,7 @@ static int __init init_com_on_air_cs(void)
 	return 0;
 
 init_out_0:
-	kfifo_free(dev->rx_fifo);
+        kfifo_free(&dev->rx_fifo);
 init_out_1:
 	unregister_chrdev(0xDEC, COA_DEVICE_NAME);
 init_out_2:
@@ -846,8 +786,8 @@ static void __exit exit_com_on_air_cs(void)
 
 	pcmcia_unregister_driver(&coa_driver);
 
-	kfifo_free(dev->rx_fifo);
-	kfifo_free(dev->tx_fifo);
+        kfifo_free(&dev->rx_fifo);
+        kfifo_free(&dev->tx_fifo);
 
 	kfree(dev);
 }
