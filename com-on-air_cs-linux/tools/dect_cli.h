@@ -93,6 +93,14 @@ struct cli_info
 	int                   autorec_timeout;
 	int                   autorec_last_bfield;
 
+	int                   imaDump;
+	int                   wavDump;
+	int                   imaDumping;
+	int                   wavDumping;
+	int                   audioPlay;
+	int                   audioPlaying;
+	int                   channelPlaying;
+
 	/* fpscan (async) list of stations */
 	struct dect_station   station;
 	struct dect_station   * station_list;
@@ -106,26 +114,6 @@ struct cli_info
 	struct sniffed_packet packet;
 	pcap_t                * pcap;
 	pcap_dumper_t         * pcap_d;
-};
-
-uint32_t ch2etsi[15] =
-{
-	9,  /* "normal" EMEA DECT, 10 channels     */
-	8,  /* with a weired (historic?) counting  */
-	7,  /* 1881.792 MHz - 1897.344 MHz         */
-	6,  /* 1728 kHz channel spacing            */
-	5,
-	4,
-	3,
-	2,
-	1,
-	0,
-
-	23, /* DECT 6.0, th US variant, 5 channels */
-	24, /* 1921.536 MHz - 1928.448 MHz         */
-	25, /* 1728 kHz channel spacing            */
-	26,
-	27
 };
 
 

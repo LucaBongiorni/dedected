@@ -30,13 +30,35 @@
 
 #include "com_on_air_user.h"
 #include "dect_cli.h"
+#include "audioDecode.h"
 
 struct cli_info cli;
+
+uint32_t ch2etsi[15] =
+{
+	9,  /* "normal" EMEA DECT, 10 channels     */
+	8,  /* with a weired (historic?) counting  */
+	7,  /* 1881.792 MHz - 1897.344 MHz         */
+	6,  /* 1728 kHz channel spacing            */
+	5,
+	4,
+	3,
+	2,
+	1,
+	0,
+
+	23, /* DECT 6.0, th US variant, 5 channels */
+	24, /* 1921.536 MHz - 1928.448 MHz         */
+	25, /* 1728 kHz channel spacing            */
+	26,
+	27
+};
 
 
 #define  RXBUF 8192
 char buf[RXBUF];
 
+char fname[512];	// Contains the base name of the dump files
 
 /* pcap errors */
 char errbuf[PCAP_ERRBUF_SIZE];
@@ -618,6 +640,31 @@ void do_hop(void)
 	LOG("### channel hopping turned %s\n", cli.hop ? "ON":"OFF");
 }
 
+void do_audio(void)
+{
+	cli.audioPlay = cli.audioPlay ? 0:1;
+	LOG("### Audio playing turned %s\n", cli.audioPlay ? "ON":"OFF");
+}
+
+void do_direction(void)
+{
+	cli.channelPlaying = cli.channelPlaying ? 0:1;
+	LOG("### Audio channel playing: %s\n", cli.channelPlaying ? "FP":"PP");
+}
+
+
+void do_wav(void)
+{
+	cli.wavDump = cli.wavDump ? 0:1;
+	LOG("### WAV Dumping turned %s\n", cli.wavDump ? "ON":"OFF");
+}
+
+void do_ima(void)
+{
+	cli.imaDump = cli.imaDump ? 0:1;
+	LOG("### IMA Dumping turned %s\n", cli.imaDump ? "ON":"OFF");
+}
+
 void do_verb(void)
 {
 	cli.verbose = cli.verbose ? 0:1;
@@ -657,6 +704,18 @@ void do_stop(void)
 		do_stop_keep_autorec();
 	}
 	cli.autorec = 0;
+
+	// Possible error?
+	// If a call is being recorded and the user invokes the stop command, 
+	// when the pcap file is closed?
+
+	//Closing dumps
+	if (cli.imaDumping)
+		closeIma();
+	if (cli.wavDumping)
+		closeWav();
+	if (cli.audioPlaying)
+		closeAlsa();
 }
 
 void do_save_station_names()
@@ -738,6 +797,14 @@ void process_cli_data()
 		{ do_add_name(&buf[4]); done = 1; }
 	if ( !strncasecmp((char *)buf, "hop", 3) )
 		{ do_hop(); done = 1; }
+	if ( !strncasecmp((char *)buf, "audio", 5) )
+		{ do_audio(); done = 1; }
+	if ( !strncasecmp((char *)buf, "direction", 9) )
+		{ do_direction(); done = 1; }
+	if ( !strncasecmp((char *)buf, "wav", 3) )
+		{ do_wav(); done = 1; }
+	if ( !strncasecmp((char *)buf, "ima", 3) )
+		{ do_ima(); done = 1; }
 	if ( !strncasecmp((char *)buf, "verb", 4) )
 		{ do_verb(); done = 1; }
 	if ( !strncasecmp((char *)buf, "mode", 4) )
@@ -836,6 +903,14 @@ void process_dect_data()
 					 * but we expect some to come soon
 					 * and the val needs to be non-0 */
 					cli.autorec_last_bfield = time(NULL);
+					
+					// IMA or WAV dumping? Audio Playing?
+					if (cli.imaDump) 
+						openIma(fname);
+					if (cli.wavDump) 
+						openWav(fname);
+					if (cli.audioPlay)
+						openAlsa();
 				}
 				if (has_b_field())
 					cli.autorec_last_bfield = time(NULL);
@@ -863,6 +938,11 @@ void process_dect_data()
 				memcpy(&pcap_packet[20], cli.packet.data, 53);
 
 				pcap_dump(cli.pcap_d, &pcap_hdr, pcap_packet);
+
+				// Dump the audio data
+				if (cli.imaDumping  || cli.wavDumping || cli.audioPlaying)
+					packetAudioProcessing(pcap_packet);
+
 			}
 			break;
 	}
@@ -961,6 +1041,13 @@ void init_cli(void)
 	cli.band                = DECT_BAND_EMEA;
 	cli.hop_start           = 0;
 	cli.hop_end             = 9;
+	cli.wavDump = 1;
+	cli.imaDump = 0;
+	cli.audioPlay = 1;
+	cli.wavDumping = 0;
+	cli.imaDumping = 0;
+	cli.audioPlaying = 0;
+	cli.channelPlaying = 0;
 
 	signal(SIGHUP, signal_handler);
 	signal(SIGINT, signal_handler);
@@ -1075,6 +1162,15 @@ void mainloop(void)
 					cli.pcap   = NULL;
 					cli.hop = 1;
 				}
+
+				//Closing dumps
+				if (cli.imaDumping)
+					closeIma();
+				if (cli.wavDumping)
+					closeWav();
+				if (cli.audioPlaying)
+					closeAlsa();
+
 			}
 		}
 	}
