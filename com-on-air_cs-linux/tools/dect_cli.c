@@ -1047,7 +1047,7 @@ void init_cli(void)
 	cli.wavDumping = 0;
 	cli.imaDumping = 0;
 	cli.audioPlaying = 0;
-	cli.channelPlaying = 0;
+	cli.channelPlaying = 1;
 
 	signal(SIGHUP, signal_handler);
 	signal(SIGINT, signal_handler);
