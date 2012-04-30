@@ -1020,7 +1020,7 @@ void signal_handler(int s)
 
 void init_cli(void)
 {
-	cli.channel      = 0;
+	cli.channel      = 10;
 	cli.slot         = 0;
 	cli.hop          = 1;
 	cli.hop_ch_time  = 1; /* in sec */
@@ -1038,9 +1038,9 @@ void init_cli(void)
 	cli.autorec_timeout     = 10;
 	cli.autorec_last_bfield = 0;
 
-	cli.band                = DECT_BAND_EMEA;
-	cli.hop_start           = 0;
-	cli.hop_end             = 9;
+	cli.band                = DECT_BAND_US;
+	cli.hop_start           = 10;
+	cli.hop_end             = 14;
 	cli.wavDump = 1;
 	cli.imaDump = 0;
 	cli.audioPlay = 1;
